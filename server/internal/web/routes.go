@@ -3,10 +3,10 @@ package web
 import "net/http"
 
 func routes() *http.ServeMux {
-    router := http.NewServeMux()
-    
-    // Routes
-    // todo
+	router := http.NewServeMux()
 
-    return router
+	// Routes
+	// todo
+
+	return router
 }

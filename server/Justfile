@@ -3,3 +3,7 @@ build:
 
 watch:
     air
+
+fmt:
+    goimports -w .
+    go fmt ./...

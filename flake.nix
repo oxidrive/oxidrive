@@ -26,14 +26,11 @@
               air
               dioxus-cli
               go
+              gotools
               just
               rust
               tailwindcss
             ];
-
-            shellHook = ''
-              alias run="just web/watch"
-            '';
           };
         };
     };
