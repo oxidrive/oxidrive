@@ -4,3 +4,7 @@ default:
 build:
     @just web/build
     @just server/build
+
+fmt:
+    @just web/fmt
+    @just server/fmt

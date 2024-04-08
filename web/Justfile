@@ -6,3 +6,7 @@ build:
 watch:
     tailwindcss -i ./input.css -o ./assets/styles.css --watch &
     dx serve --hot-reload
+
+fmt:
+    cargo fmt
+    cargo clippy --allow-dirty --allow-staged --workspace --fix -- -D warnings
