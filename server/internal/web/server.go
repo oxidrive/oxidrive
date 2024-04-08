@@ -6,7 +6,7 @@ import (
 )
 
 func Run() error {
-	port := ":3333"
+	port := ":4000"
 
 	router := routes()
 

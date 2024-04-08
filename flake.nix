@@ -16,7 +16,7 @@
       perSystem = { config, self', inputs', pkgs, system, ... }:
         let
           rustPkgs = pkgs.appendOverlays [ (import rust-overlay) ];
-          rust = rustPkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+          rust = rustPkgs.rust-bin.fromRustupToolchainFile ./web/rust-toolchain.toml;
         in
         {
           formatter = pkgs.nixpkgs-fmt;
