@@ -1,0 +1,8 @@
+build:
+    @echo "Building web frontend"
+    tailwindcss -i ./input.css -o ./assets/styles.css
+    dx build --release
+
+watch:
+    tailwindcss -i ./input.css -o ./assets/styles.css --watch &
+    dx serve --hot-reload

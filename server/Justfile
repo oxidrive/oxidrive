@@ -1,0 +1,5 @@
+build:
+    @echo "Building server"
+
+watch:
+    air
