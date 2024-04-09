@@ -8,13 +8,14 @@ import (
 )
 
 type Config struct {
-	Address     string
-	Application *application.Application
-	Logger      zerolog.Logger
+	Address        string
+	Application    *application.Application
+	Logger         zerolog.Logger
+	FrontendFolder string
 }
 
 func Run(cfg Config) error {
-	router := routes()
+	router := routes(&cfg)
 
 	cfg.Logger.Info().Str("listen", cfg.Address).Msg("starting oxidrive server")
 	return http.ListenAndServe(cfg.Address, router)

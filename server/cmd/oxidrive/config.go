@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"github.com/alecthomas/kong"
 	"github.com/rs/zerolog"
@@ -20,6 +21,8 @@ type Config struct {
 
 	Host string `env:"HOST" default:"127.0.0.1"`
 	Port int16  `env:"PORT" default:"4000"`
+
+	AssetsFolder string `env:"OXIDRIVE_ASSETS_FOLDER" default:"./assets"`
 }
 
 func ParseConfig() Config {
@@ -30,4 +33,13 @@ func ParseConfig() Config {
 
 func (c *Config) ListenAddress() string {
 	return fmt.Sprintf("%s:%d", c.Host, c.Port)
+}
+
+func (c *Config) AssetsFolderPath() string {
+	path, err := filepath.Abs(c.AssetsFolder)
+	if err != nil {
+		panic(err)
+	}
+
+	return path
 }

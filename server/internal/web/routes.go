@@ -2,11 +2,11 @@ package web
 
 import "net/http"
 
-func routes() *http.ServeMux {
+func routes(cfg *Config) *http.ServeMux {
 	router := http.NewServeMux()
 
 	// Routes
-	// todo
+	router.Handle("/", serveFrontend(cfg.FrontendFolder))
 
 	return router
 }

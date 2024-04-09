@@ -22,9 +22,10 @@ func main() {
 	app := application.New()
 
 	err := web.Run(web.Config{
-		Address:     cfg.ListenAddress(),
-		Application: app,
-		Logger:      logger,
+		Address:        cfg.ListenAddress(),
+		Application:    app,
+		Logger:         logger,
+		FrontendFolder: cfg.AssetsFolderPath(),
 	})
 
 	if errors.Is(err, http.ErrServerClosed) {
