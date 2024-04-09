@@ -1,7 +1,10 @@
 build:
     @echo "Building server"
 
-watch:
+run *args: fmt
+    go run ./cmd/oxidrive {{ args }}
+
+watch: fmt
     air
 
 fmt:
