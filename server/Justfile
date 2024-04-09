@@ -1,7 +1,7 @@
 set dotenv-load
 
 build:
-    @echo "Building server"
+    go build -o ./bin/oxidrive ./cmd/oxidrive/
 
 run *args: fmt
     go run ./cmd/oxidrive {{ args }}
@@ -12,3 +12,4 @@ watch: fmt
 fmt:
     goimports -w .
     go fmt ./...
+

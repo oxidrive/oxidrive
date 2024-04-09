@@ -1,0 +1,16 @@
+*
+!server/Justfile
+!server/cmd
+!server/go.mod
+!server/go.sum
+!server/internal
+
+!web/Cargo.lock
+!web/Cargo.toml
+!web/Dioxus.toml
+!web/Justfile
+!web/assets
+!web/input.css
+!web/rust-toolchain.toml
+!web/src/
+!web/tailwind.config.js

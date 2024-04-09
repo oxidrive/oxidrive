@@ -17,7 +17,7 @@ const (
 
 type Config struct {
 	LogLevel  zerolog.Level `env:"LOG_LEVEL" default:"info"`
-	LogFormat LogFormat     `env:"LOG_FORMAT" default:"text"`
+	LogFormat LogFormat     `env:"LOG_FORMAT" default:"json"`
 
 	Host string `env:"HOST" default:"127.0.0.1"`
 	Port int16  `env:"PORT" default:"4000"`

@@ -1,5 +1,4 @@
 build:
-    @echo "Building web frontend"
     tailwindcss -i ./input.css -o ./assets/styles.css
     dx build --release
 
@@ -10,3 +9,4 @@ watch:
 fmt:
     cargo fmt
     cargo clippy --allow-dirty --allow-staged --workspace --fix -- -D warnings
+
