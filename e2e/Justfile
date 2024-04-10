@@ -12,6 +12,9 @@ stop:
 rebuild: stop
     docker compose build
 
+record url="http://localhost:8080":
+    npx playwright codegen {{ url }}
+
 [linux]
 setup:
     #!/usr/bin/env sh

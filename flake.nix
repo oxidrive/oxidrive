@@ -32,7 +32,6 @@
               just
               nodejs_20
               rust
-              tailwindcss
             ];
           };
         };

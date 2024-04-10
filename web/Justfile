@@ -1,10 +1,12 @@
-build:
-    tailwindcss -i ./input.css -o ./assets/styles.css
+build: setup
+    npx tailwindcss -i ./input.css -o ./assets/styles.css
     dx build --release
 
-watch:
-    tailwindcss -i ./input.css -o ./assets/styles.css --watch &
-    dx serve --hot-reload
+watch: setup
+    npx concurrently "tailwindcss -i ./input.css -o ./assets/styles.css --watch" "dx serve --hot-reload"
+
+setup:
+    [ -d node_modules ] || npm install
 
 fmt:
     cargo fmt

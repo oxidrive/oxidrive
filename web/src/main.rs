@@ -25,11 +25,17 @@ fn App() -> Element {
 
 #[component]
 fn Home() -> Element {
+    let mut title = use_signal(|| "Oxidrive");
+
     rsx! {
         div {
             main {
                 role: "main",
-                h1 { "Oxidrive" }
+                h1 { "{title}" }
+                button {
+                    onclick: move |_| title.set("Changed!"),
+                    "Click me!"
+                }
             }
         }
     }
