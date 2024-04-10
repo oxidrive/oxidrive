@@ -18,9 +18,7 @@ fn main() {
 }
 
 fn App() -> Element {
-    rsx! {
-        Router::<Route> {}
-    }
+    rsx! { Router::<Route> {} }
 }
 
 #[component]
@@ -29,13 +27,9 @@ fn Home() -> Element {
 
     rsx! {
         div {
-            main {
-                role: "main",
+            main { role: "main",
                 h1 { "{title}" }
-                button {
-                    onclick: move |_| title.set("Changed!"),
-                    "Click me!"
-                }
+                button { onclick: move |_| title.set("Changed!"), "Click me!" }
             }
         }
     }

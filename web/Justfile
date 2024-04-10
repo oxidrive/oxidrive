@@ -10,5 +10,6 @@ setup:
 
 fmt:
     cargo fmt
+    dx fmt
     cargo clippy --allow-dirty --allow-staged --workspace --fix -- -D warnings
 
