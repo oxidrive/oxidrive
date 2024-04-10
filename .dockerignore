@@ -10,6 +10,7 @@
 !web/Dioxus.toml
 !web/Justfile
 !web/assets
+!web/index.html
 !web/input.css
 !web/rust-toolchain.toml
 !web/src/

@@ -39,13 +39,16 @@ To set Playwright up the first time, run `just e2e/setup`. This will install the
 
 > [!WARNING]
 > Nix users cannot use the regular Playwright-managed browsers. The project's [flake.nix](flake.nix) should install the correct Nix package, but [at the moment](https://github.com/NixOS/nixpkgs/pull/298944) only Chromium is provided.
-> Run `just e2e/test --project chromium` instead of the regular command, or select only `chromium` if running `just e2e/ui`. `Mobile Chromium` is also supported.
+> Run `just e2e/chromium` instead of the regular command, or select only `chromium` if running `just e2e/ui`. `Mobile Chromium` is also supported.
 
 Running `just e2e/test` from the root of the repository will:
 - start a [Docker Compose](e2e/docker-compose.yml) stack with a release build of Oxidrive and a Postgres database
 - run the test suite against [all supported browsers](e2e/playwright.config.ts#L37) (both desktop and mobile).
 
 A nice GUI is also provided by running `just e2e/ui`, which also allows inspecting the application as tests run.
+
+> [!NOTE]
+> When run locally Playwright will attempt to reuse an existing running instance of Oxidrive to run tests against. This is good if you're working on tests, because it avoids rebuilding the app image for nothing. If you changed the source code, however, you need to trigger a rebuild to see the changes in action. This can be achieved by running `just e2e/rebuild && just e2e/test`.
 
 [Go]: https://go.dev
 [Rust]: https://rust-lang.org

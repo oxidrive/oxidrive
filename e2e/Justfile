@@ -1,8 +1,16 @@
 test *args:
     npx playwright test {{ args }}
 
+chromium: (test "--project=chromium")
+
 ui:
     npx playwright test --ui
+
+stop:
+    docker compose down -v
+
+rebuild: stop
+    docker compose build
 
 [linux]
 setup:
