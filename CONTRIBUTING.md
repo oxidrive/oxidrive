@@ -29,9 +29,30 @@ just server/watch
 just web/watch
 ```
 
-The server should be listening on http://0.0.0.0:4000, while the web application should be available on http://0.0.0.0:8080.
+The server should be listening on http://127.0.0.1:4000, while the web application should be available on http://127.0.0.1:8080.
+
+## End-to-End Tests
+
+Oxidrive inclues a suite of UI tests that verify some of the core UX flows from the end-user's pespective. The test suite is implemented with [Playwright] and is located in the [e2e](e2e) folder. It requiers [NodeJS] 20 and related NPM CLI installed.
+
+To set Playwright up the first time, run `just e2e/setup`. This will install the required NPM packages and download the browsers that will execute the tests.
+
+> [!WARNING]
+> Nix users cannot use the regular Playwright-managed browsers. The project's [flake.nix](flake.nix) should install the correct Nix package, but [at the moment](https://github.com/NixOS/nixpkgs/pull/298944) only Chromium is provided.
+> Run `just e2e/test --project chromium` instead of the regular command, or select only `chromium` if running `just e2e/ui`. `Mobile Chromium` is also supported.
+
+Running `just e2e/test` from the root of the repository will:
+- start a [Docker Compose](e2e/docker-compose.yml) stack with a release build of Oxidrive and a Postgres database
+- run the test suite against [all supported browsers](e2e/playwright.config.ts#L37) (both desktop and mobile).
+
+A nice GUI is also provided by running `just e2e/ui`, which also allows inspecting the application as tests run.
 
 [Go]: https://go.dev
 [Rust]: https://rust-lang.org
 [Nix]: https://nixos.org
+[PostgreSQL]: https://postgresql.org
+[Docker]: https://docker.com
+[Docker Compose]: https://docs.docker.com/compose/
 [Just]: https://github.com/casey/just
+[Playwright]: https://playwright.dev/
+[NodeJS]: https://nodejs.org

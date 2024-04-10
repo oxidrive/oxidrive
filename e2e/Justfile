@@ -1,0 +1,26 @@
+test *args:
+    npx playwright test {{ args }}
+
+ui:
+    npx playwright test --ui
+
+[linux]
+setup:
+    #!/usr/bin/env sh
+    npm install
+    if grep -q ID=nixos /etc/os-release; then
+      echo ""
+      echo "====== WARNING ======="
+      echo "Playwright is not able to install browser on NixOS."
+      echo "They should be automatically installed by the project's flake.nix, but until this PR is merged only Chromium will be available."
+      echo "Please run tests with just e2e/tests --project chromium to avoid failures due to missing browsers"
+      echo ""
+      echo "https://github.com/NixOS/nixpkgs/pull/298944"
+    else
+      npx playwright install
+    fi
+
+[macos, windows]
+setup:
+    npm install
+    npx playwright install

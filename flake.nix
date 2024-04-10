@@ -22,12 +22,15 @@
           formatter = pkgs.nixpkgs-fmt;
 
           devShells.default = pkgs.mkShell {
+            PLAYWRIGHT_BROWSERS_PATH = pkgs.playwright-driver.browsers;
+
             packages = with pkgs; [
               air
               dioxus-cli
               go
               gotools
               just
+              nodejs_20
               rust
               tailwindcss
             ];
