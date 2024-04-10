@@ -22,8 +22,13 @@ RUN npx tailwindcss -i ./input.css -o ./output.css
 
 FROM public.ecr.aws/docker/library/rust:1-slim as web-build
 
-RUN apt-get update && apt-get install -y pkg-config libssl-dev perl make \
-  && cargo install dioxus-cli --locked && rustup target add wasm32-unknown-unknown
+RUN apt-get update && apt-get install wget -y
+
+RUN wget -O /tmp/cargo-binstall.tgz https://github.com/cargo-bins/cargo-binstall/releases/v1.6.4/download/cargo-binstall-x86_64-unknown-linux-musl.tgz && \
+    tar -xzf /tmp/cargo-binstall.tgz -C /tmp && \
+    mv /tmp/cargo-binstall /usr/bin/cargo-binstall
+
+RUN cargo binstall -y --no-discover-github-token dioxus-cli@0.5.4
 
 WORKDIR /app
 
