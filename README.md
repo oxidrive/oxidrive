@@ -1,5 +1,7 @@
 # Oxidrive
 
+[![Unstable Build](https://github.com/oxidrive/oxidrive/actions/workflows/unstable.yml/badge.svg?branch=main)](https://github.com/oxidrive/oxidrive/actions/workflows/unstable.yml)
+
 *Your data, your rules*
 
 ## Contributing
