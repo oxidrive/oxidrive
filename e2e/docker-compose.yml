@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   oxidrive:
-    image: ghcr.io/oxidrive/oxidrive:local-e2e
+    image: ghcr.io/oxidrive/oxidrive:unstable
     build: ..
     environment:
       HOST: 0.0.0.0

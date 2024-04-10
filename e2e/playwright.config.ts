@@ -75,7 +75,7 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'docker compose up --build',
+    command: 'docker compose up',
     url: 'http://127.0.0.1:5000',
     reuseExistingServer: !process.env.CI,
   },
