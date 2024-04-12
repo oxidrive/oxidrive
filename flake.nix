@@ -88,7 +88,7 @@
             '';
 
             packages = with pkgs; [
-              # Web
+              act
               air
               dioxus-cli
               just
