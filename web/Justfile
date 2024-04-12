@@ -3,7 +3,13 @@ build: setup
     dx build --release
 
 watch: setup
-    npx concurrently "tailwindcss -i ./input.css -o ./assets/styles.css --watch" "dx serve --hot-reload"
+    npx concurrently "just watch-app" "just watch-styles"
+
+watch-app: setup
+    dx serve --hot-reload
+
+watch-styles: setup
+    npx tailwindcss -i ./input.css -o ./assets/styles.css --watch
 
 setup:
     [ -d node_modules ] || npm install
