@@ -1,0 +1,107 @@
+name: Web CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - web/**
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+    paths:
+      - web/**
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: "0"
+
+jobs:
+  check:
+    if: github.event.pull_request.draft == false
+    name: Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: "true"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          workspaces: web
+      - run: cargo check --all --tests --all-features --all-targets
+
+  test:
+    if: github.event.pull_request.draft == false
+    name: Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: "true"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          workspaces: web
+      - uses: davidB/rust-cargo-make@v1
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with: # speed things up a bit
+          large-packages: false
+          docker-images: false
+          swap-storage: false
+      - run: cargo test --all --all-features --all-targets
+
+  fmt:
+    if: github.event.pull_request.draft == false
+    name: Rustfmt
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt            
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: "true"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          workspaces: web
+      - uses: cargo-bins/cargo-binstall@v1.6.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: cargo binstall -y dioxus-cli@0.5.4
+      - run: cargo fmt --all -- --check
+      - run: dx fmt --check
+
+  clippy:
+    if: github.event.pull_request.draft == false
+    name: Clippy
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: "true"
+          save-if: ${{ github.ref == 'refs/heads/main' }}
+          workspaces: web
+      - run: cargo clippy --workspace --tests --all-features --all-targets -- -D warnings
