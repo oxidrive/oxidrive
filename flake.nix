@@ -82,7 +82,6 @@
 
           devShells.default = pkgs.mkShell {
             PLAYWRIGHT_BROWSERS_PATH = pkgs.playwright-driver.browsers;
-            buildInputs = config.pre-commit.settings.enabledPackages;
             shellHook = ''
               ${config.pre-commit.installationScript}
               echo 1>&2 "Oxidrive development shell, pre-commits are enabled by default and can be run using nix flake check!"
@@ -98,7 +97,7 @@
 
               # Server
               goPkgs
-            ];
+            ] ++ config.pre-commit.settings.enabledPackages;
           };
         };
     };
