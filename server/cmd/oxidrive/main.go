@@ -10,6 +10,11 @@ import (
 
 	"github.com/oxidrive/oxidrive/server/internal/application"
 	"github.com/oxidrive/oxidrive/server/internal/web"
+	"github.com/oxidrive/oxidrive/server/migrations"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 func main() {
@@ -18,6 +23,15 @@ func main() {
 	cfg := ParseConfig()
 
 	logger := InitLogger(&cfg)
+
+	if err := migrations.Run(cfg.PostgresConfig); err != nil {
+		if errors.Is(err, migrate.ErrNoChange) {
+			logger.Info().AnErr("outcome", err).Msg("running Postgres migrations")
+		} else {
+			logger.Error().AnErr("error", err).Msg("running Postgres migrations")
+			os.Exit(1)
+		}
+	}
 
 	app := application.New()
 
