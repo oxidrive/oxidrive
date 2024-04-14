@@ -2,13 +2,13 @@ FROM public.ecr.aws/docker/library/golang:1.22-alpine as server-build
 
 WORKDIR /app
 
-COPY server/go.* .
+COPY go.* .
 
 RUN go mod download
 
-COPY server .
+COPY server ./server
 
-RUN go build -o ./bin/oxidrive ./cmd/oxidrive
+RUN go build -o ./bin/oxidrive ./server/cmd/oxidrive
 
 # ========================================================================= #
 
@@ -19,6 +19,8 @@ WORKDIR /app
 COPY web/input.css .
 
 RUN npx tailwindcss -i ./input.css -o ./output.css
+
+# ========================================================================= #
 
 FROM public.ecr.aws/docker/library/rust:1-slim as web-build
 
