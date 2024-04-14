@@ -27,7 +27,7 @@ type Config struct {
 	PostgresConfig
 }
 
-func ParseConfig() Config {
+func Parse() Config {
 	cfg := Config{}
 	_ = kong.Parse(&cfg)
 	return cfg
