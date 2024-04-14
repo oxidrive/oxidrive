@@ -5,12 +5,13 @@ import (
 	"os"
 	"time"
 
+	"github.com/oxidrive/oxidrive/server/internal/config"
 	"github.com/rs/zerolog"
 )
 
-func InitLogger(cfg *Config) zerolog.Logger {
+func InitLogger(cfg *config.Config) zerolog.Logger {
 	var out io.Writer = os.Stdout
-	if cfg.LogFormat == FormatText {
+	if cfg.LogFormat == config.FormatText {
 		out = zerolog.ConsoleWriter{
 			Out:        os.Stdout,
 			TimeFormat: time.RFC3339,

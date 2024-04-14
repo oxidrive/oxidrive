@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"fmt"
@@ -6,8 +6,6 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/rs/zerolog"
-
-	"github.com/oxidrive/oxidrive/server/internal/config"
 )
 
 type LogFormat string
@@ -26,7 +24,7 @@ type Config struct {
 
 	AssetsFolder string `env:"OXIDRIVE_ASSETS_FOLDER" default:"./assets"`
 
-	config.PostgresConfig
+	PostgresConfig
 }
 
 func ParseConfig() Config {
