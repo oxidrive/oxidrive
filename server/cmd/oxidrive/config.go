@@ -6,6 +6,8 @@ import (
 
 	"github.com/alecthomas/kong"
 	"github.com/rs/zerolog"
+
+	"github.com/oxidrive/oxidrive/server/internal/config"
 )
 
 type LogFormat string
@@ -23,6 +25,8 @@ type Config struct {
 	Port int16  `env:"PORT" default:"4000"`
 
 	AssetsFolder string `env:"OXIDRIVE_ASSETS_FOLDER" default:"./assets"`
+
+	config.PostgresConfig
 }
 
 func ParseConfig() Config {

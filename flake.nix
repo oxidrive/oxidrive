@@ -23,6 +23,7 @@
           goPkgs = with pkgs; [
             go
             gotools
+            go-migrate
           ];
         in
         {

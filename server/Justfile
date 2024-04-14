@@ -13,3 +13,8 @@ fmt:
     goimports -w .
     go fmt ./...
 
+psql:
+    @PGPASSWORD=$POSTGRES_PASSWORD psql -h localhost -U $POSTGRES_USER $POSTGRES_DB
+
+create_migration name:
+    @migrate create -dir ./migrations/ -ext sql {{ name }}
