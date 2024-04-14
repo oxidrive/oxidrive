@@ -1,8 +1,9 @@
 *
+!go.mod
+!go.sum
+
 !server/Justfile
 !server/cmd
-!server/go.mod
-!server/go.sum
 !server/internal
 
 !web/Cargo.lock
