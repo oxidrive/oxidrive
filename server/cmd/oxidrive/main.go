@@ -21,7 +21,7 @@ import (
 func main() {
 	trapSigterm()
 
-	cfg := config.ParseConfig()
+	cfg := config.Parse()
 
 	logger := InitLogger(&cfg)
 
