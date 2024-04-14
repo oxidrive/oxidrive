@@ -8,7 +8,7 @@ pub fn Home() -> Element {
             role: "main",
             class: "bg-primary-500 h-dvh px-12 flex flex-col items-center justify-center",
             div { class: "bg-primary-100 py-24 px-4 gap-8 flex flex-col items-center justify-evenly gap-4 w-auto rounded-3xl ",
-                Logo { with_name: true }
+                h1 { Logo { with_name: true } }
                 div { class: "flex flex-col gap-4 items-center justify-evenly",
                     p { "Oxidrive is coming soon" }
                     ButtonLink {
