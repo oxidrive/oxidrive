@@ -3,7 +3,7 @@ package web
 import (
 	"net/http"
 
-	"github.com/oxidrive/oxidrive/internal/application"
+	"github.com/oxidrive/oxidrive/server/internal/application"
 	"github.com/rs/zerolog"
 )
 

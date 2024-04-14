@@ -7,3 +7,4 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /.direnv/
+/.pre-commit-config.yaml

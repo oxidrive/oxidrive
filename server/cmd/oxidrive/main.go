@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/oxidrive/oxidrive/internal/application"
-	"github.com/oxidrive/oxidrive/internal/web"
+	"github.com/oxidrive/oxidrive/server/internal/application"
+	"github.com/oxidrive/oxidrive/server/internal/web"
 )
 
 func main() {
@@ -37,7 +37,7 @@ func main() {
 }
 
 func trapSigterm() {
-	c := make(chan os.Signal)
+	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
