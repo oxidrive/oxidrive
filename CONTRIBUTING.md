@@ -31,6 +31,25 @@ just web/watch
 
 The server should be listening on http://127.0.0.1:4000, while the web application should be available on http://127.0.0.1:8080.
 
+## PostgreSQL
+The Postgres db can be inspected using psql
+
+```sh
+just server/psql
+```
+
+If you want to create a new migration you need [migrate](https://github.com/golang-migrate/migrate), the Nix flake already provides a shell that contains it
+
+```sh
+just server/migration-create my_shiny_migration
+```
+
+Once you have your migration, you only have to edit the SQL files created under the `migrations` folder.
+
+If you don't use Nix, install migrate with the package manager you normally use, but keep in mind that we are using the v4.
+
+Migrations are embedded in the binary and run every time the server is started.
+
 ## Pre-commit
 Each commit is run against a list of checks defined using [pre-commit](https://pre-commit.com/). Before contribuiting to this project, be sure to install them.
 
@@ -42,7 +61,7 @@ Pre-commit directives are loaded from the `.pre-commit-config.json`, install the
 
 ## End-to-End Tests
 
-Oxidrive inclues a suite of UI tests that verify some of the core UX flows from the end-user's pespective. The test suite is implemented with [Playwright] and is located in the [e2e](e2e) folder. It requiers [NodeJS] 20 and related NPM CLI installed.
+Oxidrive inclues a suite of UI tests that verify some of the core UX flows from the end-user's perspective. The test suite is implemented with [Playwright] and is located in the [e2e](e2e) folder. It requires [NodeJS] 20 and related NPM CLI installed.
 
 To set Playwright up the first time, run `just e2e/setup`. This will install the required NPM packages and download the browsers that will execute the tests.
 

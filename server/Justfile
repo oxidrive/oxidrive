@@ -16,5 +16,5 @@ fmt:
 psql:
     @PGPASSWORD=$POSTGRES_PASSWORD psql -h localhost -U $POSTGRES_USER $POSTGRES_DB
 
-create_migration name:
+migration-create name:
     @migrate create -dir ./migrations/ -ext sql {{ name }}
