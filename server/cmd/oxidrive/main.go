@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/oxidrive/oxidrive/server/internal/application"
+	"github.com/oxidrive/oxidrive/server/internal/config"
 	"github.com/oxidrive/oxidrive/server/internal/web"
 	"github.com/oxidrive/oxidrive/server/migrations"
 
@@ -20,7 +21,7 @@ import (
 func main() {
 	trapSigterm()
 
-	cfg := ParseConfig()
+	cfg := config.ParseConfig()
 
 	logger := InitLogger(&cfg)
 
