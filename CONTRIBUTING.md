@@ -35,7 +35,7 @@ The server should be listening on http://127.0.0.1:4000, while the web applicati
 Each commit is run against a list of checks defined using [pre-commit](https://pre-commit.com/). Before contribuiting to this project, be sure to install them.
 
 ### Nix
-If you use nix everything you are ready to go, [git-hooks.nix](https://github.com/cachix/git-hooks.nix/tree/master) and [flake.parts](https://flake.parts/) take care of everything.
+If you use Nix for everything you are ready to go, [git-hooks.nix](https://github.com/cachix/git-hooks.nix/tree/master) and [flake.parts](https://flake.parts/) take care of everything.
 
 ### Not nix
 Pre-commit directives are loaded from the `.pre-commit-config.json`, install them using `pre-commit install`.
