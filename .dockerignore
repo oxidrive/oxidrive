@@ -1,4 +1,6 @@
 *
+!Cargo.lock
+!Cargo.toml
 !go.mod
 !go.sum
 
@@ -7,7 +9,6 @@
 !server/internal
 !server/migrations
 
-!web/Cargo.lock
 !web/Cargo.toml
 !web/Dioxus.toml
 !web/Justfile

@@ -34,10 +34,11 @@ RUN cargo binstall -y --no-discover-github-token --disable-strategies=compile di
 
 WORKDIR /app
 
-COPY web .
-COPY --from=css-build /app/output.css ./assets/styles.css
+COPY Cargo.* .
+COPY web ./web
+COPY --from=css-build /app/output.css ./web/assets/styles.css
 
-RUN dx build --release
+RUN dx build --release --bin oxidrive
 
 # ========================================================================= #
 
@@ -46,6 +47,6 @@ FROM gcr.io/distroless/static-debian11
 ENV OXIDRIVE_ASSETS_FOLDER=/assets
 
 COPY --from=server-build /app/bin/oxidrive /oxidrive
-COPY --from=web-build /app/dist $OXIDRIVE_ASSETS_FOLDER
+COPY --from=web-build /app/web/dist $OXIDRIVE_ASSETS_FOLDER
 
 CMD ["/oxidrive"]

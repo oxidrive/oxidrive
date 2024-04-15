@@ -12,3 +12,7 @@ authors = [
 ]
 
 [workspace.dependencies]
+console_error_panic_hook = "0.1.7"
+dioxus = "0.5"
+dioxus-logger = "0.4.1"
+log = "0.4.19"
