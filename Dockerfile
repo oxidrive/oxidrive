@@ -38,7 +38,7 @@ COPY Cargo.* .
 COPY web ./web
 COPY --from=css-build /app/output.css ./web/assets/styles.css
 
-RUN dx build --release --bin oxidrive
+RUN cd web && dx build --release
 
 # ========================================================================= #
 
