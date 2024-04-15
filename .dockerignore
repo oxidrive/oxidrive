@@ -5,6 +5,7 @@
 !server/Justfile
 !server/cmd
 !server/internal
+!server/migrations
 
 !web/Cargo.lock
 !web/Cargo.toml
