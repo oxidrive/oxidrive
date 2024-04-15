@@ -8,3 +8,4 @@ node_modules/
 /playwright/.cache/
 /.direnv/
 /.pre-commit-config.yaml
+/target/
