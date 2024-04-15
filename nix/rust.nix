@@ -18,11 +18,6 @@ in
             file = mkOption {
               type = t.path;
             };
-
-            package = mkOption {
-              type = t.package;
-              description = "Toolchain package containing the correct versions of rustc, cargo, etc...";
-            };
           };
 
           overlay = mkOption {
@@ -32,8 +27,6 @@ in
       };
 
       config = {
-        rust.toolchain.package = rust;
-
         devshells.default = {
           packages = with pkgs; [
             dioxus-cli

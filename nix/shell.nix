@@ -2,7 +2,7 @@
 {
   perSystem = { config, pkgs, ... }:
     let
-      mkJustCmd = command: { help, category ? "CI" }: { inherit help category; name = "just ${command}"; package = pkgs.just; };
+      mkJustCmd = command: { help, category }: { inherit help category; name = "just ${command}"; package = pkgs.just; };
     in
     {
       formatter = pkgs.nixpkgs-fmt;
@@ -32,7 +32,7 @@
           (mkJustCmd "e2e/chromium" { help = "Like just e2e/test, but only runs chromium-based tests"; category = "E2E"; })
 
           { command = "pre-commit run --all-files"; name = "format"; help = "Reformat everything (Go, Rust, TypeScript, Nix...) in one go"; }
-          (mkJustCmd "act" { help = "Run the GitHub Actions workflows locally. Requires a running Docker engine and authenticated gh CLI"; })
+          (mkJustCmd "act" { help = "Run the GitHub Actions workflows locally. Requires a running Docker engine and authenticated gh CLI"; category = "CI"; })
         ];
 
         packages = with pkgs; [
