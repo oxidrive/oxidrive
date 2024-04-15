@@ -57,12 +57,6 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
           workspaces: web
       - uses: davidB/rust-cargo-make@v1
-      - name: Free Disk Space (Ubuntu)
-        uses: jlumbroso/free-disk-space@v1.3.1
-        with: # speed things up a bit
-          large-packages: false
-          docker-images: false
-          swap-storage: false
       - run: cargo test --all --all-features --all-targets
 
   fmt:
@@ -85,7 +79,7 @@ jobs:
       - uses: cargo-bins/cargo-binstall@v1.6.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: cargo binstall -y dioxus-cli@0.5.4
+      - run: cargo binstall -y --force dioxus-cli@0.5.4
       - run: cargo fmt --all -- --check
       - run: dx fmt --check
 
