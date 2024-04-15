@@ -95,6 +95,7 @@
               just
               nodejs_20
               rust
+              gh
 
               # Server
               goPkgs

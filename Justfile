@@ -1,5 +1,12 @@
 default:
-    @just --list --unsorted | grep -v '  default'
+    @echo $'Available commands:\n'
+    @just --list --list-heading $'Global:\n' --unsorted | grep -v '  default'
+    @echo ""
+    @just -f web/Justfile --list --list-heading $'Web:\n'  --unsorted| grep -v '  default'
+    @echo ""
+    @just -f server/Justfile --list --list-heading $'Server:\n'  --unsorted | grep -v '  default'
+    @echo ""
+    @just -f e2e/Justfile --list --list-heading $'E2E Tests:\n'  --unsorted | grep -v '  default'
 
 build:
     @just web/build
@@ -8,3 +15,6 @@ build:
 fmt:
     @just web/fmt
     @just server/fmt
+
+act *args:
+    act -s GITHUB_TOKEN=$(gh auth token) {{ args }}
