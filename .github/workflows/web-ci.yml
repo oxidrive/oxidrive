@@ -80,6 +80,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: cargo binstall -y --force dioxus-cli@0.5.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: cargo fmt --all -- --check
       - run: dx fmt --check
 
