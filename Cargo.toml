@@ -1,0 +1,14 @@
+[workspace]
+resolver = "2"
+
+members = ["web"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+
+authors = [
+    "Matteo Joliveau <oxidrive@matteojoliveau.com>",
+]
+
+[workspace.dependencies]
