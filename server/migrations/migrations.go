@@ -13,14 +13,14 @@ import (
 //go:embed *.sql
 var migrations embed.FS
 
-func Run(pgConfig config.PostgresConfig) error {
+func Run(cfg config.PostgresConfig) error {
+	fmt.Printf("connecting to %s (%+v)\n", cfg.Url(), cfg)
 	source, err := iofs.New(migrations, ".")
 	if err != nil {
 		return err
 	}
 
-	databaseURL := fmt.Sprintf("postgres://%s:%s@localhost:5432/%s?sslmode=disable", pgConfig.PostgersUser, pgConfig.PostgresPassword, pgConfig.PostgresDB)
-	m, err := migrate.NewWithSourceInstance("iofs", source, databaseURL)
+	m, err := migrate.NewWithSourceInstance("iofs", source, cfg.Url())
 	if err != nil {
 		return err
 	}
