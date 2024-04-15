@@ -60,15 +60,3 @@ type UserRepository interface {
 	FindByUsername(username string) (UserRetrieveDTO, error)
 	FindByEmail(email string) (UserRetrieveDTO, error)
 }
-
-type UserService struct {
-	userRepo UserRepository
-}
-
-func (s *UserService) Register(u UserCreateDTO) error {
-	if u.Name == "pippo"{
-		return ErrNameNotValid
-	}
-
-	return nil
-}
