@@ -33,12 +33,5 @@ pub fn Logo(
         (LogoColor::White, false) => "/logo-white.svg",
     };
 
-    rsx! { 
-        img {
-            src: src,
-            height: height,
-            width: width,
-            alt: "Oxidrive"
-        }
-    }
+    rsx! { img { src: src, height: height, width: width, alt: "Oxidrive" } }
 }
