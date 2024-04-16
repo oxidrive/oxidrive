@@ -35,6 +35,33 @@
 			],
 			"repo": "https://github.com/TekWizely/pre-commit-golang",
 			"rev": "master"
+		},
+		{
+			"hooks": [
+				{
+					"id": "fmt"
+				},
+				{
+					"id": "check"
+				},
+				{
+					"id": "clippy"
+				}
+			],
+			"repo": "https://github.com/backplane/pre-commit-rust-hooks",
+			"rev": "v1.1.0"
+		},
+		{
+			"hooks": [
+				{
+					"id": "biome-check",
+					"additional_dependencies": [
+						"@biomejs/biome@1.4.1"
+					]
+				}
+			],
+			"repo": "https://github.com/biomejs/pre-commit",
+			"rev": "main"
 		}
 	]
 }
