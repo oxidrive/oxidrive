@@ -8,10 +8,6 @@
       check.enable = true;
       settings = {
         hooks = {
-          # Go
-
-
-          # Rust
           cargo-check.enable = true;
           clippy.enable = true;
           rustfmt.enable = true;
