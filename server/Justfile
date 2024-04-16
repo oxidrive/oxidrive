@@ -6,6 +6,12 @@ build:
 run *args: fmt
     go run ./cmd/oxidrive {{ args }}
 
+test:
+    gotestsum --format gotestdox
+
+test-integration:
+    INTEGRATION_TEST=1 gotestsum --format gotestdox
+
 watch: fmt
     air
 
