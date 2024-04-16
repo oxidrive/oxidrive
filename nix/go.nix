@@ -1,4 +1,5 @@
-{ lib, ... }:
+{ ... }:
+
 {
   perSystem = { config, pkgs, ... }: {
 
@@ -8,6 +9,8 @@
         go
         gotools
         go-migrate
+        gotestsum
+        (pkgs.callPackage ./pkgs/gotestdox { })
       ];
     };
 
