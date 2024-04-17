@@ -41,6 +41,8 @@ jobs:
         run: go mod download
       - name: Run tests
         run: go test -v ./...
+        env:
+          INTEGRATION_TEST: 'yes'
 
   fmt:
     if: github.event.pull_request.draft == false
