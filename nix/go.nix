@@ -9,7 +9,6 @@
         go
         gotools
         go-migrate
-        gotestsum
         (pkgs.callPackage ./pkgs/gotestdox { })
       ];
     };
