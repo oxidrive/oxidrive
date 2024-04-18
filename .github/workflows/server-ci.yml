@@ -43,6 +43,10 @@ jobs:
         run: go test -v ./...
         env:
           INTEGRATION_TEST: 'yes'
+      - name: Run mutations
+        uses: go-gremlins/gremlins-action@v1
+        with:
+          version: v0.5.0
 
   fmt:
     if: github.event.pull_request.draft == false
