@@ -7,7 +7,12 @@ run *args: fmt
     go run ./cmd/oxidrive {{ args }}
 
 test:
-   gotestdox ./...
+    @if command -v gotestsum &> /dev/null; then \
+      gotestsum --format gotestdox; \
+    fi
+    @if ! command -v gotestsum &> /dev/null; then \
+      gotestdox ./...; \
+    fi
 
 test-integration:
     INTEGRATION_TEST=1 just test
