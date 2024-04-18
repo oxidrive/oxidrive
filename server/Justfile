@@ -7,10 +7,10 @@ run *args: fmt
     go run ./cmd/oxidrive {{ args }}
 
 test:
-    gotestsum --format gotestdox
+   gotestdox ./...
 
 test-integration:
-    INTEGRATION_TEST=1 gotestsum --format gotestdox
+    INTEGRATION_TEST=1 just test
 
 watch: fmt
     air

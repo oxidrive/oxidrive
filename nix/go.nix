@@ -7,8 +7,8 @@
       packages = with pkgs; [
         air
         go
-        gotools
         go-migrate
+        gotools
         (pkgs.callPackage ./pkgs/gotestdox { })
       ];
     };
