@@ -1,17 +1,17 @@
 set dotenv-load
 
-build: fmt
+build:
     go build -o ./bin/oxidrive ./cmd/oxidrive/
 
 run *args: fmt
     go run ./cmd/oxidrive {{ args }}
 
-test:
+test path="./...":
     @if command -v gotestsum &> /dev/null; then \
       gotestsum --format gotestdox; \
     fi
     @if ! command -v gotestsum &> /dev/null; then \
-      gotestdox ./...; \
+      gotestdox {{ path }}; \
     fi
 
     cd .. && gremlins run --test-cpu=2 --workers=2
