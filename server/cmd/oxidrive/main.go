@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,13 +24,9 @@ func main() {
 
 	logger := InitLogger(&cfg)
 
-	if err := migrations.Run(cfg.PostgresConfig); err != nil {
-		if errors.Is(err, migrate.ErrNoChange) {
-			logger.Info().AnErr("outcome", err).Msg("running Postgres migrations")
-		} else {
-			logger.Error().AnErr("error", err).Msg("running Postgres migrations")
-			os.Exit(1)
-		}
+	if err := migrations.Run(cfg.PostgresConfig); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		logger.Error().AnErr("error", err).Msg("running Postgres migrations")
+		os.Exit(1)
 	}
 
 	app := application.New()
@@ -44,9 +39,9 @@ func main() {
 	})
 
 	if errors.Is(err, http.ErrServerClosed) {
-		fmt.Println("server closed")
+		logger.Info().Msg("server closed")
 	} else if err != nil {
-		fmt.Printf("server stopped: %s\n", err)
+		logger.Error().AnErr("error", err).Msg("server stopped")
 		os.Exit(1)
 	}
 }
