@@ -25,6 +25,5 @@ func TestPostgresConfig(t *testing.T) {
 		}
 
 		assert.Equal(t, url, cfg.Url())
-
 	})
 }
