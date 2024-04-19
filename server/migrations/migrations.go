@@ -2,7 +2,6 @@ package migrations
 
 import (
 	"embed"
-	"fmt"
 
 	"github.com/oxidrive/oxidrive/server/internal/config"
 
@@ -14,7 +13,6 @@ import (
 var migrations embed.FS
 
 func Run(cfg config.PostgresConfig) error {
-	fmt.Printf("connecting to %s (%+v)\n", cfg.Url(), cfg)
 	source, err := iofs.New(migrations, ".")
 	if err != nil {
 		return err

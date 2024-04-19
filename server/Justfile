@@ -1,6 +1,6 @@
 set dotenv-load
 
-build:
+build: fmt
     go build -o ./bin/oxidrive ./cmd/oxidrive/
 
 run *args: fmt
