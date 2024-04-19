@@ -11,6 +11,9 @@ watch-app: setup
 watch-styles: setup
     npx tailwindcss -i ./input.css -o ./assets/styles.css --watch
 
+test:
+    cargo nextest run
+
 setup:
     [ -d node_modules ] || npm install
 
