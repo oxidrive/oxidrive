@@ -18,3 +18,8 @@ fmt:
 
 act *args:
     act -s GITHUB_TOKEN=$(gh auth token) {{ args }}
+
+test e2e="test":
+    @just server/test-integration
+    @just web/test
+    @just e2e/rebuild && just e2e/{{ e2e }}

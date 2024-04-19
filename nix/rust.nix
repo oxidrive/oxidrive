@@ -31,6 +31,7 @@ in
           packages = with pkgs; [
             dioxus-cli
             rust
+            cargo-nextest
           ];
         };
 
