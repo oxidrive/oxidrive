@@ -77,3 +77,11 @@ func DecodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}) err
 
 	return nil
 }
+
+func RespondWithJson[T any](w http.ResponseWriter, status int, body T) {
+	w.Header().Add("content-type", "application/json")
+	w.WriteHeader(status)
+	if err := json.NewEncoder(w).Encode(body); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}

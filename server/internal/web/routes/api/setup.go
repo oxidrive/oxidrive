@@ -13,6 +13,10 @@ type setupRequest struct {
 	Admin initialAdminData
 }
 
+type setupResponse struct {
+	Ok bool `json:"ok"`
+}
+
 type initialAdminData struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
@@ -29,7 +33,7 @@ func Setup(logger zerolog.Logger, app *core.Application) http.Handler {
 	return handler.JsonHandler[setupRequest](logger, func(logger zerolog.Logger, w http.ResponseWriter, r *http.Request, req setupRequest) {
 		completed, err := app.Instance().FirstTimeSetupCompleted()
 		if err != nil {
-			handler.RespondWithError(w, http.StatusBadRequest, handler.ErrorResponse{
+			handler.RespondWithJson(w, http.StatusBadRequest, handler.ErrorResponse{
 				Error:   "setup_failed",
 				Message: err.Error(),
 			})
@@ -37,7 +41,7 @@ func Setup(logger zerolog.Logger, app *core.Application) http.Handler {
 		}
 
 		if completed {
-			handler.RespondWithError(w, http.StatusConflict, handler.ErrorResponse{
+			handler.RespondWithJson(w, http.StatusConflict, handler.ErrorResponse{
 				Error:   "setup_already_completed",
 				Message: "first time setup has already been completed",
 			})
@@ -45,11 +49,15 @@ func Setup(logger zerolog.Logger, app *core.Application) http.Handler {
 		}
 
 		if err := app.Instance().CompleteFirstTimeSetup(req.Admin.into()); err != nil {
-			handler.RespondWithError(w, http.StatusBadRequest, handler.ErrorResponse{
+			handler.RespondWithJson(w, http.StatusBadRequest, handler.ErrorResponse{
 				Error:   "setup_failed",
 				Message: err.Error(),
 			})
 			return
 		}
+
+		handler.RespondWithJson(w, http.StatusOK, setupResponse{
+			Ok: true,
+		})
 	})
 }
