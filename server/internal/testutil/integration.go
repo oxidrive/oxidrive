@@ -16,8 +16,10 @@ func isEnvVarTrue(value string) bool {
 	}
 }
 
+type IntegrationDependency func(context.Context, *testing.T) (context.Context, func())
+
 // IntegrationTest skips a test if the INTEGRATION_TEST env variable is not set while running go tests
-func IntegrationTest(ctx context.Context, t *testing.T, integrationDeps ...func(context.Context, *testing.T) func()) func() {
+func IntegrationTest(ctx context.Context, t *testing.T, integrationDeps ...IntegrationDependency) (context.Context, func()) {
 	t.Helper()
 
 	if value, ok := os.LookupEnv("INTEGRATION_TEST"); !ok || !isEnvVarTrue(value) {
@@ -26,10 +28,12 @@ func IntegrationTest(ctx context.Context, t *testing.T, integrationDeps ...func(
 
 	closeFunctions := make([]func(), len(integrationDeps))
 	for i, dependency := range integrationDeps {
-		closeFunctions[i] = dependency(ctx, t)
+		c, close := dependency(ctx, t)
+		ctx = c
+		closeFunctions[i] = close
 	}
 
-	return func() {
+	return ctx, func() {
 		for _, closeFunc := range closeFunctions {
 			closeFunc()
 		}
