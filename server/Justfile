@@ -30,4 +30,6 @@ psql:
     @PGPASSWORD=$POSTGRES_PASSWORD psql -h localhost -U $POSTGRES_USER $POSTGRES_DB
 
 migration-create name:
-    @migrate create -dir ./migrations/ -ext sql {{ name }}
+    @for db in "postgres" "sqlite"; do \
+      migrate create -dir "./migrations/$db" -ext sql {{ name }}; \
+    done

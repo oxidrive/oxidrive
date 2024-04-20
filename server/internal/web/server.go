@@ -3,13 +3,13 @@ package web
 import (
 	"net/http"
 
-	"github.com/oxidrive/oxidrive/server/internal/application"
+	"github.com/oxidrive/oxidrive/server/internal/core"
 	"github.com/rs/zerolog"
 )
 
 type Config struct {
 	Address        string
-	Application    *application.Application
+	Application    *core.Application
 	Logger         zerolog.Logger
 	FrontendFolder string
 }

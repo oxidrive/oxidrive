@@ -32,3 +32,7 @@ func ValidateAndHash(password string) (Hash, error) {
 func (h Hash) Verify(password string) (bool, error) {
 	return argon2.VerifyEncoded([]byte(password), h)
 }
+
+func (h Hash) Expose() string {
+	return string(h)
+}
