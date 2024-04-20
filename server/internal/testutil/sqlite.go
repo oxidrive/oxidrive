@@ -41,14 +41,14 @@ func WithSqliteDB(cfg SqliteDBConfig) IntegrationDependency {
 type sqliteKey struct{}
 
 // / SqliteUrlFromContext returns the database URL for the teemporary SQLite database
-func SqliteUrlFromContext(ctx context.Context) string {
+func SqliteUrlFromContext(ctx context.Context, t *testing.T) string {
 	dir, ok := ctx.Value(sqliteKey{}).(string)
 	if !ok {
-		panic("failed to cast SQLite database URL from context to string")
+		t.Fatal("failed to cast SQLite database URL from context to string")
 	}
 
 	if dir == "" {
-		panic("SQLite database URL not found in context")
+		t.Fatal("SQLite database URL not found in context")
 	}
 
 	return dir

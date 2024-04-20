@@ -28,14 +28,14 @@ func WithTempDir() IntegrationDependency {
 type dirKey struct{}
 
 // / TempDirFromContext returns the path to the generated tempdir
-func TempDirFromContext(ctx context.Context) string {
+func TempDirFromContext(ctx context.Context, t *testing.T) string {
 	dir, ok := ctx.Value(dirKey{}).(string)
 	if !ok {
-		panic("failed to cast tempdir from context to string")
+		t.Fatal("failed to cast tempdir from context to string")
 	}
 
 	if dir == "" {
-		panic("tempdir not found in context")
+		t.Fatal("tempdir not found in context")
 	}
 
 	return dir
