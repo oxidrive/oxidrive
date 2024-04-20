@@ -3,9 +3,14 @@ package testutil
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"os"
 	"path"
 	"testing"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/oxidrive/oxidrive/server/internal/config"
+	"github.com/oxidrive/oxidrive/server/migrations"
 )
 
 type SqliteDBConfig struct {
@@ -52,4 +57,25 @@ func SqliteUrlFromContext(ctx context.Context, t *testing.T) string {
 	}
 
 	return dir
+}
+
+func SqliteDBFromContext(ctx context.Context, t *testing.T) *sqlx.DB {
+	u := SqliteUrlFromContext(ctx, t)
+	url, err := url.Parse(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cfg := config.DatabaseConfig{Url: url}
+
+	if err := migrations.Run(cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	db, err := sqlx.Connect(cfg.DatabaseDriver(), cfg.DatabaseSource())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	return db
 }
