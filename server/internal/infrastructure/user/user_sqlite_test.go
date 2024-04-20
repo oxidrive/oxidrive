@@ -12,6 +12,8 @@ import (
 
 func TestSqliteUsers_Count(t *testing.T) {
 	t.Run("returns the number of users", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
 		defer done()
 
@@ -31,6 +33,8 @@ func TestSqliteUsers_Count(t *testing.T) {
 
 func TestSqliteUsers_Save(t *testing.T) {
 	t.Run("creates a new user", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
 		defer done()
 
@@ -46,6 +50,8 @@ func TestSqliteUsers_Save(t *testing.T) {
 	})
 
 	t.Run("updates an existing user", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
 		defer done()
 

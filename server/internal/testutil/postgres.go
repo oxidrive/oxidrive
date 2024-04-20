@@ -2,20 +2,22 @@ package testutil
 
 import (
 	"context"
-	"fmt"
+	"errors"
+	"log"
 	"net/url"
 	"testing"
+	"time"
 
+	"github.com/golang-migrate/migrate/v4"
 	"github.com/jmoiron/sqlx"
 	"github.com/oxidrive/oxidrive/server/internal/config"
 	"github.com/oxidrive/oxidrive/server/migrations"
 	"github.com/testcontainers/testcontainers-go"
+	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
-)
 
-type PgDBConfig struct {
-	DbParams string
-}
+	_ "github.com/jackc/pgx/stdlib"
+)
 
 const (
 	pgUser     = "oxidrive"
@@ -24,36 +26,27 @@ const (
 )
 
 // / WithPgDB creates a temporary Postgres database
-func WithPgDB(cfg PgDBConfig) IntegrationDependency {
+func WithPgDB() IntegrationDependency {
 	return IntegrationDependency(func(ctx context.Context, t *testing.T) (context.Context, func()) {
 		t.Helper()
 
-		req := testcontainers.ContainerRequest{
-			Image: "public.ecr.aws/docker/library/postgres:15-alpine",
-			Env: map[string]string{
-				"POSTGRES_USER":     pgUser,
-				"POSTGRES_PASSWORD": pgPassword,
-				"POSTGRES_DB":       pgName,
-			},
-			ExposedPorts: []string{"5432/tcp"},
-			WaitingFor:   wait.ForLog("database system is ready to accept connections"),
-		}
-		pg, err := testcontainers.GenericContainer(ctx, testcontainers.GenericContainerRequest{ContainerRequest: req, Started: true})
+		pg, err := postgres.RunContainer(ctx,
+			testcontainers.WithImage("public.ecr.aws/docker/library/postgres:16-alpine"),
+			postgres.WithDatabase(pgName),
+			postgres.WithUsername(pgUser),
+			postgres.WithPassword(pgPassword),
+			testcontainers.WithLogger(testcontainers.TestLogger(t)),
+			testcontainers.WithWaitStrategy(
+				wait.ForLog(".*database system is ready to accept connections").
+					AsRegexp().
+					WithOccurrence(2).
+					WithStartupTimeout(60*time.Second)),
+		)
 		if err != nil {
-			t.Fatal(err)
+			log.Fatal(err)
 		}
 
-		host, err := pg.Host(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		port, err := pg.MappedPort(ctx, "5432")
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		url := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable&%s", pgUser, pgPassword, host, port, pgName, cfg.DbParams)
+		url := pg.MustConnectionString(ctx, "sslmode=disable")
 		ctx = context.WithValue(ctx, pgKey{}, url)
 		return ctx, func() {
 			if err := pg.Terminate(ctx); err != nil {
@@ -67,16 +60,16 @@ type pgKey struct{}
 
 // / PgUrlFromContext returns the database URL for the teemporary SQLite database
 func PgUrlFromContext(ctx context.Context, t *testing.T) string {
-	dir, ok := ctx.Value(pgKey{}).(string)
+	url, ok := ctx.Value(pgKey{}).(string)
 	if !ok {
 		t.Fatal("failed to cast Postgres database URL from context to string")
 	}
 
-	if dir == "" {
+	if url == "" {
 		t.Fatal("Postgres database URL not found in context")
 	}
 
-	return dir
+	return url
 }
 
 func PgDBFromContext(ctx context.Context, t *testing.T) *sqlx.DB {
@@ -88,7 +81,7 @@ func PgDBFromContext(ctx context.Context, t *testing.T) *sqlx.DB {
 
 	cfg := config.DatabaseConfig{Url: url}
 
-	if err := migrations.Run(cfg); err != nil {
+	if err := migrations.Run(cfg); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		t.Fatal(err)
 	}
 
