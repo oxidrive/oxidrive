@@ -18,7 +18,7 @@ func JsonHandler[T any](logger zerolog.Logger, h func(logger zerolog.Logger, w h
 				http.Error(w, mr.Msg, mr.Status)
 			} else {
 				logger.Error().AnErr("error", err).Msg("failed to decode setup request body from JSON")
-				RespondWithError(w, http.StatusInternalServerError, ErrUnknown(err))
+				RespondWithJson(w, http.StatusInternalServerError, ErrUnknown(err))
 			}
 			return
 		}
