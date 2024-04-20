@@ -14,7 +14,7 @@ test path="./...":
       gotestdox {{ path }}; \
     fi
 
-    cd .. && gremlins run --test-cpu=2 --workers=2
+    cd .. && gremlins run ./server/internal --test-cpu=2 --workers=2
 
 test-integration:
     INTEGRATION_TEST=1 just test

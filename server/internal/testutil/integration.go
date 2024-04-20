@@ -39,3 +39,11 @@ func IntegrationTest(ctx context.Context, t *testing.T, integrationDeps ...Integ
 		}
 	}
 }
+
+func Must[T any](object T, err error) T {
+	if err != nil {
+		panic(err)
+	}
+
+	return object
+}
