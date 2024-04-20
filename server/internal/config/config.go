@@ -24,7 +24,7 @@ type Config struct {
 
 	AssetsFolder string `env:"OXIDRIVE_ASSETS_FOLDER" default:"./assets"`
 
-	PostgresConfig
+	DatabaseConfig
 }
 
 func Parse() Config {

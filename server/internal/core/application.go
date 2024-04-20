@@ -10,12 +10,12 @@ type Application struct {
 }
 
 type ApplicationDependencies struct {
-	users user.Users
+	Users user.Users
 }
 
 func NewApplication(deps ApplicationDependencies) *Application {
 	return &Application{
-		instance: instance.NewService(deps.users),
+		instance: instance.NewService(deps.Users),
 	}
 }
 

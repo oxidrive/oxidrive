@@ -7,14 +7,18 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/oxidrive/oxidrive/server/internal/application"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/jmoiron/sqlx"
 	"github.com/oxidrive/oxidrive/server/internal/config"
+	"github.com/oxidrive/oxidrive/server/internal/core"
+	"github.com/oxidrive/oxidrive/server/internal/core/user"
+	userinfra "github.com/oxidrive/oxidrive/server/internal/infrastructure/user"
 	"github.com/oxidrive/oxidrive/server/internal/web"
 	"github.com/oxidrive/oxidrive/server/migrations"
+	"github.com/rs/zerolog"
 
-	"github.com/golang-migrate/migrate/v4"
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/jackc/pgx/stdlib"
+	_ "modernc.org/sqlite"
 )
 
 func main() {
@@ -24,14 +28,18 @@ func main() {
 
 	logger := InitLogger(&cfg)
 
-	if err := migrations.Run(cfg.PostgresConfig); err != nil && !errors.Is(err, migrate.ErrNoChange) {
-		logger.Error().AnErr("error", err).Msg("running Postgres migrations")
-		os.Exit(1)
+	if err := migrations.Run(cfg.DatabaseConfig); err != nil && !errors.Is(err, migrate.ErrNoChange) {
+		die(logger, err, "failed to run database migrations")
 	}
 
-	app := application.New()
+	db, err := sqlx.Connect(cfg.DatabaseDriver(), cfg.DatabaseSource())
+	if err != nil {
+		die(logger, err, "failed to open database connection")
+	}
 
-	err := web.Run(web.Config{
+	app := core.NewApplication(deps(db))
+
+	err = web.Run(web.Config{
 		Address:        cfg.ListenAddress(),
 		Application:    app,
 		Logger:         logger,
@@ -41,8 +49,7 @@ func main() {
 	if errors.Is(err, http.ErrServerClosed) {
 		logger.Info().Msg("server closed")
 	} else if err != nil {
-		logger.Error().AnErr("error", err).Msg("server stopped")
-		os.Exit(1)
+		die(logger, err, "server stopped")
 	}
 }
 
@@ -53,4 +60,23 @@ func trapSigterm() {
 		<-c
 		os.Exit(0)
 	}()
+}
+
+func die(logger zerolog.Logger, err error, msg string) {
+	logger.Error().AnErr("error", err).Msg(msg)
+	os.Exit(1)
+}
+
+func deps(db *sqlx.DB) core.ApplicationDependencies {
+	var users user.Users
+	switch db.DriverName() {
+	case config.DriverPG:
+		users = userinfra.NewPgUsers(db)
+	case config.DriverSqlite:
+		users = userinfra.NewSqliteUsers(db)
+	}
+
+	return core.ApplicationDependencies{
+		Users: users,
+	}
 }

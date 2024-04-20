@@ -8,6 +8,10 @@ import (
 
 type UserId (uuid.UUID)
 
+func (i UserId) String() string {
+	return uuid.UUID(i).String()
+}
+
 type User struct {
 	Id           UserId
 	Username     string
@@ -32,6 +36,7 @@ func (u User) VerifyPassword(password string) (bool, error) {
 }
 
 type Users interface {
+	Count() (int, error)
 	Save(user User) (User, error)
 }
 
@@ -41,14 +46,25 @@ type UsersSpy struct {
 	users map[UserId]User
 }
 
-func NewUsersSpy() *UsersSpy {
+func NewUsersSpy(existing ...User) *UsersSpy {
+	users := make(map[UserId]User)
+	for _, u := range existing {
+		users[u.Id] = u
+	}
+
 	return &UsersSpy{
-		users: make(map[UserId]User),
+		users: users,
 	}
 }
 
 func (s *UsersSpy) Users() []User {
 	return maps.Values(s.users)
+}
+
+// impl users.Users
+
+func (s *UsersSpy) Count() (int, error) {
+	return len(s.users), nil
 }
 
 func (s *UsersSpy) Save(user User) (User, error) {
