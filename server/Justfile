@@ -8,7 +8,7 @@ run *args: fmt
 
 test path="./...":
     @if command -v gotestsum &> /dev/null; then \
-      gotestsum --format gotestdox; \
+      gotestsum --format gotestdox {{ path }}; \
     fi
     @if ! command -v gotestsum &> /dev/null; then \
       gotestdox {{ path }}; \
