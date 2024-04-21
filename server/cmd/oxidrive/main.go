@@ -38,7 +38,7 @@ func main() {
 		die(logger, err, "failed to open database connection")
 	}
 
-	app := core.NewApplication(deps(db))
+	app := core.NewApplication(cfg, deps(db))
 
 	err = web.Run(web.Config{
 		Address:        cfg.ListenAddress(),

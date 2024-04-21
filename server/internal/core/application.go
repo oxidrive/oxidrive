@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/oxidrive/oxidrive/server/internal/config"
 	"github.com/oxidrive/oxidrive/server/internal/core/instance"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
@@ -13,9 +14,13 @@ type ApplicationDependencies struct {
 	Users user.Users
 }
 
-func NewApplication(deps ApplicationDependencies) *Application {
+func NewApplication(cfg config.Config, deps ApplicationDependencies) *Application {
 	return &Application{
-		instance: instance.NewService(deps.Users),
+		instance: instance.NewService(instance.Info{
+			PublicURL:   cfg.PublicURL,
+			Database:    instance.StatusDB(cfg.DatabaseName()),
+			FileStorage: instance.StatusFileStorageFS, // TODO: add real file store
+		}, deps.Users),
 	}
 }
 

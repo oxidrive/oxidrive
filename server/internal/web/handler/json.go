@@ -7,6 +7,13 @@ import (
 	"github.com/rs/zerolog"
 )
 
+func Handler(logger zerolog.Logger, h func(logger zerolog.Logger, w http.ResponseWriter, r *http.Request)) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		l := requestLogger(logger, r)
+		h(l, w, r)
+	})
+}
+
 func JsonHandler[T any](logger zerolog.Logger, h func(logger zerolog.Logger, w http.ResponseWriter, r *http.Request, body T)) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body T
@@ -23,8 +30,12 @@ func JsonHandler[T any](logger zerolog.Logger, h func(logger zerolog.Logger, w h
 			return
 		}
 
-		l := logger.With().Logger()
+		l := requestLogger(logger, r)
 
 		h(l, w, r, body)
 	})
+}
+
+func requestLogger(logger zerolog.Logger, r *http.Request) zerolog.Logger {
+	return logger.With().Logger()
 }
