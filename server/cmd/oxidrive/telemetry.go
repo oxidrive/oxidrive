@@ -5,8 +5,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/oxidrive/oxidrive/server/internal/config"
 	"github.com/rs/zerolog"
+
+	"github.com/oxidrive/oxidrive/server/internal/config"
 )
 
 func InitLogger(cfg *config.Config) zerolog.Logger {

@@ -23,7 +23,7 @@ watch: fmt
     air
 
 fmt:
-    goimports -w .
+    goimports -local github.com/oxidrive/oxidrive -w .
     go fmt ./...
 
 psql:

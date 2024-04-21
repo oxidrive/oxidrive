@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/oxidrive/oxidrive/server/internal/core/user"
-	"github.com/oxidrive/oxidrive/server/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/oxidrive/oxidrive/server/internal/core/user"
+	"github.com/oxidrive/oxidrive/server/internal/testutil"
 )
 
 func TestInstanceService(t *testing.T) {

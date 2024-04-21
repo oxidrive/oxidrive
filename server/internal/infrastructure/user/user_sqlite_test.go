@@ -4,10 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"github.com/oxidrive/oxidrive/server/internal/core/user"
-	"github.com/oxidrive/oxidrive/server/internal/testutil"
 	"github.com/stretchr/testify/assert"
 	_ "modernc.org/sqlite"
+
+	"github.com/oxidrive/oxidrive/server/internal/core/user"
+	"github.com/oxidrive/oxidrive/server/internal/testutil"
 )
 
 func TestSqliteUsers_Count(t *testing.T) {

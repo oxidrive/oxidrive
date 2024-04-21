@@ -3,10 +3,11 @@ package api
 import (
 	"net/http"
 
+	"github.com/rs/zerolog"
+
 	"github.com/oxidrive/oxidrive/server/internal/core"
 	"github.com/oxidrive/oxidrive/server/internal/core/instance"
 	"github.com/oxidrive/oxidrive/server/internal/web/handler"
-	"github.com/rs/zerolog"
 )
 
 type setupRequest struct {

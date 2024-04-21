@@ -9,13 +9,14 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog"
+
 	"github.com/oxidrive/oxidrive/server/internal/config"
 	"github.com/oxidrive/oxidrive/server/internal/core"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 	userinfra "github.com/oxidrive/oxidrive/server/internal/infrastructure/user"
 	"github.com/oxidrive/oxidrive/server/internal/web"
 	"github.com/oxidrive/oxidrive/server/migrations"
-	"github.com/rs/zerolog"
 
 	_ "github.com/jackc/pgx/stdlib"
 	_ "modernc.org/sqlite"

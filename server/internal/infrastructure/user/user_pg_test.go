@@ -4,9 +4,10 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 	"github.com/oxidrive/oxidrive/server/internal/testutil"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestPgUsers_Count(t *testing.T) {
