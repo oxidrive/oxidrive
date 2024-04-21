@@ -60,6 +60,27 @@
 			],
 			"repo": "https://github.com/biomejs/pre-commit",
 			"rev": "main"
+		},
+		{
+			"hooks": [
+				{
+					"always_run": false,
+					"entry": "dotenv-linter fix --no-backup --recursive",
+					"exclude": "^$",
+					"fail_fast": false,
+					"files": "^.env",
+					"id": "dotenv-linter",
+					"language": "system",
+					"name": "dotenv-linter",
+					"pass_filenames": false,
+					"require_serial": true,
+					"stages": ["pre-commit"],
+					"types": ["file"],
+					"types_or": [],
+					"verbose": false
+				}
+			],
+			"repo": "local"
 		}
 	]
 }
