@@ -10,11 +10,12 @@ import (
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/jmoiron/sqlx"
-	"github.com/oxidrive/oxidrive/server/internal/config"
-	"github.com/oxidrive/oxidrive/server/migrations"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
+
+	"github.com/oxidrive/oxidrive/server/internal/config"
+	"github.com/oxidrive/oxidrive/server/migrations"
 
 	_ "github.com/jackc/pgx/stdlib"
 )

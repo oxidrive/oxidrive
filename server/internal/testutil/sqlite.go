@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/jmoiron/sqlx"
+
 	"github.com/oxidrive/oxidrive/server/internal/config"
 	"github.com/oxidrive/oxidrive/server/migrations"
 )

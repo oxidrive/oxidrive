@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/jmoiron/sqlx"
+
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
 

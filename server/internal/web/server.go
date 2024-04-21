@@ -3,8 +3,9 @@ package web
 import (
 	"net/http"
 
-	"github.com/oxidrive/oxidrive/server/internal/core"
 	"github.com/rs/zerolog"
+
+	"github.com/oxidrive/oxidrive/server/internal/core"
 )
 
 type Config struct {
