@@ -1,0 +1,33 @@
+name: Dotenv Linter
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/**
+      - '**/.env*'
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+    paths:
+      - .github/workflows/**
+      - '**/.env*'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  dotenv-linter:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run dotenv-linter
+        uses: dotenv-linter/action-dotenv-linter@v2

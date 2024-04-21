@@ -38,6 +38,7 @@
 
         packages = with pkgs; [
           act
+          dotenv-linter
           gh
         ];
 
@@ -48,6 +49,23 @@
         check.enable = false;
         settings.hooks = {
           nixpkgs-fmt.enable = true;
+
+          dotenv-linter = {
+            enable = true;
+            name = "dotenv-linter";
+            description = "Lint .env files";
+            files = "^.env";
+            entry =
+              let
+                script = pkgs.writeShellScript "precommit-dotenv-linter" ''
+                  set -e
+                  ${pkgs.dotenv-linter}/bin/dotenv-linter fix --no-backup --recursive
+                '';
+              in
+              builtins.toString script;
+            require_serial = true;
+            pass_filenames = false;
+          };
         };
       };
     };
