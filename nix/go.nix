@@ -51,7 +51,7 @@
                 failed=false
                 for file in "$@"; do
                     # redirect stderr so that violations and summaries are properly interleaved.
-                    if ! ${pkgs.gotools}/bin/goimports -l -d "$file" 2>&1
+                    if ! ${pkgs.gotools}/bin/goimports -local github.com/oxidrive/oxidrive -l -d "$file" 2>&1
                     then
                         failed=true
                     fi
