@@ -40,6 +40,9 @@ func IntegrationTest(ctx context.Context, t *testing.T, integrationDeps ...Integ
 	}
 }
 
+// / Must takes an object `T` and an `error`, usually the result of calling another method.
+// / It and returns `T` if the error is `nil`, otherwise it panics with `err`.
+// / This is useful to quickly unwrap fallible operations in tests without cluttering the code with lots of `if err != nil`
 func Must[T any](object T, err error) T {
 	if err != nil {
 		panic(err)
