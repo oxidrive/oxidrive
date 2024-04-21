@@ -1,6 +1,8 @@
 package user
 
 import (
+	"context"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
@@ -13,14 +15,14 @@ func NewSqliteUsers(db *sqlx.DB) *SqliteUsers {
 	return &SqliteUsers{db: db}
 }
 
-func (p *SqliteUsers) Count() (int, error) {
+func (p *SqliteUsers) Count(ctx context.Context) (int, error) {
 	var count int
-	err := p.db.Get(&count, "select count(id) from users")
+	err := p.db.GetContext(ctx, &count, "select count(id) from users")
 	return count, err
 }
 
-func (p *SqliteUsers) Save(u user.User) (user.User, error) {
-	_, err := p.db.Exec(`insert into users (
+func (p *SqliteUsers) Save(ctx context.Context, u user.User) (user.User, error) {
+	_, err := p.db.ExecContext(ctx, `insert into users (
         id,
         username,
         password_hash

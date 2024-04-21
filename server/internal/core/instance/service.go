@@ -1,6 +1,7 @@
 package instance
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -19,8 +20,8 @@ func NewService(users user.Users) Service {
 	return Service{users: users}
 }
 
-func (s *Service) FirstTimeSetupCompleted() (bool, error) {
-	count, err := s.users.Count()
+func (s *Service) FirstTimeSetupCompleted(ctx context.Context) (bool, error) {
+	count, err := s.users.Count(ctx)
 	if err != nil {
 		return false, fmt.Errorf("failed to count existing users: %w", err)
 	}
@@ -28,8 +29,8 @@ func (s *Service) FirstTimeSetupCompleted() (bool, error) {
 	return count > 0, nil
 }
 
-func (s *Service) CompleteFirstTimeSetup(admin InitialAdmin) error {
-	completed, err := s.FirstTimeSetupCompleted()
+func (s *Service) CompleteFirstTimeSetup(ctx context.Context, admin InitialAdmin) error {
+	completed, err := s.FirstTimeSetupCompleted(ctx)
 	if err != nil {
 		return err
 	}
@@ -43,7 +44,7 @@ func (s *Service) CompleteFirstTimeSetup(admin InitialAdmin) error {
 		return fmt.Errorf("failed to create initial admin: %w", err)
 	}
 
-	_, err = s.users.Save(u)
+	_, err = s.users.Save(ctx, u)
 	if err != nil {
 		return fmt.Errorf("failed to save initial admin: %w", err)
 	}
