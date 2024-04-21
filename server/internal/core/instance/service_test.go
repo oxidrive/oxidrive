@@ -5,7 +5,10 @@ import (
 	"testing"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
+	"github.com/oxidrive/oxidrive/server/internal/testutil"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 func TestInstanceService(t *testing.T) {
@@ -14,26 +17,24 @@ func TestInstanceService(t *testing.T) {
 
 		ctx := context.Background()
 
-		users := user.NewUsersSpy()
-		svc := NewService(users)
-
 		initial := InitialAdmin{
 			Username: "test",
 			Password: "testpassword",
 		}
 
+		created := testutil.Must(user.Create(initial.Username, initial.Password))
+		users := user.NewUsersMock(t)
+		users.On("Count", ctx).Return(0, nil).Twice()
+		users.On("Save", ctx, mock.MatchedBy(func(u user.User) bool { return u.Username == created.Username })).Return(created, nil).Once()
+
+		svc := NewService(users)
+
 		completed, err := svc.FirstTimeSetupCompleted(ctx)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.False(t, completed)
 
 		err = svc.CompleteFirstTimeSetup(ctx, initial)
-		created := users.Users()[0]
-		assert.NoError(t, err)
-		assert.Equal(t, initial.Username, created.Username)
-
-		valid, err := created.VerifyPassword(initial.Password)
-		assert.NoError(t, err)
-		assert.True(t, valid)
+		require.NoError(t, err)
 	})
 
 	t.Run("stops the first time setup flow if a user has already been created", func(t *testing.T) {
@@ -41,10 +42,9 @@ func TestInstanceService(t *testing.T) {
 
 		ctx := context.Background()
 
-		existing, err := user.Create("test", "test")
-		assert.NoError(t, err)
+		users := user.NewUsersMock(t)
+		users.On("Count", ctx).Return(1, nil).Twice()
 
-		users := user.NewUsersSpy(existing)
 		svc := NewService(users)
 
 		initial := InitialAdmin{
@@ -58,6 +58,5 @@ func TestInstanceService(t *testing.T) {
 
 		err = svc.CompleteFirstTimeSetup(ctx, initial)
 		assert.ErrorIs(t, err, ErrSetupAlreadyCompleted)
-		assert.Len(t, users.Users(), 1)
 	})
 }
