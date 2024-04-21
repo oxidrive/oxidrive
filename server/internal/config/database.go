@@ -12,7 +12,7 @@ const (
 )
 
 type DatabaseConfig struct {
-	Url *url.URL `group:"database" xor:"host,port,user,pwd,db,args" env:"DATABASE_URL" help:"Database connection string. E.g.: postgres://oxidrive:oxidrive@localhost:5432/oxidrive?sslmode=disable or sqlite:///path/to/oxidrive.db"`
+	Url *url.URL `name:"database-url" group:"database" xor:"host,port,user,pwd,db,args" env:"DATABASE_URL" help:"Database connection string. E.g.: postgres://oxidrive:oxidrive@localhost:5432/oxidrive?sslmode=disable or sqlite:///path/to/oxidrive.db"`
 
 	PostgresHost     string `group:"postgresql" xor:"host" required:"" env:"POSTGRES_HOST"`
 	PostgresPort     string `group:"postgresql" xor:"port" required:"" env:"POSTGRES_PORT"`

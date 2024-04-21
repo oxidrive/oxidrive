@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"path/filepath"
 
 	"github.com/alecthomas/kong"
@@ -16,6 +17,8 @@ const (
 )
 
 type Config struct {
+	PublicURL *url.URL `env:"PUBLIC_URL" required:"" help:"The public URL where the Oxidrive UI and API are exposed"`
+
 	LogLevel  zerolog.Level `env:"LOG_LEVEL" default:"info"`
 	LogFormat LogFormat     `env:"LOG_FORMAT" default:"json"`
 

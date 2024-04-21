@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
@@ -12,12 +13,22 @@ var (
 	ErrSetupAlreadyCompleted = errors.New("first time setup has been already performed")
 )
 
+type Info struct {
+	PublicURL   *url.URL
+	Database    StatusDB
+	FileStorage StatusFileStorage
+}
+
 type Service struct {
+	info  Info
 	users user.Users
 }
 
-func NewService(users user.Users) Service {
-	return Service{users: users}
+func NewService(info Info, users user.Users) Service {
+	return Service{
+		info:  info,
+		users: users,
+	}
 }
 
 func (s *Service) FirstTimeSetupCompleted(ctx context.Context) (bool, error) {
@@ -55,4 +66,34 @@ func (s *Service) CompleteFirstTimeSetup(ctx context.Context, admin InitialAdmin
 type InitialAdmin struct {
 	Username string
 	Password string
+}
+
+func (s *Service) Status(ctx context.Context) (Status, error) {
+	completed, err := s.FirstTimeSetupCompleted(ctx)
+	if err != nil {
+		return Status{}, err
+	}
+
+	return Status{
+		Info:                    s.info,
+		FirstTimeSetupCompleted: completed,
+	}, nil
+}
+
+type StatusDB string
+type StatusFileStorage string
+
+const (
+	StatusDBPostgres StatusDB = "postgres"
+	StatusDBSqlite   StatusDB = "sqlite"
+)
+
+const (
+	StatusFileStorageFS StatusFileStorage = "filesystem"
+	StatusFileStorageS3 StatusFileStorage = "s3"
+)
+
+type Status struct {
+	Info
+	FirstTimeSetupCompleted bool
 }

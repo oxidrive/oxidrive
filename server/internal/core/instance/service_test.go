@@ -2,18 +2,25 @@ package instance
 
 import (
 	"context"
+	"net/url"
 	"testing"
+
+	"github.com/oxidrive/oxidrive/server/internal/core/user"
+	"github.com/oxidrive/oxidrive/server/internal/testutil"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-
-	"github.com/oxidrive/oxidrive/server/internal/core/user"
-	"github.com/oxidrive/oxidrive/server/internal/testutil"
 )
 
-func TestInstanceService(t *testing.T) {
-	t.Run("completes the first time setup", func(t *testing.T) {
+var info = Info{
+	PublicURL:   testutil.Must(url.Parse("https://example.org")),
+	Database:    StatusDBSqlite,
+	FileStorage: StatusFileStorageFS,
+}
+
+func TestInstanceService_FirstTimeSetup(t *testing.T) {
+	t.Run("can be completed if it wasn't before", func(t *testing.T) {
 		t.Parallel()
 
 		ctx := context.Background()
@@ -28,7 +35,7 @@ func TestInstanceService(t *testing.T) {
 		users.On("Count", ctx).Return(0, nil).Twice()
 		users.On("Save", ctx, mock.MatchedBy(func(u user.User) bool { return u.Username == created.Username })).Return(created, nil).Once()
 
-		svc := NewService(users)
+		svc := NewService(info, users)
 
 		completed, err := svc.FirstTimeSetupCompleted(ctx)
 		require.NoError(t, err)
@@ -38,7 +45,7 @@ func TestInstanceService(t *testing.T) {
 		require.NoError(t, err)
 	})
 
-	t.Run("stops the first time setup flow if a user has already been created", func(t *testing.T) {
+	t.Run("stops if a user has already been created", func(t *testing.T) {
 		t.Parallel()
 
 		ctx := context.Background()
@@ -46,7 +53,7 @@ func TestInstanceService(t *testing.T) {
 		users := user.NewUsersMock(t)
 		users.On("Count", ctx).Return(1, nil).Twice()
 
-		svc := NewService(users)
+		svc := NewService(info, users)
 
 		initial := InitialAdmin{
 			Username: "test",
@@ -54,10 +61,32 @@ func TestInstanceService(t *testing.T) {
 		}
 
 		completed, err := svc.FirstTimeSetupCompleted(ctx)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.True(t, completed)
 
 		err = svc.CompleteFirstTimeSetup(ctx, initial)
 		assert.ErrorIs(t, err, ErrSetupAlreadyCompleted)
+	})
+}
+
+func TestInstanceService_Status(t *testing.T) {
+	t.Run("returns the current status of the instance", func(t *testing.T) {
+		t.Parallel()
+
+		ctx := context.Background()
+
+		expected := Status{
+			Info:                    info,
+			FirstTimeSetupCompleted: true,
+		}
+
+		users := user.NewUsersMock(t)
+		users.On("Count", ctx).Return(1, nil).Twice()
+
+		svc := NewService(info, users)
+
+		status, err := svc.Status(ctx)
+		require.NoError(t, err)
+		assert.Equal(t, expected, status)
 	})
 }
