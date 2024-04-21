@@ -31,7 +31,9 @@ func (d initialAdminData) into() instance.InitialAdmin {
 
 func Setup(logger zerolog.Logger, app *core.Application) http.Handler {
 	return handler.JsonHandler[setupRequest](logger, func(logger zerolog.Logger, w http.ResponseWriter, r *http.Request, req setupRequest) {
-		completed, err := app.Instance().FirstTimeSetupCompleted()
+		ctx := r.Context()
+
+		completed, err := app.Instance().FirstTimeSetupCompleted(ctx)
 		if err != nil {
 			handler.RespondWithJson(w, http.StatusBadRequest, handler.ErrorResponse{
 				Error:   "setup_failed",
@@ -48,7 +50,7 @@ func Setup(logger zerolog.Logger, app *core.Application) http.Handler {
 			return
 		}
 
-		if err := app.Instance().CompleteFirstTimeSetup(req.Admin.into()); err != nil {
+		if err := app.Instance().CompleteFirstTimeSetup(ctx, req.Admin.into()); err != nil {
 			handler.RespondWithJson(w, http.StatusBadRequest, handler.ErrorResponse{
 				Error:   "setup_failed",
 				Message: err.Error(),

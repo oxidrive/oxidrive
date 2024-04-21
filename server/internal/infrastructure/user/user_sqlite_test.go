@@ -21,10 +21,10 @@ func TestSqliteUsers_Count(t *testing.T) {
 
 		users := NewSqliteUsers(db)
 
-		testutil.Must(users.Save(testutil.Must(user.Create("a", "a"))))
-		testutil.Must(users.Save(testutil.Must(user.Create("b", "b"))))
+		testutil.Must(users.Save(ctx, testutil.Must(user.Create("a", "a"))))
+		testutil.Must(users.Save(ctx, testutil.Must(user.Create("b", "b"))))
 
-		count, err := users.Count()
+		count, err := users.Count(ctx)
 
 		assert.NoError(t, err)
 		assert.Equal(t, 2, count)
@@ -44,7 +44,7 @@ func TestSqliteUsers_Save(t *testing.T) {
 
 		users := NewSqliteUsers(db)
 
-		created, err := users.Save(testutil.Must(user.Create(username, "a")))
+		created, err := users.Save(ctx, testutil.Must(user.Create(username, "a")))
 		assert.NoError(t, err)
 		assert.Equal(t, username, created.Username)
 	})
@@ -61,14 +61,14 @@ func TestSqliteUsers_Save(t *testing.T) {
 
 		users := NewSqliteUsers(db)
 
-		created, err := users.Save(testutil.Must(user.Create(username, "a")))
+		created, err := users.Save(ctx, testutil.Must(user.Create(username, "a")))
 		assert.NoError(t, err)
 		assert.Equal(t, username, created.Username)
 
 		changedUsername := "changed"
 		created.Username = changedUsername
 
-		updated, err := users.Save(created)
+		updated, err := users.Save(ctx, created)
 		assert.NoError(t, err)
 		assert.Equal(t, created.Id, updated.Id)
 		assert.Equal(t, changedUsername, updated.Username)

@@ -1,6 +1,8 @@
 package user
 
 import (
+	"context"
+
 	"github.com/google/uuid"
 	"github.com/oxidrive/oxidrive/server/internal/core/password"
 	"golang.org/x/exp/maps"
@@ -36,8 +38,8 @@ func (u User) VerifyPassword(password string) (bool, error) {
 }
 
 type Users interface {
-	Count() (int, error)
-	Save(user User) (User, error)
+	Count(context.Context) (int, error)
+	Save(context.Context, User) (User, error)
 }
 
 // For testing only
@@ -63,11 +65,11 @@ func (s *UsersSpy) Users() []User {
 
 // impl users.Users
 
-func (s *UsersSpy) Count() (int, error) {
+func (s *UsersSpy) Count(_ context.Context) (int, error) {
 	return len(s.users), nil
 }
 
-func (s *UsersSpy) Save(user User) (User, error) {
+func (s *UsersSpy) Save(_ context.Context, user User) (User, error) {
 	s.users[user.Id] = user
 	return user, nil
 }
