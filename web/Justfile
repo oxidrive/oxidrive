@@ -1,20 +1,28 @@
 build: setup
+    #!/usr/bin/env sh
+    cd app
     npx tailwindcss -i ./input.css -o ./assets/styles.css
     dx build --release
 
 watch: setup
+    #!/usr/bin/env sh
+    cd app
     npx concurrently "just watch-app" "just watch-styles"
 
 watch-app: setup
-    dx serve --hot-reload
+    dx serve --hot-reload --bin oxidrive
 
 watch-styles: setup
+    #!/usr/bin/env sh
+    cd app
     npx tailwindcss -i ./input.css -o ./assets/styles.css --watch
 
 test:
     cargo nextest run
 
 setup:
+    #!/usr/bin/env sh
+    cd app
     [ -d node_modules ] || npm install
 
 fmt:
