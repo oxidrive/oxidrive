@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -22,8 +23,8 @@ func TestSqliteUsers_Count(t *testing.T) {
 
 		users := NewSqliteUsers(db)
 
-		testutil.Must(users.Save(ctx, testutil.Must(user.Create("a", "a"))))
-		testutil.Must(users.Save(ctx, testutil.Must(user.Create("b", "b"))))
+		testutil.Must(users.Save(ctx, *testutil.Must(user.Create("a", "a"))))
+		testutil.Must(users.Save(ctx, *testutil.Must(user.Create("b", "b"))))
 
 		count, err := users.Count(ctx)
 
@@ -38,14 +39,14 @@ func TestSqliteUsers_Save(t *testing.T) {
 
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
 		defer done()
-
 		db := testutil.SqliteDBFromContext(ctx, t)
 
 		username := "testuser"
 
 		users := NewSqliteUsers(db)
+		fmt.Println("ciao mondo")
 
-		created, err := users.Save(ctx, testutil.Must(user.Create(username, "a")))
+		created, err := users.Save(ctx, *testutil.Must(user.Create(username, "a")))
 		assert.NoError(t, err)
 		assert.Equal(t, username, created.Username)
 	})
@@ -62,16 +63,16 @@ func TestSqliteUsers_Save(t *testing.T) {
 
 		users := NewSqliteUsers(db)
 
-		created, err := users.Save(ctx, testutil.Must(user.Create(username, "a")))
+		created, err := users.Save(ctx, *testutil.Must(user.Create(username, "a")))
 		assert.NoError(t, err)
 		assert.Equal(t, username, created.Username)
 
 		changedUsername := "changed"
 		created.Username = changedUsername
 
-		updated, err := users.Save(ctx, created)
+		updated, err := users.Save(ctx, *created)
 		assert.NoError(t, err)
-		assert.Equal(t, created.Id, updated.Id)
+		assert.Equal(t, created.ID, updated.ID)
 		assert.Equal(t, changedUsername, updated.Username)
 	})
 }

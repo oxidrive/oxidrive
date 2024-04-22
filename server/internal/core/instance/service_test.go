@@ -33,7 +33,7 @@ func TestInstanceService_FirstTimeSetup(t *testing.T) {
 		created := testutil.Must(user.Create(initial.Username, initial.Password))
 		users := user.NewUsersMock(t)
 		users.On("Count", ctx).Return(0, nil).Twice()
-		users.On("Save", ctx, mock.MatchedBy(func(u user.User) bool { return u.Username == created.Username })).Return(created, nil).Once()
+		users.On("Save", ctx, mock.MatchedBy(func(u user.User) bool { return u.Username == created.Username })).Return((*user.User)(nil), nil).Once()
 
 		svc := NewService(info, users)
 

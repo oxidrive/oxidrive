@@ -10,20 +10,18 @@ import (
 func TestUser(t *testing.T) {
 	t.Run("can be created with valid parameters", func(t *testing.T) {
 		t.Parallel()
-
 		username := "test"
 		password := "testpassword"
 
 		created, err := Create(username, password)
 
 		assert.NoError(t, err)
-		assert.NotEqual(t, UserId(uuid.Nil), created.Id)
+		assert.NotEqual(t, UserID(uuid.Nil), created.ID)
 		assert.Equal(t, username, created.Username)
 	})
 
 	t.Run("verifies a valid password", func(t *testing.T) {
 		t.Parallel()
-
 		username := "test"
 		password := "testpassword"
 
@@ -38,7 +36,6 @@ func TestUser(t *testing.T) {
 
 	t.Run("does not verify an invalid password", func(t *testing.T) {
 		t.Parallel()
-
 		username := "test"
 		password := "testpassword"
 
