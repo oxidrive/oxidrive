@@ -17,8 +17,26 @@ module.exports = {
 					800: "#0a1e31",
 					900: "#050f18",
 				},
+				flexGrow: {
+					2: "2",
+				},
 			},
+		},
+		fontFamily: {
+			sans: ["Roboto", "sans-serif"],
+		},
+		fontWeight: {
+			light: "300",
+			regular: "400",
+			bold: "500",
 		},
 	},
 	plugins: [],
+	safelist: [
+		// Title
+		"text-sm",
+		"text-md",
+		"text-lg",
+		"text-xl",
+	],
 };
