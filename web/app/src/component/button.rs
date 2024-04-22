@@ -1,10 +1,10 @@
 use dioxus::prelude::*;
 
 const CLASS_PRIMARY: &str =
-    "bg-primary-500 text-primary-50 py-1 px-12 flex flex-row items-center justify-center rounded";
+    "bg-primary-500 text-primary-50 py-2 px-6 flex flex-row content-stretch items-center justify-center rounded";
 
 const CLASS_GHOST: &str =
-    "text-primary-500 underline p-1 flex flex-row items-center justify-center rounded";
+    "text-primary-500 underline p-1 flex flex-row content-stretch items-center justify-center rounded";
 
 #[derive(PartialEq, Clone, Props)]
 pub struct ButtonProps {

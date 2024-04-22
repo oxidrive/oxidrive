@@ -5,10 +5,9 @@ authors.workspace = true
 edition.workspace = true
 
 [dependencies]
+oxidrive_api = { workspace = true }
 
-dioxus = { workspace = true, features = ["web", "router"] }
-
-# Debug
-log = { workspace = true }
-dioxus-logger = { workspace = true }
 console_error_panic_hook = { workspace = true }
+dioxus = { workspace = true, features = ["web", "router"] }
+dioxus-logger = { workspace = true }
+log = { workspace = true }

@@ -12,7 +12,14 @@ authors = [
 ]
 
 [workspace.dependencies]
+# workspace
+oxidrive_api = { path = "web/api" }
+
+# crates.io
 console_error_panic_hook = "0.1.7"
 dioxus = "0.5"
 dioxus-logger = "0.4.1"
 log = "0.4.19"
+reqwest = { version = "0.12.4", default-features = false, features = [ "charset", "http2", "macos-system-configuration", "json", "rustls-tls"] }
+serde = { version = "1.0.198", features = ["derive"] }
+
