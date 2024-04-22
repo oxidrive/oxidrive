@@ -12,6 +12,7 @@ func routes(cfg *Config) *http.ServeMux {
 	// Routes
 	router.Handle("POST /api/setup", api.Setup(cfg.Logger.With().Str("handler", "api.setup").Logger(), cfg.Application))
 	router.Handle("/", serveFrontend(cfg.FrontendFolder))
+	// router.Handle("/files", route.FilesHandler(file.))
 
 	return router
 }

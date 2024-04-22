@@ -71,7 +71,7 @@ func TestSqliteUsers_Save(t *testing.T) {
 
 		updated, err := users.Save(ctx, created)
 		assert.NoError(t, err)
-		assert.Equal(t, created.Id, updated.Id)
+		assert.Equal(t, created.ID, updated.ID)
 		assert.Equal(t, changedUsername, updated.Username)
 	})
 }
