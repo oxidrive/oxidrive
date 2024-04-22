@@ -55,8 +55,7 @@ func (s *Service) CompleteFirstTimeSetup(ctx context.Context, admin InitialAdmin
 		return fmt.Errorf("failed to create initial admin: %w", err)
 	}
 
-	_, err = s.users.Save(ctx, u)
-	if err != nil {
+	if _, err = s.users.Save(ctx, *u); err != nil {
 		return fmt.Errorf("failed to save initial admin: %w", err)
 	}
 

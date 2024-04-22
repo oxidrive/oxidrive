@@ -8,26 +8,26 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/core/password"
 )
 
-type UserId (uuid.UUID)
+type UserID (uuid.UUID)
 
-func (i UserId) String() string {
+func (i UserID) String() string {
 	return uuid.UUID(i).String()
 }
 
 type User struct {
-	Id           UserId
+	ID           UserID
 	Username     string
 	PasswordHash password.Hash
 }
 
-func Create(username string, pwd string) (User, error) {
+func Create(username string, pwd string) (*User, error) {
 	hash, err := password.ValidateAndHash(pwd)
 	if err != nil {
-		return User{}, err
+		return nil, err
 	}
 
-	return User{
-		Id:           UserId(uuid.Must(uuid.NewV7())),
+	return &User{
+		ID:           UserID(uuid.Must(uuid.NewV7())),
 		Username:     username,
 		PasswordHash: hash,
 	}, nil
@@ -39,5 +39,5 @@ func (u User) VerifyPassword(password string) (bool, error) {
 
 type Users interface {
 	Count(context.Context) (int, error)
-	Save(context.Context, User) (User, error)
+	Save(context.Context, User) (*User, error)
 }

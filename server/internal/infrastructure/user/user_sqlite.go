@@ -22,7 +22,7 @@ func (p *SqliteUsers) Count(ctx context.Context) (int, error) {
 	return count, err
 }
 
-func (p *SqliteUsers) Save(ctx context.Context, u user.User) (user.User, error) {
+func (p *SqliteUsers) Save(ctx context.Context, u user.User) (*user.User, error) {
 	_, err := p.db.ExecContext(ctx, `insert into users (
         id,
         username,
@@ -36,6 +36,10 @@ func (p *SqliteUsers) Save(ctx context.Context, u user.User) (user.User, error) 
     do update set
       username = excluded.username,
       password_hash = excluded.password_hash
-    ;`, u.Id.String(), u.Username, u.PasswordHash.Expose())
-	return u, err
+    ;`, u.ID.String(), u.Username, u.PasswordHash.Expose())
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, err
 }

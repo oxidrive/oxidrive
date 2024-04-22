@@ -22,7 +22,7 @@ func (s *UsersMock) Count(ctx context.Context) (int, error) {
 	return args.Int(0), args.Error(1)
 }
 
-func (s *UsersMock) Save(ctx context.Context, user User) (User, error) {
+func (s *UsersMock) Save(ctx context.Context, user User) (*User, error) {
 	args := s.Called(ctx, user)
-	return args.Get(0).(User), args.Error(1)
+	return args.Get(0).(*User), args.Error(1)
 }

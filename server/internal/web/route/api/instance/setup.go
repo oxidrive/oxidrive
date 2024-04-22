@@ -31,8 +31,9 @@ func (d initialAdminData) into() instance.InitialAdmin {
 }
 
 func Setup(logger zerolog.Logger, app *core.Application) http.Handler {
-	return handler.JsonHandler[setupRequest](logger, func(logger zerolog.Logger, w http.ResponseWriter, r *http.Request, req setupRequest) {
+	return handler.JsonHandler(logger, func(logger zerolog.Logger, w http.ResponseWriter, r *http.Request, req setupRequest) {
 		ctx := r.Context()
+		defer handler.CloseBody(r, logger)
 
 		completed, err := app.Instance().FirstTimeSetupCompleted(ctx)
 		if err != nil {
