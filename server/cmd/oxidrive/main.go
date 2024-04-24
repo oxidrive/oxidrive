@@ -18,7 +18,7 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/web"
 	"github.com/oxidrive/oxidrive/server/migrations"
 
-	_ "github.com/jackc/pgx/stdlib"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	_ "modernc.org/sqlite"
 )
 
