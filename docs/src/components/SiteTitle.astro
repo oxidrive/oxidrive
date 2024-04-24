@@ -4,7 +4,9 @@
 import AstrolightSiteTitle from "@astrojs/starlight/components/SiteTitle.astro";
 import type { Props } from "@astrojs/starlight/props";
 
-const menuItems = [{ name: "Docs", href: "/overview/introduction" }];
+const menuItems = [
+	{ name: "Docs", href: `${import.meta.env.BASE_URL}/overview/introduction` },
+];
 
 function pathsMatch(pathA: string, pathB: string): boolean {
 	return pathB.includes(pathA);
