@@ -41,11 +41,20 @@ jobs:
     if: github.ref == 'refs/heads/main'
     needs: lint
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./docs
     steps:
       - uses: actions/checkout@v4
-      - uses: withastro/action@v2
+      - uses: actions/setup-node@v4
         with:
-          path: ./docs
+          node-version: lts/*
+      - run: npm ci
+      - name: Build website
+        run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs/dist/
 
   deploy:
     if: github.ref == 'refs/heads/main'
