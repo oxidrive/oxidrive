@@ -1,0 +1,12 @@
+build: setup
+    npm run build
+
+watch: setup
+    npm start
+
+setup:
+    [ -d node_modules ] || npm install
+
+fmt:
+    npm run format
+

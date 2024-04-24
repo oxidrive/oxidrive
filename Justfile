@@ -15,6 +15,7 @@ build:
 fmt:
     @just web/fmt
     @just server/fmt
+    @just docs/fmt
 
 act *args:
     act -s GITHUB_TOKEN=$(gh auth token) {{ args }}

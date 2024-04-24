@@ -15,6 +15,7 @@
         inputs.pre-commit-hooks-nix.flakeModule
         inputs.devshell.flakeModule
 
+        ./nix/docs.nix
         ./nix/go.nix
         ./nix/playwright.nix
         ./nix/rust.nix
