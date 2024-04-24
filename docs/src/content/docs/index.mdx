@@ -1,0 +1,37 @@
+---
+title: Oxidrive
+description: Self-hostable, simple personal storage service
+template: splash
+hero:
+  title: Your data, your rules
+  tagline: Self-hostable, simple personal storage service that makes it easy to reclaim your data sovereignty
+  image:
+    alt: 'Oxidrive: your data, your rules'
+    file: ../../../public/images/logo-with-name.svg
+  actions:
+    - text: Get started
+      link: /overview/introduction
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/oxidrive/oxidrive
+      icon: external
+      variant: secondary
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+<CardGrid stagger>
+	<Card title="Fast and lightweight" icon="rocket">
+        Oxidrive is blazing fast and requires very little resources to run, making it cheap and easy to host your own Oxidrive instance
+	</Card>
+	<Card title="Highly scalable" icon="random">
+        Go from a super simple setup with a local filesystem and SQLite database on a Raspberry Pi, to a massive multi-region cloud deployment with S3 and PostgreSQL
+	</Card>
+	<Card title="Extensible" icon="rss">
+        Build integrations and extend Oxidrive with its poweful REST API and OAuth 2.0 support
+	</Card>
+	<Card title="Open Source and forever free" icon="github">
+        Licenced under the [AGPL 3.0](https://github.com/oxidrive/oxidrive/blob/main/LICENSE), Oxidrive is and always be free to use and modify 
+	</Card>
+</CardGrid>
