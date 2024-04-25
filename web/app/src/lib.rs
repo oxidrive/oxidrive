@@ -17,7 +17,6 @@ pub enum Route {
     #[layout(Centered)]
     #[route("/")]
     Home {},
-    #[layout(Centered)]
     #[route("/setup")]
     Setup {},
 }

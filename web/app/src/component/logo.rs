@@ -15,7 +15,6 @@ pub struct LogoProps {
 #[derive(Clone, Copy, PartialEq)]
 pub enum LogoColor {
     Primary,
-    White,
 }
 
 pub fn Logo(
@@ -29,8 +28,6 @@ pub fn Logo(
     let src = match (color, with_name) {
         (LogoColor::Primary, true) => "/logo-with-name.svg",
         (LogoColor::Primary, false) => "/logo.svg",
-        (LogoColor::White, true) => "/logo-white-with-name.svg",
-        (LogoColor::White, false) => "/logo-white.svg",
     };
 
     rsx! { img { src: src, height: height, width: width, alt: "Oxidrive" } }

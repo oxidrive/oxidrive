@@ -16,7 +16,11 @@ FROM public.ecr.aws/docker/library/node:20-alpine as css-build
 
 WORKDIR /app
 
-COPY web/input.css .
+COPY web/app/package*.json .
+
+RUN npm ci
+
+COPY web/app .
 
 RUN npx tailwindcss -i ./input.css -o ./output.css
 
@@ -36,9 +40,9 @@ WORKDIR /app
 
 COPY Cargo.* .
 COPY web ./web
-COPY --from=css-build /app/output.css ./web/assets/styles.css
+COPY --from=css-build /app/output.css ./web/app/assets/styles.css
 
-RUN cd web && dx build --release
+RUN cd web/app && dx build --release
 
 # ========================================================================= #
 
@@ -47,6 +51,6 @@ FROM gcr.io/distroless/static-debian11
 ENV OXIDRIVE_ASSETS_FOLDER=/assets
 
 COPY --from=server-build /app/bin/oxidrive /oxidrive
-COPY --from=web-build /app/web/dist $OXIDRIVE_ASSETS_FOLDER
+COPY --from=web-build /app/web/app/dist $OXIDRIVE_ASSETS_FOLDER
 
 CMD ["/oxidrive"]

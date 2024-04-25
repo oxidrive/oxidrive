@@ -7,15 +7,12 @@ pub enum Heading {
     H1,
     H2,
     H3,
-    H4,
-    H5,
-    H6,
 }
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum TitleColor {
     Primary,
-    White,
+    PrimaryDark,
     Black,
 }
 
@@ -23,7 +20,7 @@ impl TitleColor {
     pub fn class(&self) -> &'static str {
         match self {
             TitleColor::Primary => "text-primary-500",
-            TitleColor::White => "text-white",
+            TitleColor::PrimaryDark => "text-primary-700",
             TitleColor::Black => "text-black",
         }
     }
@@ -31,7 +28,6 @@ impl TitleColor {
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum FontWeight {
-    Light,
     Regular,
     Bold,
 }
@@ -39,7 +35,6 @@ pub enum FontWeight {
 impl FontWeight {
     pub fn class(&self) -> &'static str {
         match self {
-            FontWeight::Light => "font-light",
             FontWeight::Regular => "font-regular",
             FontWeight::Bold => "font-bold",
         }
@@ -72,15 +67,6 @@ pub fn Title(
         },
         Heading::H3 => rsx! {
             h3 { class: class, {children} }
-        },
-        Heading::H4 => rsx! {
-            h4 { class: class, {children} }
-        },
-        Heading::H5 => rsx! {
-            h5 { class: class, {children} }
-        },
-        Heading::H6 => rsx! {
-            h6 { class: class, {children} }
         },
     }
 }
