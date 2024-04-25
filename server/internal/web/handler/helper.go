@@ -5,13 +5,22 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"strings"
+
+	"github.com/rs/zerolog"
 )
 
 type MalformedRequest struct {
 	Status int
 	Msg    string
+}
+
+type MultipartRequest struct {
+	File       multipart.File
+	FileHeader *multipart.FileHeader
+	CloseFunc  func()
 }
 
 func (mr *MalformedRequest) Error() string {
@@ -76,6 +85,53 @@ func DecodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}) err
 	}
 
 	return nil
+}
+
+func DecodeMutipart(w http.ResponseWriter, r *http.Request, dst *MultipartRequest, logger zerolog.Logger) error {
+	ct := r.Header.Get("Content-Type")
+	if ct != "" {
+		mediaType := strings.ToLower(strings.TrimSpace(strings.Split(ct, ";")[0]))
+		if mediaType != "multipart/form-data" {
+			msg := "Content-Type header is not mutipart/form-data"
+			return &MalformedRequest{Status: http.StatusUnsupportedMediaType, Msg: msg}
+		}
+	}
+
+	if err := r.ParseMultipartForm(0); err != nil {
+		return &MalformedRequest{Status: http.StatusBadRequest, Msg: err.Error()}
+	}
+	defer func() {
+	}()
+
+	uploadedFile, uploadedFileHeader, err := r.FormFile("file")
+	if err != nil {
+		if err == http.ErrMissingFile {
+			return &MalformedRequest{Status: http.StatusBadRequest, Msg: "Request did not contain a file"}
+
+		} else {
+			return &MalformedRequest{Status: http.StatusBadRequest, Msg: err.Error()}
+		}
+	}
+	dst.File = uploadedFile
+	dst.FileHeader = uploadedFileHeader
+	dst.CloseFunc = func() {
+		if err := r.MultipartForm.RemoveAll(); err != nil {
+			logger.Error().AnErr("error", err).Msg("error while removing temporary files")
+		}
+		if err := uploadedFile.Close(); err != nil {
+			logger.Error().AnErr("error", err).Msg("error while closing uploaded file")
+		}
+		CloseBody(r, logger)
+	}
+
+	return nil
+}
+
+func CloseBody(r *http.Request, logger zerolog.Logger) {
+	if err := r.Body.Close(); err != nil {
+		logger.Warn().AnErr("error", err).Msg("error while closing body of the request")
+	}
+
 }
 
 func RespondWithJson[T any](w http.ResponseWriter, status int, body T) {

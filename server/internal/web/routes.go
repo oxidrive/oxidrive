@@ -3,7 +3,7 @@ package web
 import (
 	"net/http"
 
-	"github.com/oxidrive/oxidrive/server/internal/web/routes/api"
+	"github.com/oxidrive/oxidrive/server/internal/web/route/api"
 )
 
 func routes(cfg *Config) *http.ServeMux {
@@ -11,8 +11,8 @@ func routes(cfg *Config) *http.ServeMux {
 
 	// Routes
 	router.Handle("POST /api/setup", api.Setup(cfg.Logger.With().Str("handler", "api.setup").Logger(), cfg.Application))
+	router.Handle("POST /api/upload", api.Setup(cfg.Logger.With().Str("handler", "api.upload").Logger(), cfg.Application))
 	router.Handle("/", serveFrontend(cfg.FrontendFolder))
-	// router.Handle("/files", route.FilesHandler(file.))
 
 	return router
 }
