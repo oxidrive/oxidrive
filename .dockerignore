@@ -3,18 +3,19 @@
 !Cargo.toml
 !go.mod
 !go.sum
+!rust-toolchain.toml
 
 !server/Justfile
 !server/cmd
 !server/internal
 !server/migrations
 
-!web/Cargo.toml
-!web/Dioxus.toml
+!web/*/Cargo.toml
+!web/*/src/
 !web/Justfile
-!web/assets
-!web/index.html
-!web/input.css
-!web/rust-toolchain.toml
-!web/src/
-!web/tailwind.config.js
+!web/app/Dioxus.toml
+!web/app/assets
+!web/app/index.html
+!web/app/input.css
+!web/app/package*.json
+!web/app/tailwind.config.js

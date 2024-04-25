@@ -9,6 +9,9 @@ ui:
 stop:
     docker compose down -v
 
+start:
+    docker compose up -d
+
 rebuild: stop
     docker compose build
 

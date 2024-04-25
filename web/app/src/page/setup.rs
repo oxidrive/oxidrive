@@ -9,8 +9,8 @@ use serde::Deserialize;
 use crate::{
     api::use_oxidrive_api,
     component::{
-        Button, ButtonLink, ButtonVariant, FieldKind, FontWeight, Heading, Loading, Logo, Pane,
-        Size, TextField, Title, TitleColor,
+        Button, ButtonColor, ButtonLink, ButtonVariant, FieldKind, FontWeight, Heading, Loading,
+        Logo, Pane, Size, TextField, Title, TitleColor,
     },
     Route,
 };
@@ -42,7 +42,7 @@ pub fn Setup() -> Element {
     rsx! {
         Pane {
             h1 { Logo { with_name: true } }
-            Title { color: TitleColor::Primary, "Create an admin account" }
+            Title { h: Heading::H2, color: TitleColor::Primary, "Create an admin account" }
             form {
                 class: "flex flex-col justify-space-evenly gap-6 w-full items-center content-stretch justify-center",
                 onsubmit: move |event| async move {
@@ -64,12 +64,17 @@ pub fn Setup() -> Element {
                     Title {
                         h: Heading::H3,
                         size: Size::Medium,
-                        color: TitleColor::Primary,
+                        color: TitleColor::PrimaryDark,
                         weight: FontWeight::Bold,
                         class: "text-center",
                         "Configuration Recap"
                     }
-                    ButtonLink { variant: ButtonVariant::Ghost, to: public_url.clone(), {public_url} }
+                    ButtonLink {
+                        variant: ButtonVariant::Ghost,
+                        color: ButtonColor::PrimaryDark,
+                        to: public_url.clone(),
+                        {public_url}
+                    }
                     div { class: "pt-1",
                         RecapEntry { name: "Database", value: database }
                         RecapEntry { name: "File Storage", value: file_storage }
@@ -92,7 +97,7 @@ pub fn Setup() -> Element {
 #[component]
 fn RecapEntry(name: String, #[props(into)] value: String) -> Element {
     rsx! {
-        span { class: "flex flex-row flex-nowrap gap-4 content-space-evenly items-start justify-between text-primary-500",
+        span { class: "flex flex-row flex-nowrap gap-4 content-space-evenly items-start justify-between text-primary-600",
             p { class: "whitespace-nowrap font-bold", "{name}:" }
             p { class: "truncate", title: value, "{value}" }
         }

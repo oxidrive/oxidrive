@@ -1,4 +1,4 @@
-build: setup
+build: setup fmt
     #!/usr/bin/env sh
     cd app
     npx tailwindcss -i ./input.css -o ./assets/styles.css

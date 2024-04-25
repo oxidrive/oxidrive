@@ -42,10 +42,35 @@ fn button(
     }
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum ButtonColor {
+    Primary,
+    PrimaryDark,
+    White,
+}
+
+impl ButtonColor {
+    fn class(&self) -> &'static str {
+        match self {
+            Self::Primary => "text-primary-500",
+            Self::PrimaryDark => "text-primary-600",
+            Self::White => "text-primary-50",
+        }
+    }
+
+    fn default_for(variant: ButtonVariant) -> Self {
+        match variant {
+            ButtonVariant::Filled => Self::White,
+            ButtonVariant::Ghost => Self::Primary,
+        }
+    }
+}
+
 #[derive(PartialEq, Clone, Props)]
 pub struct ButtonLinkProps {
     #[props(default = ButtonVariant::Filled)]
     pub variant: ButtonVariant,
+    pub color: Option<ButtonColor>,
     pub children: Element,
     #[props(default)]
     pub new_tab: bool,
@@ -80,7 +105,8 @@ pub fn ButtonLink(props: ButtonLinkProps) -> Element {
 fn button_link(
     class: impl Into<String>,
     ButtonLinkProps {
-        variant: _,
+        variant,
+        color,
         children,
         new_tab,
         onclick,
@@ -89,9 +115,11 @@ fn button_link(
         to,
     }: ButtonLinkProps,
 ) -> Element {
+    let color = color.unwrap_or_else(|| ButtonColor::default_for(variant));
+    let class = format!("{} {}", class.into(), color.class());
     rsx! {
         Link {
-            class: class.into(),
+            class: class,
             new_tab,
             onclick,
             onclick_only,
