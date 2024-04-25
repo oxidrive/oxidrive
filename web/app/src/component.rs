@@ -1,11 +1,15 @@
 mod button;
 mod input;
 mod logo;
+mod pane;
+mod spinner;
 mod title;
 
 pub use button::*;
 pub use input::*;
 pub use logo::*;
+pub use pane::*;
+pub use spinner::*;
 pub use title::*;
 
 #[derive(Clone, Copy, PartialEq)]

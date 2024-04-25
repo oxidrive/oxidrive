@@ -10,4 +10,8 @@ oxidrive_api = { workspace = true }
 console_error_panic_hook = { workspace = true }
 dioxus = { workspace = true, features = ["web", "router"] }
 dioxus-logger = { workspace = true }
+gloo-timers = { workspace = true }
+gloo-utils = { workspace = true }
 log = { workspace = true }
+serde = { workspace = true }
+
