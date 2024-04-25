@@ -1,5 +1,4 @@
 use dioxus::prelude::*;
-
 #[derive(PartialEq, Clone, Props)]
 pub struct LogoProps {
     #[props(default = 100)]
@@ -11,12 +10,10 @@ pub struct LogoProps {
     #[props(default = false)]
     with_name: bool,
 }
-
 #[derive(Clone, Copy, PartialEq)]
 pub enum LogoColor {
     Primary,
 }
-
 pub fn Logo(
     LogoProps {
         height,
@@ -29,6 +26,5 @@ pub fn Logo(
         (LogoColor::Primary, true) => "/logo-with-name.svg",
         (LogoColor::Primary, false) => "/logo.svg",
     };
-
     rsx! { img { src: src, height: height, width: width, alt: "Oxidrive" } }
 }
