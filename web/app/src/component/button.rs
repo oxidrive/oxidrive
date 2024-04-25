@@ -1,11 +1,6 @@
 use dioxus::prelude::*;
-
-const CLASS_PRIMARY: &str =
-    "bg-primary-500 text-primary-50 py-2 px-6 flex flex-row content-stretch items-center justify-center rounded";
-
-const CLASS_GHOST: &str =
-    "text-primary-500 underline p-1 flex flex-row content-stretch items-center justify-center rounded";
-
+const CLASS_PRIMARY: &str = "bg-primary-500 text-primary-50 py-2 px-6 flex flex-row content-stretch items-center justify-center rounded";
+const CLASS_GHOST: &str = "text-primary-500 underline p-1 flex flex-row content-stretch items-center justify-center rounded";
 #[derive(PartialEq, Clone, Props)]
 pub struct ButtonProps {
     #[props(default = ButtonVariant::Filled)]
@@ -13,20 +8,17 @@ pub struct ButtonProps {
     pub onclick: Option<EventHandler<MouseEvent>>,
     pub children: Element,
 }
-
 #[derive(Clone, Copy, PartialEq)]
 pub enum ButtonVariant {
     Filled,
     Ghost,
 }
-
 pub fn Button(props: ButtonProps) -> Element {
     match props.variant {
         ButtonVariant::Filled => button(CLASS_PRIMARY, props),
         ButtonVariant::Ghost => button(CLASS_GHOST, props),
     }
 }
-
 fn button(
     class: impl Into<String>,
     ButtonProps {
@@ -36,19 +28,16 @@ fn button(
     }: ButtonProps,
 ) -> Element {
     let onclick = move |evt| onclick.unwrap_or_default().call(evt);
-
     rsx! {
-        button { class: class.into(), onclick: onclick, {children} }
+        button { class: class.into(), onclick: onclick, { children } }
     }
 }
-
 #[derive(Clone, Copy, PartialEq)]
 pub enum ButtonColor {
     Primary,
     PrimaryDark,
     White,
 }
-
 impl ButtonColor {
     fn class(&self) -> &'static str {
         match self {
@@ -57,7 +46,6 @@ impl ButtonColor {
             Self::White => "text-primary-50",
         }
     }
-
     fn default_for(variant: ButtonVariant) -> Self {
         match variant {
             ButtonVariant::Filled => Self::White,
@@ -65,7 +53,6 @@ impl ButtonColor {
         }
     }
 }
-
 #[derive(PartialEq, Clone, Props)]
 pub struct ButtonLinkProps {
     #[props(default = ButtonVariant::Filled)]
@@ -83,17 +70,14 @@ pub struct ButtonLinkProps {
     ///    will be executed after the links regular functionality.
     /// 3. If `onclick_only` is [`true`], only the provided `onclick` handler will be executed.
     pub onclick_only: bool,
-
     /// The rel attribute for the generated HTML anchor tag.
     ///
     /// For external `a`s, this defaults to `noopener noreferrer`.
     pub rel: Option<String>,
-
     /// The navigation target. Roughly equivalent to the href attribute of an HTML anchor tag.
     #[props(into)]
     pub to: IntoRoutable,
 }
-
 pub fn ButtonLink(props: ButtonLinkProps) -> Element {
     let button_variant = props.variant;
     match button_variant {
@@ -101,7 +85,6 @@ pub fn ButtonLink(props: ButtonLinkProps) -> Element {
         ButtonVariant::Ghost => button_link(CLASS_GHOST, props),
     }
 }
-
 fn button_link(
     class: impl Into<String>,
     ButtonLinkProps {
@@ -125,7 +108,7 @@ fn button_link(
             onclick_only,
             rel,
             to,
-            {children}
+            { children }
         }
     }
 }

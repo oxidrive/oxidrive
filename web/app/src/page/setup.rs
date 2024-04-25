@@ -1,11 +1,3 @@
-use dioxus::prelude::*;
-
-use oxidrive_api::{
-    instance::{InitialAdminData, SetupRequest, Status, StatusResponse},
-    Oxidrive,
-};
-use serde::Deserialize;
-
 use crate::{
     api::use_oxidrive_api,
     component::{
@@ -14,13 +6,16 @@ use crate::{
     },
     Route,
 };
-
+use dioxus::prelude::*;
+use oxidrive_api::{
+    instance::{InitialAdminData, SetupRequest, Status, StatusResponse},
+    Oxidrive,
+};
+use serde::Deserialize;
 pub fn Setup() -> Element {
     let api = use_oxidrive_api();
     let navigator = use_navigator();
-
     let future = use_resource(move || async move { api().instance().status().await });
-
     let Status {
         database,
         file_storage,
@@ -28,17 +23,19 @@ pub fn Setup() -> Element {
         setup_completed,
     } = match future.read().as_ref() {
         Some(Ok(StatusResponse { status })) => status.clone(),
-        Some(Err(err)) => return rsx! {"Error: {err:?}"},
-        None => return rsx! { Loading {} },
+        Some(Err(err)) => {
+            return rsx! {"Error: {err:?}"};
+        }
+        None => {
+            return rsx! { Loading {} };
+        }
     };
-
     if setup_completed {
         log::info!("setup has already been completed, redirecting to home page...");
         if let Some(err) = navigator.replace(Route::Home {}) {
             return rsx! {"Error: {err:?}"};
         }
     }
-
     rsx! {
         Pane {
             h1 { Logo { with_name: true } }
@@ -73,7 +70,7 @@ pub fn Setup() -> Element {
                         variant: ButtonVariant::Ghost,
                         color: ButtonColor::PrimaryDark,
                         to: public_url.clone(),
-                        {public_url}
+                        { public_url }
                     }
                     div { class: "pt-1",
                         RecapEntry { name: "Database", value: database }
@@ -93,7 +90,6 @@ pub fn Setup() -> Element {
         }
     }
 }
-
 #[component]
 fn RecapEntry(name: String, #[props(into)] value: String) -> Element {
     rsx! {
@@ -103,14 +99,12 @@ fn RecapEntry(name: String, #[props(into)] value: String) -> Element {
         }
     }
 }
-
 #[derive(Debug, Deserialize)]
 struct SetupFormData {
     username: Vec<String>,
     password: Vec<String>,
     password_confirmation: Vec<String>,
 }
-
 async fn submit(
     api: Signal<Oxidrive>,
     SetupFormData {
@@ -122,11 +116,9 @@ async fn submit(
     let username = username.into_iter().next().unwrap();
     let password = password.into_iter().next().unwrap();
     let password_confirmation = password_confirmation.into_iter().next().unwrap();
-
     if password != password_confirmation {
         return Err("passwords must match".into());
     }
-
     api()
         .instance()
         .setup(SetupRequest {
@@ -134,6 +126,5 @@ async fn submit(
         })
         .await
         .map_err(|err| err.to_string())?;
-
     Ok(())
 }

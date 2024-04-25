@@ -29,7 +29,7 @@ setup:
     [ -d node_modules ] || npm install
 
 fmt:
-    dx fmt || true
+    dx fmt
     cargo fmt --all
     cargo clippy --allow-dirty --allow-staged --workspace --fix -- -D warnings
 

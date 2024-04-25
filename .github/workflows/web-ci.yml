@@ -71,7 +71,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - run: cargo fmt --all -- --check
-      - run: dx fmt --check
+      # dx fmt and cargo fmt are in conflict with one another, uncomment once we can get them to behave
+      # - run: dx fmt --check
 
   clippy:
     if: github.event.pull_request.draft == false
