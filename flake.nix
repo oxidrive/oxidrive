@@ -26,7 +26,7 @@
 
       perSystem = { system, ... }: {
         rust = {
-          toolchain.file = ./web/rust-toolchain.toml;
+          toolchain.file = ./rust-toolchain.toml;
           overlay = import rust-overlay;
         };
       };

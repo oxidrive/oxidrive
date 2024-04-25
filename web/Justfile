@@ -4,6 +4,9 @@ build: setup
     npx tailwindcss -i ./input.css -o ./assets/styles.css
     dx build --release
 
+clean:
+    rm -rf app/dist
+
 watch: setup
     #!/usr/bin/env sh
     cd app
@@ -26,7 +29,7 @@ setup:
     [ -d node_modules ] || npm install
 
 fmt:
+    dx fmt || true
     cargo fmt --all
-    dx fmt
     cargo clippy --allow-dirty --allow-staged --workspace --fix -- -D warnings
 
