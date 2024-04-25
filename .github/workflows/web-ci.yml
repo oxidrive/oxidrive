@@ -28,9 +28,6 @@ jobs:
     if: github.event.pull_request.draft == false
     name: Check
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -38,16 +35,12 @@ jobs:
         with:
           cache-all-crates: "true"
           save-if: ${{ github.ref == 'refs/heads/main' }}
-          workspaces: web
       - run: cargo check --all --tests --all-features --all-targets
 
   test:
     if: github.event.pull_request.draft == false
     name: Tests
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -55,7 +48,6 @@ jobs:
         with:
           cache-all-crates: "true"
           save-if: ${{ github.ref == 'refs/heads/main' }}
-          workspaces: web
       - uses: davidB/rust-cargo-make@v1
       - run: cargo test --all --all-features --all-targets
 
@@ -63,9 +55,6 @@ jobs:
     if: github.event.pull_request.draft == false
     name: Rustfmt
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -75,7 +64,6 @@ jobs:
         with:
           cache-all-crates: "true"
           save-if: ${{ github.ref == 'refs/heads/main' }}
-          workspaces: web
       - uses: cargo-bins/cargo-binstall@v1.6.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -89,9 +77,6 @@ jobs:
     if: github.event.pull_request.draft == false
     name: Clippy
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: web
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -101,5 +86,4 @@ jobs:
         with:
           cache-all-crates: "true"
           save-if: ${{ github.ref == 'refs/heads/main' }}
-          workspaces: web
       - run: cargo clippy --workspace --tests --all-features --all-targets -- -D warnings
