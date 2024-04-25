@@ -2,6 +2,7 @@ package file
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
 
@@ -50,5 +51,45 @@ func TestService_Upload(t *testing.T) {
 		err := service.Upload(ctx, content, Path(filepath), Size(size), zerolog.Nop())
 
 		require.ErrorIs(t, err, ErrInvalidPath)
+	})
+
+	t.Run("uplaods with error while storing the content", func(t *testing.T) {
+		ctx := context.Background()
+		content := strings.NewReader("")
+		filepath := "filepath"
+		size := 10
+		expectedLogger := zerolog.Nop().With().Str("path", filepath).Int("size", size).Logger()
+		genericError := errors.New("generic error")
+
+		contentMock.On("Store", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath }), expectedLogger).Return(genericError).Once()
+		defer contentMock.AssertExpectations(t)
+		defer metadataMock.AssertExpectations(t)
+
+		err := service.Upload(ctx, content, Path(filepath), Size(size), zerolog.Nop())
+
+		require.Error(t, err)
+	})
+
+	t.Run("uplaods with error while saving metadata", func(t *testing.T) {
+		ctx := context.Background()
+		content := strings.NewReader("")
+		filepath := "filepath"
+		size := 10
+		expectedLogger := zerolog.Nop().With().Str("path", filepath).Int("size", size).Logger()
+		genericError := errors.New("generic error")
+
+		contentMock.On("Store", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath }), expectedLogger).Return(nil).Once()
+		metadataMock.On(
+			"Save",
+			mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath }),
+			expectedLogger,
+		).Return((*File)(nil), genericError).Once()
+
+		defer contentMock.AssertExpectations(t)
+		defer metadataMock.AssertExpectations(t)
+
+		err := service.Upload(ctx, content, Path(filepath), Size(size), zerolog.Nop())
+
+		require.Error(t, err)
 	})
 }

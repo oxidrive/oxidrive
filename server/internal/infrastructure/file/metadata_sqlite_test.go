@@ -5,11 +5,12 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/oxidrive/oxidrive/server/internal/core/file"
-	"github.com/oxidrive/oxidrive/server/internal/testutil"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/oxidrive/oxidrive/server/internal/core/file"
+	"github.com/oxidrive/oxidrive/server/internal/testutil"
 )
 
 func TestSqliteFiles_Save(t *testing.T) {
@@ -23,7 +24,7 @@ func TestSqliteFiles_Save(t *testing.T) {
 
 		files := NewSqliteFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, err := file.NewFile(readerMock, "filename", "filepath", 10)
+		fileToSave, err := file.NewFile(readerMock, "filepath", 10)
 		require.NoError(t, err)
 
 		saveed, err := files.Save(ctx, *fileToSave, zerolog.Nop())
@@ -44,7 +45,7 @@ func TestSqliteFiles_Save(t *testing.T) {
 
 		files := NewSqliteFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, _ := file.NewFile(readerMock, "filename", "filepath", 10)
+		fileToSave, _ := file.NewFile(readerMock, "filepath", 10)
 
 		saveed, err := files.Save(ctx, *fileToSave, zerolog.Nop())
 

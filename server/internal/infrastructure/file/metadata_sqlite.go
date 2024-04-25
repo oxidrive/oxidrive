@@ -4,8 +4,9 @@ import (
 	"context"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/oxidrive/oxidrive/server/internal/core/file"
 	"github.com/rs/zerolog"
+
+	"github.com/oxidrive/oxidrive/server/internal/core/file"
 )
 
 type SqliteFiles struct {

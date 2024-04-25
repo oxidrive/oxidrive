@@ -5,9 +5,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/rs/zerolog"
+
 	"github.com/oxidrive/oxidrive/server/internal/core/file"
 	"github.com/oxidrive/oxidrive/server/internal/testutil"
-	"github.com/rs/zerolog"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -23,7 +24,7 @@ func TestPgFiles_Save(t *testing.T) {
 
 		files := NewPgFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, _ := file.NewFile(readerMock, "filename", "filepath", 10)
+		fileToSave, _ := file.NewFile(readerMock, "filepath", 10)
 
 		saveed, err := files.Save(ctx, *fileToSave, zerolog.Nop())
 
@@ -43,7 +44,7 @@ func TestPgFiles_Save(t *testing.T) {
 
 		files := NewPgFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, _ := file.NewFile(readerMock, "filename", "filepath", 10)
+		fileToSave, _ := file.NewFile(readerMock, "filepath", 10)
 
 		saveed, err := files.Save(ctx, *fileToSave, zerolog.Nop())
 
