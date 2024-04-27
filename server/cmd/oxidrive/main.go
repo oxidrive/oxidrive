@@ -13,8 +13,6 @@ import (
 
 	"github.com/oxidrive/oxidrive/server/internal/config"
 	"github.com/oxidrive/oxidrive/server/internal/core"
-	"github.com/oxidrive/oxidrive/server/internal/core/user"
-	userinfra "github.com/oxidrive/oxidrive/server/internal/infrastructure/user"
 	"github.com/oxidrive/oxidrive/server/internal/web"
 	"github.com/oxidrive/oxidrive/server/migrations"
 
@@ -38,7 +36,7 @@ func main() {
 		die(logger, err, "failed to open database connection")
 	}
 
-	app := core.NewApplication(deps(db))
+	app := core.NewApplication(core.SetupDependencies(cfg, db))
 
 	err = web.Run(web.Config{
 		Address:        cfg.ListenAddress(),
@@ -66,18 +64,4 @@ func trapSigterm() {
 func die(logger zerolog.Logger, err error, msg string) {
 	logger.Error().AnErr("error", err).Msg(msg)
 	os.Exit(1)
-}
-
-func deps(db *sqlx.DB) core.ApplicationDependencies {
-	var users user.Users
-	switch db.DriverName() {
-	case config.DriverPG:
-		users = userinfra.NewPgUsers(db)
-	case config.DriverSqlite:
-		users = userinfra.NewSqliteUsers(db)
-	}
-
-	return core.ApplicationDependencies{
-		Users: users,
-	}
 }

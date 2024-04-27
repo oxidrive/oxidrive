@@ -10,39 +10,47 @@ import (
 
 	"github.com/oxidrive/oxidrive/server/internal/config"
 	"github.com/oxidrive/oxidrive/server/internal/core/file"
+	"github.com/oxidrive/oxidrive/server/internal/core/user"
 
 	"github.com/rs/zerolog"
 )
 
-const throughputInByte = 32
+const (
+	throughputInByte    = 32
+	filePermission      = 0644
+	directoryPermission = 0755
+)
 
 type blobFS struct {
 	filesRoot string
 }
 
-func NewBlobFS(config config.StorageConfig) blobFS {
-	return blobFS{
+func NewBlobFS(config config.StorageConfig) *blobFS {
+	return &blobFS{
 		filesRoot: config.StorageRoot,
 	}
 }
 
-func (b *blobFS) Save(ctx context.Context, f file.File, logger zerolog.Logger) (err error) {
-	fsPath := filepath.Join(b.filesRoot, string(f.Path))
+func (b *blobFS) Store(ctx context.Context, u user.User, f file.File, logger zerolog.Logger) (err error) {
+	fsPath := filepath.Join(b.filesRoot, u.ID.String(), string(f.Path))
+	if err := ensureDir(fsPath); err != nil {
+		return err
+	}
 
-	fsFile, err := os.OpenFile(fsPath, os.O_RDWR|os.O_CREATE, 0644)
+	fsFile, err := os.OpenFile(fsPath, os.O_RDWR|os.O_CREATE, filePermission)
 	if err != nil {
 		return err
 	}
 	defer func() {
 		if clErr := fsFile.Close(); clErr != nil && !errors.Is(err, context.Canceled) && !errors.Is(err, context.DeadlineExceeded) {
-			logger.Error().AnErr("error", clErr).Msg("error while closing the new file in blob fs save")
+			logger.Error().AnErr("error", clErr).Msg("error while closing the new file in blob fs store")
 		}
 	}()
 
 	for {
 		if err = ctx.Err(); err != nil {
-			if reErr := os.Remove(string(f.Path)); reErr != nil {
-				logger.Error().AnErr("error", reErr).Msg("error while removing the new file in blob fs save after context invalidation")
+			if reErr := os.Remove(string(fsPath)); reErr != nil {
+				logger.Error().AnErr("error", reErr).Msg("error while removing the new file in blob fs store after context invalidation")
 			}
 			return fmt.Errorf("context invalidated while saving the new ifle in blob fs: %w", err)
 		}
@@ -54,4 +62,9 @@ func (b *blobFS) Save(ctx context.Context, f file.File, logger zerolog.Logger) (
 			return err
 		}
 	}
+}
+
+func ensureDir(path string) error {
+	dir := filepath.Dir(path)
+	return os.MkdirAll(dir, directoryPermission)
 }

@@ -8,9 +8,9 @@ import (
 )
 
 func TestUser(t *testing.T) {
-	t.Run("can be created with valid parameters", func(t *testing.T) {
-		t.Parallel()
+	t.Parallel()
 
+	t.Run("can be created with valid parameters", func(t *testing.T) {
 		username := "test"
 		password := "testpassword"
 
@@ -22,8 +22,6 @@ func TestUser(t *testing.T) {
 	})
 
 	t.Run("verifies a valid password", func(t *testing.T) {
-		t.Parallel()
-
 		username := "test"
 		password := "testpassword"
 
@@ -37,8 +35,6 @@ func TestUser(t *testing.T) {
 	})
 
 	t.Run("does not verify an invalid password", func(t *testing.T) {
-		t.Parallel()
-
 		username := "test"
 		password := "testpassword"
 

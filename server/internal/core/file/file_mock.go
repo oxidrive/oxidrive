@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/oxidrive/oxidrive/server/internal/core/user"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 )
@@ -19,8 +20,8 @@ func NewFilesContentMock(t *testing.T) *FilesContentMock {
 	return &m
 }
 
-func (f *FilesContentMock) Store(_ context.Context, file File, logger zerolog.Logger) error {
-	args := f.Called(file, logger)
+func (f *FilesContentMock) Store(_ context.Context, user user.User, file File, logger zerolog.Logger) error {
+	args := f.Called(user, file, logger)
 	return args.Error(0)
 }
 
@@ -35,7 +36,7 @@ func NewFilesMetadataMock(t *testing.T) *FilesMetadataMock {
 	return &m
 }
 
-func (f *FilesMetadataMock) Save(_ context.Context, file File, logger zerolog.Logger) (*File, error) {
-	args := f.Called(file, logger)
+func (f *FilesMetadataMock) Save(_ context.Context, user user.User, file File, logger zerolog.Logger) (*File, error) {
+	args := f.Called(user, file, logger)
 	return args.Get(0).(*File), args.Error(1)
 }

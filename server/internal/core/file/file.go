@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
+	"github.com/oxidrive/oxidrive/server/internal/core/user"
 	"github.com/rs/zerolog"
 )
 
@@ -55,9 +56,9 @@ func isValid(path Path) bool {
 }
 
 type FilesContent interface {
-	Store(ctx context.Context, file File, logger zerolog.Logger) error
+	Store(context.Context, user.User, File, zerolog.Logger) error
 }
 
 type FilesMetadata interface {
-	Save(ctx context.Context, file File, logger zerolog.Logger) (*File, error)
+	Save(context.Context, user.User, File, zerolog.Logger) (*File, error)
 }

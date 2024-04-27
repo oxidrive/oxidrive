@@ -22,7 +22,7 @@ func (p *PgUsers) Count(ctx context.Context) (int, error) {
 	return count, err
 }
 
-func (p *PgUsers) Save(ctx context.Context, u user.User) (user.User, error) {
+func (p *PgUsers) Save(ctx context.Context, u user.User) (*user.User, error) {
 	_, err := p.db.ExecContext(ctx, `insert into users (
         id,
         username,
@@ -37,5 +37,9 @@ func (p *PgUsers) Save(ctx context.Context, u user.User) (user.User, error) {
       username = excluded.username,
       password_hash = excluded.password_hash
     ;`, u.ID.String(), u.Username, u.PasswordHash.Expose())
-	return u, err
+	if err != nil {
+		return nil, err
+	}
+
+	return &u, nil
 }

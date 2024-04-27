@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/file"
+	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
 
 type PgFiles struct {
@@ -17,24 +18,28 @@ func NewPgFiles(db *sqlx.DB) *PgFiles {
 	return &PgFiles{db: db}
 }
 
-func (p *PgFiles) Save(ctx context.Context, f file.File, logger zerolog.Logger) (file.File, error) {
-	_, err := p.db.ExecContext(ctx, `insert into files (
+func (p *PgFiles) Save(ctx context.Context, u user.User, f file.File, logger zerolog.Logger) (*file.File, error) {
+	if _, err := p.db.ExecContext(ctx, `insert into files (
         id,
         name,
         path,
-        size
+        size,
+        user_id
     ) values (
         $1,
         $2,
         $3,
-        $4
+        $4,
+        $5
     )
     on conflict (id)
     do update set
       name = excluded.name,
       path = excluded.path,
       size = excluded.size
-    ;`, f.ID.String(), f.Name, f.Path, f.Size)
+    ;`, f.ID.String(), f.Name, f.Path, f.Size, u.ID.String()); err != nil {
+		return nil, err
+	}
 
-	return f, err
+	return &f, nil
 }

@@ -21,8 +21,8 @@ func TestPgUsers_Count(t *testing.T) {
 
 		users := NewPgUsers(db)
 
-		testutil.Must(users.Save(ctx, testutil.Must(user.Create("a", "a"))))
-		testutil.Must(users.Save(ctx, testutil.Must(user.Create("b", "b"))))
+		testutil.Must(users.Save(ctx, *testutil.Must(user.Create("a", "a"))))
+		testutil.Must(users.Save(ctx, *testutil.Must(user.Create("b", "b"))))
 
 		count, err := users.Count(ctx)
 
@@ -45,7 +45,7 @@ func TestPgUsers_Save(t *testing.T) {
 
 		users := NewPgUsers(db)
 
-		created, err := users.Save(ctx, testutil.Must(user.Create(username, "a")))
+		created, err := users.Save(ctx, *testutil.Must(user.Create(username, "a")))
 		assert.NoError(t, err)
 		assert.Equal(t, username, created.Username)
 
@@ -63,14 +63,14 @@ func TestPgUsers_Save(t *testing.T) {
 
 		users := NewPgUsers(db)
 
-		created, err := users.Save(ctx, testutil.Must(user.Create(username, "a")))
+		created, err := users.Save(ctx, *testutil.Must(user.Create(username, "a")))
 		assert.NoError(t, err)
 		assert.Equal(t, username, created.Username)
 
 		changedUsername := "changed"
 		created.Username = changedUsername
 
-		updated, err := users.Save(ctx, created)
+		updated, err := users.Save(ctx, *created)
 		assert.NoError(t, err)
 		assert.Equal(t, created.ID, updated.ID)
 		assert.Equal(t, changedUsername, updated.Username)

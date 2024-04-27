@@ -20,13 +20,13 @@ type User struct {
 	PasswordHash password.Hash
 }
 
-func Create(username string, pwd string) (User, error) {
+func Create(username string, pwd string) (*User, error) {
 	hash, err := password.ValidateAndHash(pwd)
 	if err != nil {
-		return User{}, err
+		return nil, err
 	}
 
-	return User{
+	return &User{
 		ID:           UserID(uuid.Must(uuid.NewV7())),
 		Username:     username,
 		PasswordHash: hash,
@@ -39,5 +39,5 @@ func (u User) VerifyPassword(password string) (bool, error) {
 
 type Users interface {
 	Count(context.Context) (int, error)
-	Save(context.Context, User) (User, error)
+	Save(context.Context, User) (*User, error)
 }

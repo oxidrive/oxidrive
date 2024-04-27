@@ -6,17 +6,18 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/oxidrive/oxidrive/server/internal/core/user"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
 func TestService_Upload(t *testing.T) {
-	t.Parallel()
 	contentMock := NewFilesContentMock(t)
 	metadataMock := NewFilesMetadataMock(t)
 
 	service := NewService(contentMock, metadataMock)
+	user, _ := user.Create("username", "password")
 
 	t.Run("uplaods with valid path", func(t *testing.T) {
 		ctx := context.Background()
@@ -34,7 +35,7 @@ func TestService_Upload(t *testing.T) {
 		defer contentMock.AssertExpectations(t)
 		defer metadataMock.AssertExpectations(t)
 
-		err := service.Upload(ctx, content, Path(filepath), Size(size), zerolog.Nop())
+		err := service.Upload(ctx, *user, content, Path(filepath), Size(size), zerolog.Nop())
 
 		require.NoError(t, err)
 	})
@@ -48,7 +49,7 @@ func TestService_Upload(t *testing.T) {
 		defer contentMock.AssertExpectations(t)
 		defer metadataMock.AssertExpectations(t)
 
-		err := service.Upload(ctx, content, Path(filepath), Size(size), zerolog.Nop())
+		err := service.Upload(ctx, *user, content, Path(filepath), Size(size), zerolog.Nop())
 
 		require.ErrorIs(t, err, ErrInvalidPath)
 	})
@@ -65,7 +66,7 @@ func TestService_Upload(t *testing.T) {
 		defer contentMock.AssertExpectations(t)
 		defer metadataMock.AssertExpectations(t)
 
-		err := service.Upload(ctx, content, Path(filepath), Size(size), zerolog.Nop())
+		err := service.Upload(ctx, *user, content, Path(filepath), Size(size), zerolog.Nop())
 
 		require.Error(t, err)
 	})
@@ -88,7 +89,7 @@ func TestService_Upload(t *testing.T) {
 		defer contentMock.AssertExpectations(t)
 		defer metadataMock.AssertExpectations(t)
 
-		err := service.Upload(ctx, content, Path(filepath), Size(size), zerolog.Nop())
+		err := service.Upload(ctx, *user, content, Path(filepath), Size(size), zerolog.Nop())
 
 		require.Error(t, err)
 	})

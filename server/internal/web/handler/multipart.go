@@ -11,7 +11,7 @@ func MultipartHandler(logger zerolog.Logger, h func(logger zerolog.Logger, w htt
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var body MultipartRequest
 
-		err := DecodeMutipart(w, r, &body, logger)
+		err := DecodeMutipartBody(w, r, &body, logger)
 		if err != nil {
 			var mr *MalformedRequest
 			if errors.As(err, &mr) {
