@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log"
 	"net/url"
+	"os"
 	"testing"
 	"time"
 
@@ -31,8 +32,13 @@ func WithPgDB() IntegrationDependency {
 	return IntegrationDependency(func(ctx context.Context, t *testing.T) (context.Context, func()) {
 		t.Helper()
 
+		img := os.Getenv("TESTCONTAINER_POSTGRES_IMAGE")
+		if img == "" {
+			img = "postgres:16-alpine"
+		}
+
 		pg, err := postgres.RunContainer(ctx,
-			testcontainers.WithImage("public.ecr.aws/docker/library/postgres:16-alpine"),
+			testcontainers.WithImage(img),
 			postgres.WithDatabase(pgName),
 			postgres.WithUsername(pgUser),
 			postgres.WithPassword(pgPassword),
