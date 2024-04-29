@@ -1,10 +1,16 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { testAccessibility } from "./fixtures";
 
 test.describe("setup flow", () => {
 	test("should be completed to unlock the instance", async ({ page }) => {
 		await page.goto("/");
 		await expect(page).toHaveURL("/setup");
+
+		// Normally this should be its own test, however the first time setup flow is a one-shot process
+		// that is never accessible again after it has run. Running a11y checks as their own
+		// tests would require re-initializing the database manually.
+		testAccessibility("/setup")({ page });
 
 		await expect(
 			page.getByRole("heading", { name: "Create an admin account" }),
@@ -20,16 +26,5 @@ test.describe("setup flow", () => {
 		await expect(
 			page.getByRole("link", { name: "Join the community!" }),
 		).toBeVisible();
-	});
-
-	test("should not have any automatically detectable accessibility issues", async ({
-		page,
-	}) => {
-		await page.goto("/setup");
-		await expect(page).toHaveURL("/setup");
-
-		const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
-
-		expect(accessibilityScanResults.violations).toEqual([]);
 	});
 });
