@@ -9,6 +9,7 @@ use layout::Centered;
 
 mod api;
 mod component;
+mod i18n;
 mod layout;
 mod page;
 
@@ -22,6 +23,8 @@ pub enum Route {
 }
 
 pub fn App() -> Element {
+    i18n::init();
+
     let init = use_resource(api::init);
     if init.read().is_none() {
         return rsx! { Loading {} };

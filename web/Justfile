@@ -28,6 +28,9 @@ setup:
     cd app
     [ -d node_modules ] || npm install
 
+lint:
+    cargo clippy --workspace -- -D warnings
+
 fmt:
     dx fmt
     cargo fmt --all

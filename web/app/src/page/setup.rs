@@ -4,6 +4,7 @@ use crate::{
         Button, ButtonColor, ButtonLink, ButtonVariant, FieldKind, FontWeight, Heading, Loading,
         Logo, Pane, Size, TextField, Title, TitleColor,
     },
+    i18n::use_localizer,
     Route,
 };
 use dioxus::prelude::*;
@@ -14,6 +15,7 @@ use oxidrive_api::{
 use serde::Deserialize;
 
 pub fn Setup() -> Element {
+    let i18n = use_localizer();
     let api = use_oxidrive_api();
     let navigator = use_navigator();
 
@@ -43,7 +45,7 @@ pub fn Setup() -> Element {
     rsx! {
         Pane {
             Logo { with_name: true }
-            Title { h: Heading::H1, color: TitleColor::Primary, "Create an admin account" }
+            Title { h: Heading::H1, color: TitleColor::Primary, {i18n.localize("setup-title")} }
             form {
                 class: "flex flex-col justify-space-evenly gap-6 w-full items-center content-stretch justify-center",
                 onsubmit: move |event| async move {
@@ -53,11 +55,15 @@ pub fn Setup() -> Element {
                     }
                 },
                 div { class: "flex flex-col gap-4 items-center content-stretch justify-center w-full",
-                    TextField { name: "username", placeholder: "Username" }
-                    TextField { name: "password", placeholder: "Password", kind: FieldKind::Password }
+                    TextField { name: "username", placeholder: i18n.localize("setup-form-username") }
+                    TextField {
+                        name: "password",
+                        placeholder: i18n.localize("setup-form-password"),
+                        kind: FieldKind::Password
+                    }
                     TextField {
                         name: "password_confirmation",
-                        placeholder: "Confirm Password",
+                        placeholder: i18n.localize("setup-form-confirm-password"),
                         kind: FieldKind::Password
                     }
                 }
@@ -68,7 +74,7 @@ pub fn Setup() -> Element {
                         color: TitleColor::PrimaryDark,
                         weight: FontWeight::Bold,
                         class: "text-center",
-                        "Configuration Recap"
+                        {i18n.localize("setup-form-configuration-recap")}
                     }
                     ButtonLink {
                         variant: ButtonVariant::Ghost,
@@ -77,17 +83,23 @@ pub fn Setup() -> Element {
                         { public_url }
                     }
                     div { class: "pt-1",
-                        RecapEntry { name: "Database", value: database }
-                        RecapEntry { name: "File Storage", value: file_storage }
+                        RecapEntry {
+                            name: i18n.localize("setup-form-configuration-recap.database"),
+                            value: database
+                        }
+                        RecapEntry {
+                            name: i18n.localize("setup-form-configuration-recap.file-storage"),
+                            value: file_storage
+                        }
                     }
                 }
                 div { class: "flex flex-col gap-2 content-stretch items-center justify-center",
-                    Button { "Complete Setup" }
+                    Button { {i18n.localize("setup-form-submit-cta")} }
                     ButtonLink {
                         variant: ButtonVariant::Ghost,
                         to: "https://github.com/oxidrive/oxidrive/discussions",
                         new_tab: true,
-                        "Find help"
+                        {i18n.localize("setup-form-help-cta")}
                     }
                 }
             }
