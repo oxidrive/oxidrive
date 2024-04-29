@@ -1,6 +1,7 @@
 use crate::{
     api::use_oxidrive_api,
     component::{ButtonLink, ButtonVariant, Loading, Logo, Pane},
+    i18n::use_localizer,
     Route,
 };
 use dioxus::prelude::*;
@@ -8,6 +9,7 @@ use oxidrive_api::instance::{Status, StatusResponse};
 
 #[component]
 pub fn Home() -> Element {
+    let i18n = use_localizer();
     let api = use_oxidrive_api();
     let navigator = use_navigator();
 
@@ -34,12 +36,12 @@ pub fn Home() -> Element {
         Pane {
             h1 { Logo { with_name: true } }
             div { class: "flex flex-col gap-4 items-center justify-evenly",
-                p { "Oxidrive is coming soon" }
+                p { {i18n.localize("home-title")} }
                 ButtonLink {
                     variant: ButtonVariant::Filled,
                     to: "https://github.com/oxidrive/oxidrive/discussions",
                     new_tab: true,
-                    "Join the community!"
+                    {i18n.localize("home-cta")}
                 }
             }
         }
