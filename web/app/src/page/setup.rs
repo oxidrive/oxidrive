@@ -63,7 +63,7 @@ pub fn Setup() -> Element {
                 }
                 div { class: "bg-primary-200 rounded-3xl inline-block p-2",
                     Title {
-                        h: Heading::H3,
+                        h: Heading::H2,
                         size: Size::Medium,
                         color: TitleColor::PrimaryDark,
                         weight: FontWeight::Bold,

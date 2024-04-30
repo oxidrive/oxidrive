@@ -4,7 +4,7 @@ use dioxus::prelude::*;
 #[derive(Clone, Copy, PartialEq)]
 pub enum Heading {
     H1,
-    H3,
+    H2,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -61,9 +61,9 @@ pub fn Title(
                 h1 { class: class, { children } }
             }
         }
-        Heading::H3 => {
+        Heading::H2 => {
             rsx! {
-                h3 { class: class, { children } }
+                h2 { class: class, { children } }
             }
         }
     }
