@@ -1,8 +1,10 @@
 use std::{borrow::Cow, rc::Rc};
 
 use dioxus::hooks::{use_context, use_context_provider};
-use fluent::{FluentArgs, FluentBundle, FluentResource};
-use unic_langid::{langid, LanguageIdentifier};
+use fluent_bundle::{FluentArgs, FluentBundle, FluentResource};
+use fluent_langneg::{negotiate_languages, NegotiationStrategy};
+pub use unic_langid::langid;
+use unic_langid::LanguageIdentifier;
 
 #[cfg(not(windows))]
 macro_rules! sep {
@@ -21,7 +23,8 @@ macro_rules! sep {
 macro_rules! translation {
     ($lang: tt, $kind: tt, $name: tt) => {
         (
-            concat!($lang, sep!(), $kind, sep!(), $name),
+            langid!($lang),
+            concat!($kind, sep!(), $name),
             include_str!(concat!(
                 "translations",
                 sep!(),
@@ -35,28 +38,66 @@ macro_rules! translation {
     };
 }
 
-const EN_TRANSLATIONS: &[(&str, &str)] = &[
+static DEFAULT_LOCALE: LanguageIdentifier = langid!("en");
+static LOCALES: &[LanguageIdentifier] = &[langid!("en")];
+
+type Translations<'a> = &'a [(LanguageIdentifier, &'a str, &'a str)];
+
+static TRANSLATIONS: Translations = &[
     translation!("en", "page", "home.ftl"),
     translation!("en", "page", "setup.ftl"),
 ];
 
 pub fn init() -> Localizer {
-    let bundle = init_lang(langid!("en"), EN_TRANSLATIONS);
-    use_context_provider(|| Localizer { bundle })
+    let requested_locales = web_sys::window()
+        .expect("window not found")
+        .navigator()
+        .languages()
+        .into_iter()
+        .filter_map(|lang| lang.as_string())
+        .filter_map(|lang| lang.parse().ok())
+        .collect::<Vec<LanguageIdentifier>>();
+
+    let localizer = init_with(&requested_locales, TRANSLATIONS, true);
+    use_context_provider(|| localizer)
 }
 
-fn init_lang(
-    lang: LanguageIdentifier,
-    sources: &[(&str, &str)],
-) -> Rc<FluentBundle<FluentResource>> {
-    let mut bundle = FluentBundle::new(vec![lang]);
+fn init_with(
+    requested_locales: &[LanguageIdentifier],
+    translations: Translations,
+    isolating: bool,
+) -> Localizer {
+    let selected_locales = negotiate_languages(
+        requested_locales,
+        LOCALES,
+        Some(&DEFAULT_LOCALE),
+        NegotiationStrategy::Filtering,
+    )
+    .into_iter()
+    .cloned()
+    .collect::<Vec<_>>();
 
-    for (id, content) in sources {
+    let bundle = init_bundle(selected_locales, translations, isolating);
+    Localizer { bundle }
+}
+
+fn init_bundle(
+    langs: Vec<LanguageIdentifier>,
+    translations: Translations,
+    isolating: bool,
+) -> Rc<FluentBundle<FluentResource>> {
+    let mut bundle = FluentBundle::new(langs.clone());
+    bundle.set_use_isolating(isolating);
+
+    for (lang, id, content) in translations
+        .iter()
+        .filter(|(lang, _, _)| langs.contains(lang))
+    {
         let resource = FluentResource::try_new((*content).into())
-            .unwrap_or_else(|_| panic!("failed to parse {id}"));
+            .unwrap_or_else(|_| panic!("failed to parse {lang}/{id}"));
         bundle
             .add_resource(resource)
-            .unwrap_or_else(|_| panic!("failed to add resource {id} to bundle"));
+            .unwrap_or_else(|_| panic!("failed to add resource {lang}/{id} to bundle"));
     }
 
     Rc::new(bundle)
@@ -111,37 +152,45 @@ pub fn use_localizer() -> Localizer {
     use_context()
 }
 
+#[macro_export]
+macro_rules! loc_args {
+    ( $($key:expr => $value:expr),* ) => {
+        {
+            let mut args: fluent_bundle::FluentArgs = fluent_bundle::FluentArgs::new();
+            $(
+                args.set($key, $value);
+            )*
+            args
+        }
+    };
+}
+
 #[cfg(test)]
 mod tests {
-    use std::rc::Rc;
 
     use assert2::check;
-    use fluent::{fluent_args, FluentBundle, FluentResource};
-    use unic_langid::langid;
+    use rstest::rstest;
+    use unic_langid::{langid, LanguageIdentifier};
 
-    use super::Localizer;
+    use crate::i18n::{init_with, Translations};
 
-    #[test]
-    fn it_localizes_an_attribute() {
-        let resource = FluentResource::try_new(
+    #[rstest]
+    #[case::normal(&[langid!("en-US"), langid!("en")])]
+    #[case::default_fallback(&[langid!("de-AT"), langid!("fr-FR"), langid!("fr-CA")])]
+    fn it_localizes_an_attribute(#[case] locales: &[LanguageIdentifier]) {
+        let translations: Translations = &[(
+            langid!("en"),
+            "test.ftl",
             r#"
 test = Unused
   .msg = hello {$name}!
-"#
-            .into(),
-        )
-        .unwrap();
+"#,
+        )];
 
-        let mut bundle = FluentBundle::new(vec![langid!("en")]);
-        // important for testing or strings will contain additional UTF-8 characters that fail the equality check
-        bundle.set_use_isolating(false);
+        let i18n = init_with(locales, translations, false);
+        check!(i18n.bundle.locales == &[langid!("en")]);
 
-        bundle.add_resource(resource).unwrap();
-
-        let i18n = Localizer {
-            bundle: Rc::new(bundle),
-        };
-        let args = fluent_args!["name" => "world"];
+        let args = loc_args!["name" => "world"];
         let localized = i18n.localize_with("test.msg", &args);
         check!(localized == "hello world!");
     }

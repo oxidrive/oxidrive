@@ -19,9 +19,9 @@ console_error_panic_hook = "0.1.7"
 dioxus = "0.5"
 dioxus-logger = "0.4.1"
 env_logger = "0.11"
-fluent = "0.16.0"
+fluent-bundle = "0.15.2"
+fluent-langneg = "0.13.0"
 gloo-timers = { version = "0.3.0", features = ["futures"] }
-gloo-utils = { version = "0.2.0" }
 log = "0.4.19"
 mockito = "1"
 reqwest = { version = "0.12.4", default-features = false, features = [
@@ -29,8 +29,10 @@ reqwest = { version = "0.12.4", default-features = false, features = [
     "http2",
     "json",
 ] }
+rstest = "0.19.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "1"
 tokio = "1"
 unic-langid = { version = "0.9.4", features = ["macros"] }
+web-sys = "0.3.68"

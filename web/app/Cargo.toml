@@ -10,12 +10,14 @@ oxidrive_api = { workspace = true }
 console_error_panic_hook = { workspace = true }
 dioxus = { workspace = true, features = ["web", "router"] }
 dioxus-logger = { workspace = true }
-fluent = { workspace = true }
+fluent-bundle = { workspace = true }
+fluent-langneg = { workspace = true }
 gloo-timers = { workspace = true }
-gloo-utils = { workspace = true }
 log = { workspace = true }
 serde = { workspace = true }
 unic-langid = { workspace = true }
+web-sys = { workspace = true, features = ["Window", "Navigator", "Location"] }
 
 [dev-dependencies]
 assert2 = { workspace = true }
+rstest = { workspace = true }

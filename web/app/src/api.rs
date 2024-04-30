@@ -6,7 +6,11 @@ pub fn use_oxidrive_api() -> Signal<Oxidrive> {
 }
 
 pub async fn init() {
-    let origin = gloo_utils::window().location().origin().unwrap();
+    let origin = web_sys::window()
+        .expect("window not found")
+        .location()
+        .origin()
+        .unwrap();
     let api = Oxidrive::new(origin);
     use_context_provider(|| Signal::new(api));
 }
