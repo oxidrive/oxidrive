@@ -1,17 +1,20 @@
 use super::Size;
 use dioxus::prelude::*;
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum Heading {
     H1,
     H2,
     H3,
 }
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum TitleColor {
     Primary,
     PrimaryDark,
     Black,
 }
+
 impl TitleColor {
     pub fn class(&self) -> &'static str {
         match self {
@@ -21,11 +24,13 @@ impl TitleColor {
         }
     }
 }
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum FontWeight {
     Regular,
     Bold,
 }
+
 impl FontWeight {
     pub fn class(&self) -> &'static str {
         match self {
@@ -34,6 +39,7 @@ impl FontWeight {
         }
     }
 }
+
 #[component]
 pub fn Title(
     #[props(default = Heading::H1)] h: Heading,

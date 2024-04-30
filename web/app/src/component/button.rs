@@ -1,6 +1,8 @@
 use dioxus::prelude::*;
+
 const CLASS_PRIMARY: &str = "bg-primary-500 text-primary-50 py-2 px-6 flex flex-row content-stretch items-center justify-center rounded";
 const CLASS_GHOST: &str = "text-primary-500 underline p-1 flex flex-row content-stretch items-center justify-center rounded";
+
 #[derive(PartialEq, Clone, Props)]
 pub struct ButtonProps {
     #[props(default = ButtonVariant::Filled)]
@@ -8,17 +10,20 @@ pub struct ButtonProps {
     pub onclick: Option<EventHandler<MouseEvent>>,
     pub children: Element,
 }
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum ButtonVariant {
     Filled,
     Ghost,
 }
+
 pub fn Button(props: ButtonProps) -> Element {
     match props.variant {
         ButtonVariant::Filled => button(CLASS_PRIMARY, props),
         ButtonVariant::Ghost => button(CLASS_GHOST, props),
     }
 }
+
 fn button(
     class: impl Into<String>,
     ButtonProps {
@@ -32,12 +37,14 @@ fn button(
         button { class: class.into(), onclick: onclick, { children } }
     }
 }
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum ButtonColor {
     Primary,
     PrimaryDark,
     White,
 }
+
 impl ButtonColor {
     fn class(&self) -> &'static str {
         match self {
@@ -46,6 +53,7 @@ impl ButtonColor {
             Self::White => "text-primary-50",
         }
     }
+
     fn default_for(variant: ButtonVariant) -> Self {
         match variant {
             ButtonVariant::Filled => Self::White,
@@ -53,6 +61,7 @@ impl ButtonColor {
         }
     }
 }
+
 #[derive(PartialEq, Clone, Props)]
 pub struct ButtonLinkProps {
     #[props(default = ButtonVariant::Filled)]
@@ -78,6 +87,7 @@ pub struct ButtonLinkProps {
     #[props(into)]
     pub to: IntoRoutable,
 }
+
 pub fn ButtonLink(props: ButtonLinkProps) -> Element {
     let button_variant = props.variant;
     match button_variant {
@@ -85,6 +95,7 @@ pub fn ButtonLink(props: ButtonLinkProps) -> Element {
         ButtonVariant::Ghost => button_link(CLASS_GHOST, props),
     }
 }
+
 fn button_link(
     class: impl Into<String>,
     ButtonLinkProps {
@@ -100,6 +111,7 @@ fn button_link(
 ) -> Element {
     let color = color.unwrap_or_else(|| ButtonColor::default_for(variant));
     let class = format!("{} {}", class.into(), color.class());
+
     rsx! {
         Link {
             class: class,

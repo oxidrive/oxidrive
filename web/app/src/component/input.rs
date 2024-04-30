@@ -1,10 +1,13 @@
-use dioxus::prelude::*;
 use std::fmt::Display;
+
+use dioxus::prelude::*;
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum FieldKind {
     Text,
     Password,
 }
+
 impl Display for FieldKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let s = match self {
@@ -14,6 +17,7 @@ impl Display for FieldKind {
         s.fmt(f)
     }
 }
+
 #[derive(PartialEq, Clone, Props)]
 pub struct TextFieldProps {
     #[props(into)]
@@ -28,6 +32,7 @@ pub struct TextFieldProps {
     pub kind: FieldKind,
     pub oninput: Option<EventHandler<FormEvent>>,
 }
+
 pub fn TextField(
     TextFieldProps {
         name,

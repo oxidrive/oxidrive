@@ -12,9 +12,11 @@ use oxidrive_api::{
     Oxidrive,
 };
 use serde::Deserialize;
+
 pub fn Setup() -> Element {
     let api = use_oxidrive_api();
     let navigator = use_navigator();
+
     let future = use_resource(move || async move { api().instance().status().await });
     let Status {
         database,
@@ -30,12 +32,14 @@ pub fn Setup() -> Element {
             return rsx! { Loading {} };
         }
     };
+
     if setup_completed {
         log::info!("setup has already been completed, redirecting to home page...");
         if let Some(err) = navigator.replace(Route::Home {}) {
             return rsx! {"Error: {err:?}"};
         }
     }
+
     rsx! {
         Pane {
             h1 { Logo { with_name: true } }
@@ -90,6 +94,7 @@ pub fn Setup() -> Element {
         }
     }
 }
+
 #[component]
 fn RecapEntry(name: String, #[props(into)] value: String) -> Element {
     rsx! {
@@ -99,12 +104,14 @@ fn RecapEntry(name: String, #[props(into)] value: String) -> Element {
         }
     }
 }
+
 #[derive(Debug, Deserialize)]
 struct SetupFormData {
     username: Vec<String>,
     password: Vec<String>,
     password_confirmation: Vec<String>,
 }
+
 async fn submit(
     api: Signal<Oxidrive>,
     SetupFormData {
@@ -116,9 +123,11 @@ async fn submit(
     let username = username.into_iter().next().unwrap();
     let password = password.into_iter().next().unwrap();
     let password_confirmation = password_confirmation.into_iter().next().unwrap();
+
     if password != password_confirmation {
         return Err("passwords must match".into());
     }
+
     api()
         .instance()
         .setup(SetupRequest {
@@ -126,5 +135,6 @@ async fn submit(
         })
         .await
         .map_err(|err| err.to_string())?;
+
     Ok(())
 }
