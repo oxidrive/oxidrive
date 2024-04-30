@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+
 pub fn Loading() -> Element {
     rsx! {
         div { class: "oxygen bg-primary-500 rounded-full",

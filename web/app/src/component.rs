@@ -10,11 +10,13 @@ pub use logo::*;
 pub use pane::*;
 pub use spinner::*;
 pub use title::*;
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum Size {
     Medium,
     Large,
 }
+
 impl Size {
     pub fn class_suffix(&self) -> &'static str {
         match self {
