@@ -42,8 +42,8 @@ pub fn Setup() -> Element {
 
     rsx! {
         Pane {
-            h1 { Logo { with_name: true } }
-            Title { h: Heading::H2, color: TitleColor::Primary, "Create an admin account" }
+            Logo { with_name: true }
+            Title { h: Heading::H1, color: TitleColor::Primary, "Create an admin account" }
             form {
                 class: "flex flex-col justify-space-evenly gap-6 w-full items-center content-stretch justify-center",
                 onsubmit: move |event| async move {
