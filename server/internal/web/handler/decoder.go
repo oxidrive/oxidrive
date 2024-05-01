@@ -62,8 +62,8 @@ func DecodeJSONBody(w http.ResponseWriter, r *http.Request, dst interface{}) err
 	return nil
 }
 
-func DecodeMutipartBody(w http.ResponseWriter, r *http.Request, dst *MultipartRequest, logger zerolog.Logger) error {
-	if err := r.ParseMultipartForm(0); err != nil {
+func DecodeMutipartBody(w http.ResponseWriter, r *http.Request, dst *MultipartRequest, multipartMaxMemory int, logger zerolog.Logger) error {
+	if err := r.ParseMultipartForm(int64(multipartMaxMemory) << 20); err != nil {
 		return &MalformedRequest{Status: http.StatusBadRequest, Msg: err.Error()}
 	}
 	defer func() {

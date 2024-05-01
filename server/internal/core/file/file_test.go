@@ -11,7 +11,7 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/testutil"
 )
 
-func Test_NewFile(t *testing.T) {
+func Test_Create(t *testing.T) {
 	t.Run("creates a new valid file", func(t *testing.T) {
 		t.Parallel()
 

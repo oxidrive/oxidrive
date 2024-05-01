@@ -29,7 +29,7 @@ func routes(cfg *Config) *http.ServeMux {
 	router.Handle(
 		"POST /api/files",
 		middleware.Apply(
-			api.Upload(cfg.Logger.With().Str("handler", "api.upload").Logger(), cfg.Application),
+			api.Upload(cfg.Logger.With().Str("handler", "api.upload").Logger(), cfg.Application, cfg.Config),
 			middleware.EnforceContentType("multipart/form-data"),
 			middleware.Authenticate(),
 		),

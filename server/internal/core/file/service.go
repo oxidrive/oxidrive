@@ -7,6 +7,12 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
 
+type FileUpload struct {
+	Content Content
+	Path    Path
+	Size    Size
+}
+
 type Service struct {
 	filesContent  FilesContent
 	filesMetadata FilesMetadata
@@ -19,9 +25,9 @@ func InitService(filesContent FilesContent, filesMetadata FilesMetadata) Service
 	}
 }
 
-func (s *Service) Upload(ctx context.Context, content Content, path Path, size Size, ownerID user.ID) error {
+func (s *Service) Upload(ctx context.Context, toUpload FileUpload, owner user.ID) error {
 	// TODO add user validation logic
-	f, err := Create(content, path, size, ownerID)
+	f, err := Create(toUpload.Content, toUpload.Path, toUpload.Size, owner)
 	if err != nil {
 		return err
 	}

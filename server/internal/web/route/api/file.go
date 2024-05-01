@@ -17,8 +17,8 @@ type uploadResponse struct {
 	Ok bool `json:"ok"`
 }
 
-func Upload(logger zerolog.Logger, app *core.Application) http.Handler {
-	return handler.MultipartHandler(logger, func(logger zerolog.Logger, w http.ResponseWriter, r *http.Request, req handler.MultipartRequest) {
+func Upload(logger zerolog.Logger, app *core.Application, cfg handler.Config) http.Handler {
+	return handler.MultipartHandler(logger, cfg.MultipartMaxMemory, func(logger zerolog.Logger, w http.ResponseWriter, r *http.Request, req handler.MultipartRequest) {
 		ctx := r.Context()
 		defer req.CloseFunc()
 
@@ -31,7 +31,7 @@ func Upload(logger zerolog.Logger, app *core.Application) http.Handler {
 			return
 		}
 
-		userID, err := uuid.FromBytes([]byte(getUserIDFromAuthToken(authToken))) // TODO delete this call after creating the user service
+		userID, err := uuid.Parse(getUserIDFromAuthToken(authToken)) // TODO delete this call after creating the user service
 		if err != nil {
 			handler.RespondWithJson(w, http.StatusUnauthorized, handler.ErrorResponse{
 				Error:   "upload_failed",
@@ -40,7 +40,9 @@ func Upload(logger zerolog.Logger, app *core.Application) http.Handler {
 			return
 		}
 
-		if err := app.File().Upload(ctx, file.Content(req.File), file.Path(req.FileHeader.Filename), file.Size(req.FileHeader.Size), user.ID(userID)); err != nil {
+		toUpload := file.FileUpload{Content: file.Content(req.File), Path: file.Path(req.FileHeader.Filename), Size: file.Size(req.FileHeader.Size)}
+
+		if err := app.File().Upload(ctx, toUpload, user.ID(userID)); err != nil {
 			handler.RespondWithJson(w, http.StatusInternalServerError, handler.ErrorResponse{
 				Error:   "upload_failed",
 				Message: err.Error(),

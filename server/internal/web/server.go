@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/oxidrive/oxidrive/server/internal/core"
+	"github.com/oxidrive/oxidrive/server/internal/web/handler"
 )
 
 type Config struct {
@@ -13,6 +14,7 @@ type Config struct {
 	Application    *core.Application
 	Logger         zerolog.Logger
 	FrontendFolder string
+	handler.Config
 }
 
 func Run(cfg Config) error {

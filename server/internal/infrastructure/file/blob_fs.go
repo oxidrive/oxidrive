@@ -15,19 +15,20 @@ import (
 )
 
 const (
-	throughputInByte    = 32
 	filePermission      = 0644
 	directoryPermission = 0755
 )
 
 type blobFS struct {
 	filesPrefix string
+	throughput  int
 	logger      zerolog.Logger
 }
 
-func NewBlobFS(config config.StorageConfig, logger zerolog.Logger) *blobFS {
+func NewBlobFS(cfg config.StorageConfig, logger zerolog.Logger) *blobFS {
 	return &blobFS{
-		filesPrefix: config.StoragePrefix,
+		filesPrefix: cfg.StoragePrefix,
+		throughput:  cfg.ThroughputInByte,
 		logger:      logger,
 	}
 }
@@ -57,7 +58,7 @@ func (b *blobFS) Store(ctx context.Context, f file.File) (err error) {
 			return fmt.Errorf("context invalidated while saving the file in blob fs: %w", err)
 		}
 
-		if _, err = io.CopyN(fsFile, f.Content, throughputInByte); err != nil {
+		if _, err = io.CopyN(fsFile, f.Content, int64(b.throughput)<<20); err != nil {
 			if errors.Is(err, io.EOF) {
 				return nil
 			}
