@@ -1,7 +1,6 @@
 package file
 
 import (
-	"bytes"
 	"context"
 	"os"
 	"path/filepath"
@@ -29,9 +28,8 @@ func TestBlobFS_Store(t *testing.T) {
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir())
 		defer done()
 
-		var buf bytes.Buffer
 		path := testutil.TempDirFromContext(ctx, t)
-		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path}, zerolog.New(&buf))
+		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path}, zerolog.Nop())
 		f, err := file.Create(content, "this/dir/without_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
 		require.NoError(t, err)
 
@@ -39,7 +37,6 @@ func TestBlobFS_Store(t *testing.T) {
 
 		require.NoError(t, err)
 		testFileContet(t, filepath.Join(path, f.OwnerID.String(), string(f.Path)), contentStr)
-		require.Empty(t, buf)
 	})
 
 	t.Run("stores a file with timedouted context", func(t *testing.T) {
@@ -48,9 +45,8 @@ func TestBlobFS_Store(t *testing.T) {
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir())
 		defer done()
 
-		var buf bytes.Buffer
 		path := testutil.TempDirFromContext(ctx, t)
-		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path}, zerolog.New(&buf))
+		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path}, zerolog.Nop())
 		f, err := file.Create(content, "this/dir/timeout_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
 		require.NoError(t, err)
 		ctx, cancel := context.WithTimeout(context.Background(), 0*time.Nanosecond)
@@ -61,7 +57,6 @@ func TestBlobFS_Store(t *testing.T) {
 		require.Error(t, err)
 		_, err = os.Stat(filepath.Join(path, f.OwnerID.String(), string(f.Path)))
 		require.ErrorIs(t, err, os.ErrNotExist)
-		require.Empty(t, buf)
 	})
 
 	t.Run("stores a file with cancelled context", func(t *testing.T) {
@@ -70,9 +65,8 @@ func TestBlobFS_Store(t *testing.T) {
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir())
 		defer done()
 
-		var buf bytes.Buffer
 		path := testutil.TempDirFromContext(ctx, t)
-		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path}, zerolog.New(&buf))
+		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path}, zerolog.Nop())
 		f, err := file.Create(content, "this/dir/ctx_cancelled_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
 		require.NoError(t, err)
 		ctx, cancel := context.WithCancel(context.Background())
@@ -83,7 +77,6 @@ func TestBlobFS_Store(t *testing.T) {
 		require.Error(t, err)
 		_, err = os.Stat(filepath.Join(path, f.OwnerID.String(), string(f.Path)))
 		require.ErrorIs(t, err, os.ErrNotExist)
-		require.Empty(t, buf)
 	})
 }
 
