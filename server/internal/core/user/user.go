@@ -8,14 +8,14 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/core/password"
 )
 
-type UserID (uuid.UUID)
+type ID (uuid.UUID)
 
-func (i UserID) String() string {
+func (i ID) String() string {
 	return uuid.UUID(i).String()
 }
 
 type User struct {
-	ID           UserID
+	ID           ID
 	Username     string
 	PasswordHash password.Hash
 }
@@ -27,7 +27,7 @@ func Create(username string, pwd string) (*User, error) {
 	}
 
 	return &User{
-		ID:           UserID(uuid.Must(uuid.NewV7())),
+		ID:           ID(uuid.Must(uuid.NewV7())),
 		Username:     username,
 		PasswordHash: hash,
 	}, nil

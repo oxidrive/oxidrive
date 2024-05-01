@@ -24,7 +24,7 @@ type Service struct {
 	users user.Users
 }
 
-func NewService(info Info, users user.Users) Service {
+func InitService(info Info, users user.Users) Service {
 	return Service{
 		info:  info,
 		users: users,

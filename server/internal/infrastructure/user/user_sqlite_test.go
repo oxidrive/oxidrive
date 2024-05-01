@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -44,7 +43,6 @@ func TestSqliteUsers_Save(t *testing.T) {
 		username := "testuser"
 
 		users := NewSqliteUsers(db)
-		fmt.Println("ciao mondo")
 
 		created, err := users.Save(ctx, *testutil.Must(user.Create(username, "a")))
 		assert.NoError(t, err)

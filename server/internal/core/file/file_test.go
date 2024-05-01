@@ -3,15 +3,19 @@ package file
 import (
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/oxidrive/oxidrive/server/internal/core/user"
+	"github.com/oxidrive/oxidrive/server/internal/testutil"
 )
 
 func Test_NewFile(t *testing.T) {
 	t.Run("creates a new valid file", func(t *testing.T) {
 		t.Parallel()
 
-		file, err := NewFile(nil, "this/is/a/directory/filename.txt", 5)
+		file, err := Create(nil, "this/is/a/directory/filename.txt", 5, user.ID(testutil.Must(uuid.NewV7())))
 
 		assert.NotNil(t, file)
 		assert.NoError(t, err)
@@ -20,7 +24,7 @@ func Test_NewFile(t *testing.T) {
 	t.Run("returns an error with an invalid path", func(t *testing.T) {
 		t.Parallel()
 
-		file, err := NewFile(nil, "/this/is/a/directory/filename.txt", 5)
+		file, err := Create(nil, "/this/is/a/directory/filename.txt", 5, user.ID(testutil.Must(uuid.NewV7())))
 
 		assert.Nil(t, file)
 		assert.ErrorIs(t, err, ErrInvalidPath)

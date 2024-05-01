@@ -16,7 +16,7 @@ func TestUser(t *testing.T) {
 		created, err := Create(username, password)
 
 		assert.NoError(t, err)
-		assert.NotEqual(t, UserID(uuid.Nil), created.ID)
+		assert.NotEqual(t, ID(uuid.Nil), created.ID)
 		assert.Equal(t, username, created.Username)
 	})
 

@@ -35,7 +35,7 @@ func TestInstanceService_FirstTimeSetup(t *testing.T) {
 		users.On("Count", ctx).Return(0, nil).Twice()
 		users.On("Save", ctx, mock.MatchedBy(func(u user.User) bool { return u.Username == created.Username })).Return((*user.User)(nil), nil).Once()
 
-		svc := NewService(info, users)
+		svc := InitService(info, users)
 
 		completed, err := svc.FirstTimeSetupCompleted(ctx)
 		require.NoError(t, err)
@@ -53,7 +53,7 @@ func TestInstanceService_FirstTimeSetup(t *testing.T) {
 		users := user.NewUsersMock(t)
 		users.On("Count", ctx).Return(1, nil).Twice()
 
-		svc := NewService(info, users)
+		svc := InitService(info, users)
 
 		initial := InitialAdmin{
 			Username: "test",
@@ -83,7 +83,7 @@ func TestInstanceService_Status(t *testing.T) {
 		users := user.NewUsersMock(t)
 		users.On("Count", ctx).Return(1, nil).Twice()
 
-		svc := NewService(info, users)
+		svc := InitService(info, users)
 
 		status, err := svc.Status(ctx)
 		require.NoError(t, err)

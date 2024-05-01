@@ -4,10 +4,8 @@ import (
 	"context"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/rs/zerolog"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/file"
-	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
 
 type PgFiles struct {
@@ -18,7 +16,7 @@ func NewPgFiles(db *sqlx.DB) *PgFiles {
 	return &PgFiles{db: db}
 }
 
-func (p *PgFiles) Save(ctx context.Context, u user.User, f file.File, logger zerolog.Logger) (*file.File, error) {
+func (p *PgFiles) Save(ctx context.Context, f file.File) (*file.File, error) {
 	if _, err := p.db.ExecContext(ctx, `insert into files (
         id,
         name,
@@ -37,7 +35,7 @@ func (p *PgFiles) Save(ctx context.Context, u user.User, f file.File, logger zer
       name = excluded.name,
       path = excluded.path,
       size = excluded.size
-    ;`, f.ID.String(), f.Name, f.Path, f.Size, u.ID.String()); err != nil {
+    ;`, f.ID.String(), f.Name, f.Path, f.Size, f.OwnerID.String()); err != nil {
 		return nil, err
 	}
 
