@@ -29,7 +29,7 @@ func TestBlobFS_Store(t *testing.T) {
 		defer done()
 
 		path := testutil.TempDirFromContext(ctx, t)
-		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path}, zerolog.Nop())
+		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
 		f, err := file.Create(content, "this/dir/without_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
 		require.NoError(t, err)
 
@@ -46,7 +46,7 @@ func TestBlobFS_Store(t *testing.T) {
 		defer done()
 
 		path := testutil.TempDirFromContext(ctx, t)
-		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path}, zerolog.Nop())
+		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
 		f, err := file.Create(content, "this/dir/timeout_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
 		require.NoError(t, err)
 		ctx, cancel := context.WithTimeout(context.Background(), 0*time.Nanosecond)
@@ -66,7 +66,7 @@ func TestBlobFS_Store(t *testing.T) {
 		defer done()
 
 		path := testutil.TempDirFromContext(ctx, t)
-		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path}, zerolog.Nop())
+		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
 		f, err := file.Create(content, "this/dir/ctx_cancelled_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
 		require.NoError(t, err)
 		ctx, cancel := context.WithCancel(context.Background())

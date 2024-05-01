@@ -58,7 +58,7 @@ func (b *blobFS) Store(ctx context.Context, f file.File) (err error) {
 			return fmt.Errorf("context invalidated while saving the file in blob fs: %w", err)
 		}
 
-		if _, err = io.CopyN(fsFile, f.Content, int64(b.throughput)<<20); err != nil {
+		if _, err = io.CopyN(fsFile, f.Content, int64(b.throughput)); err != nil {
 			if errors.Is(err, io.EOF) {
 				return nil
 			}
