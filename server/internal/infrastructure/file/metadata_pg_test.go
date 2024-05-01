@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/rs/zerolog"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/file"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
@@ -14,6 +13,7 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/testutil"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestPgFiles_Save(t *testing.T) {
@@ -28,9 +28,10 @@ func TestPgFiles_Save(t *testing.T) {
 
 		files := NewPgFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, _ := file.NewFile(readerMock, "filepath", 10)
+		fileToSave, err := file.Create(readerMock, "filepath", 10, u.ID)
+		require.NoError(t, err)
 
-		saved, err := files.Save(ctx, u, *fileToSave, zerolog.Nop())
+		saved, err := files.Save(ctx, *fileToSave)
 
 		assert.NoError(t, err)
 		assert.Equal(t, fileToSave.Name, saved.Name)
@@ -49,9 +50,10 @@ func TestPgFiles_Save(t *testing.T) {
 
 		files := NewPgFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, _ := file.NewFile(readerMock, "filepath", 10)
+		fileToSave, err := file.Create(readerMock, "filepath", 10, u.ID)
+		require.NoError(t, err)
 
-		saved, err := files.Save(ctx, u, *fileToSave, zerolog.Nop())
+		saved, err := files.Save(ctx, *fileToSave)
 
 		assert.NoError(t, err)
 		assert.Equal(t, fileToSave.Name, saved.Name)
@@ -62,7 +64,7 @@ func TestPgFiles_Save(t *testing.T) {
 		fileToSave.Path = "changed"
 		fileToSave.Size = 20
 
-		saved, err = files.Save(ctx, u, *fileToSave, zerolog.Nop())
+		saved, err = files.Save(ctx, *fileToSave)
 
 		assert.NoError(t, err)
 		assert.Equal(t, fileToSave.Name, saved.Name)
@@ -77,13 +79,15 @@ func TestPgFiles_Save(t *testing.T) {
 		defer done()
 
 		db := testutil.PgDBFromContext(ctx, t)
-		u, _ := user.Create("username", "password")
+		u, err := user.Create("username", "password")
+		require.NoError(t, err)
 
 		files := NewPgFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, _ := file.NewFile(readerMock, "filepath", 10)
+		fileToSave, err := file.Create(readerMock, "filepath", 10, u.ID)
+		require.NoError(t, err)
 
-		saved, err := files.Save(ctx, *u, *fileToSave, zerolog.Nop())
+		saved, err := files.Save(ctx, *fileToSave)
 
 		assert.Error(t, err)
 		assert.Nil(t, saved)

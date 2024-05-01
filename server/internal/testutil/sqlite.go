@@ -34,6 +34,7 @@ func WithSqliteDB(cfg SqliteDBConfig) IntegrationDependency {
 		}
 
 		url := fmt.Sprintf("sqlite://%s?%s", path.Join(dir, cfg.DbName), cfg.DbParams)
+		fmt.Println(url)
 
 		ctx = context.WithValue(ctx, sqliteKey{}, url)
 		return ctx, func() {
@@ -74,6 +75,11 @@ func SqliteDBFromContext(ctx context.Context, t *testing.T) *sqlx.DB {
 	}
 
 	db, err := sqlx.Connect(cfg.DatabaseDriver(), cfg.DatabaseSource())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = db.Exec("PRAGMA foreign_keys = ON;")
 	if err != nil {
 		t.Fatal(err)
 	}

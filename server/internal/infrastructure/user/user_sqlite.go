@@ -41,5 +41,5 @@ func (p *SqliteUsers) Save(ctx context.Context, u user.User) (*user.User, error)
 		return nil, err
 	}
 
-	return nil, err
+	return &u, nil
 }

@@ -7,17 +7,17 @@ import (
 	"path/filepath"
 
 	"github.com/google/uuid"
+
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
-	"github.com/rs/zerolog"
 )
 
-type FileID (uuid.UUID)
+type ID (uuid.UUID)
 type Content io.Reader
 type Path string
 type Name string
 type Size int
 
-func (i FileID) String() string {
+func (i ID) String() string {
 	return uuid.UUID(i).String()
 }
 
@@ -26,14 +26,15 @@ var (
 )
 
 type File struct {
-	ID      FileID
+	ID      ID
 	Content Content
 	Name    Name
 	Path    Path
 	Size    Size
+	OwnerID user.ID
 }
 
-func NewFile(content Content, path Path, size Size) (*File, error) {
+func Create(content Content, path Path, size Size, ownerID user.ID) (*File, error) {
 	if !isValid(path) {
 		return nil, ErrInvalidPath
 	}
@@ -41,11 +42,12 @@ func NewFile(content Content, path Path, size Size) (*File, error) {
 	name := Name(filepath.Base(string(path)))
 
 	return &File{
-		ID:      FileID(uuid.Must(uuid.NewV7())),
+		ID:      ID(uuid.Must(uuid.NewV7())),
 		Content: content,
 		Name:    name,
 		Path:    path,
 		Size:    size,
+		OwnerID: ownerID,
 	}, nil
 }
 
@@ -56,9 +58,9 @@ func isValid(path Path) bool {
 }
 
 type FilesContent interface {
-	Store(context.Context, user.User, File, zerolog.Logger) error
+	Store(context.Context, File) error
 }
 
 type FilesMetadata interface {
-	Save(context.Context, user.User, File, zerolog.Logger) (*File, error)
+	Save(context.Context, File) (*File, error)
 }

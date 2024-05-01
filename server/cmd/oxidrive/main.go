@@ -8,11 +8,11 @@ import (
 	"syscall"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 
 	"github.com/oxidrive/oxidrive/server/internal/config"
 	"github.com/oxidrive/oxidrive/server/internal/core"
+	"github.com/oxidrive/oxidrive/server/internal/infrastructure"
 	"github.com/oxidrive/oxidrive/server/internal/web"
 	"github.com/oxidrive/oxidrive/server/migrations"
 
@@ -31,12 +31,12 @@ func main() {
 		die(logger, err, "failed to run database migrations")
 	}
 
-	db, err := sqlx.Connect(cfg.DatabaseDriver(), cfg.DatabaseSource())
+	db, err := infrastructure.InitDB(cfg.DatabaseConfig)
 	if err != nil {
 		die(logger, err, "failed to open database connection")
 	}
 
-	app := core.NewApplication(core.SetupDependencies(cfg, db))
+	app := core.NewApplication(cfg, infrastructure.Setup(cfg, db, logger))
 
 	err = web.Run(web.Config{
 		Address:        cfg.ListenAddress(),

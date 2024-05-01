@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -17,7 +16,6 @@ import (
 )
 
 func TestSqliteFiles_Save(t *testing.T) {
-
 	t.Run("saves a new file", func(t *testing.T) {
 		t.Parallel()
 
@@ -29,10 +27,10 @@ func TestSqliteFiles_Save(t *testing.T) {
 
 		files := NewSqliteFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, err := file.NewFile(readerMock, "filepath", 10)
+		fileToSave, err := file.Create(readerMock, "filepath", 10, u.ID)
 		require.NoError(t, err)
 
-		saved, err := files.Save(ctx, u, *fileToSave, zerolog.Nop())
+		saved, err := files.Save(ctx, *fileToSave)
 
 		assert.NoError(t, err)
 		assert.Equal(t, fileToSave.Name, saved.Name)
@@ -51,9 +49,10 @@ func TestSqliteFiles_Save(t *testing.T) {
 
 		files := NewSqliteFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, _ := file.NewFile(readerMock, "filepath", 10)
+		fileToSave, err := file.Create(readerMock, "filepath", 10, u.ID)
+		require.NoError(t, err)
 
-		saved, err := files.Save(ctx, u, *fileToSave, zerolog.Nop())
+		saved, err := files.Save(ctx, *fileToSave)
 
 		assert.NoError(t, err)
 		assert.Equal(t, fileToSave.Name, saved.Name)
@@ -64,7 +63,7 @@ func TestSqliteFiles_Save(t *testing.T) {
 		fileToSave.Path = "changed"
 		fileToSave.Size = 20
 
-		saved, err = files.Save(ctx, u, *fileToSave, zerolog.Nop())
+		saved, err = files.Save(ctx, *fileToSave)
 
 		assert.NoError(t, err)
 		assert.Equal(t, fileToSave.Name, saved.Name)
@@ -75,17 +74,18 @@ func TestSqliteFiles_Save(t *testing.T) {
 	t.Run("do not saves with a not existing user", func(t *testing.T) {
 		t.Parallel()
 
-		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{DbParams: "_foreign_keys=on"}))
 		defer done()
 
-		db := testutil.PgDBFromContext(ctx, t)
+		db := testutil.SqliteDBFromContext(ctx, t)
 		u, _ := user.Create("username", "password")
 
-		files := NewPgFiles(db)
+		files := NewSqliteFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, _ := file.NewFile(readerMock, "filepath", 10)
+		fileToSave, err := file.Create(readerMock, "filepath", 10, u.ID)
+		require.NoError(t, err)
 
-		saved, err := files.Save(ctx, *u, *fileToSave, zerolog.Nop())
+		saved, err := files.Save(ctx, *fileToSave)
 
 		assert.Error(t, err)
 		assert.Nil(t, saved)
@@ -96,7 +96,7 @@ func TestSqliteFiles_Save(t *testing.T) {
 func insertSqliteUser(t *testing.T, db *sqlx.DB, username string, password string) user.User {
 	t.Helper()
 
-	users := userinfra.NewPgUsers(db)
+	users := userinfra.NewSqliteUsers(db)
 	u := testutil.Must(user.Create(username, password))
 
 	if _, err := users.Save(context.Background(), *u); err != nil {

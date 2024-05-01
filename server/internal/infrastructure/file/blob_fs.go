@@ -10,7 +10,6 @@ import (
 
 	"github.com/oxidrive/oxidrive/server/internal/config"
 	"github.com/oxidrive/oxidrive/server/internal/core/file"
-	"github.com/oxidrive/oxidrive/server/internal/core/user"
 
 	"github.com/rs/zerolog"
 )
@@ -22,21 +21,24 @@ const (
 )
 
 type blobFS struct {
-	filesRoot string
+	filesPrefix string
+	logger      zerolog.Logger
 }
 
-func NewBlobFS(config config.StorageConfig) *blobFS {
+func NewBlobFS(config config.StorageConfig, logger zerolog.Logger) *blobFS {
 	return &blobFS{
-		filesRoot: config.StorageRoot,
+		filesPrefix: config.StoragePrefix,
+		logger:      logger,
 	}
 }
 
-func (b *blobFS) Store(ctx context.Context, u user.User, f file.File, logger zerolog.Logger) (err error) {
-	fsPath := filepath.Join(b.filesRoot, u.ID.String(), string(f.Path))
+func (b *blobFS) Store(ctx context.Context, f file.File) (err error) {
+	fsPath := filepath.Join(b.filesPrefix, f.OwnerID.String(), string(f.Path))
 	if err := ensureDir(fsPath); err != nil {
 		return err
 	}
 
+	logger := b.logger.With().Str("path", string(f.Path)).Int("size", int(f.Size)).Logger()
 	fsFile, err := os.OpenFile(fsPath, os.O_RDWR|os.O_CREATE, filePermission)
 	if err != nil {
 		return err

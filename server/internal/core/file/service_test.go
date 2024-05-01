@@ -6,42 +6,38 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/oxidrive/oxidrive/server/internal/core/user"
-	"github.com/rs/zerolog"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+
+	"github.com/oxidrive/oxidrive/server/internal/core/user"
+	"github.com/oxidrive/oxidrive/server/internal/testutil"
 )
 
 func TestService_Upload(t *testing.T) {
 	contentMock := NewFilesContentMock(t)
 	metadataMock := NewFilesMetadataMock(t)
 
-	service := NewService(contentMock, metadataMock)
-	createdUser, _ := user.Create("username", "password")
+	service := InitService(contentMock, metadataMock)
 
 	t.Run("uploads with valid path", func(t *testing.T) {
 		ctx := context.Background()
 		content := strings.NewReader("")
 		filepath := "filepath"
 		size := 10
-		expectedLogger := zerolog.Nop().With().Str("path", filepath).Int("size", size).Logger()
 
 		contentMock.On(
 			"Store",
-			mock.MatchedBy(func(u user.User) bool { return string(u.Username) == "username" }),
 			mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath }),
-			expectedLogger,
 		).Return(nil).Once()
 		metadataMock.On(
 			"Save",
-			mock.MatchedBy(func(u user.User) bool { return string(u.Username) == "username" }),
 			mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath }),
-			expectedLogger,
 		).Return((*File)(nil), nil).Once()
 		defer contentMock.AssertExpectations(t)
 		defer metadataMock.AssertExpectations(t)
 
-		err := service.Upload(ctx, *createdUser, content, Path(filepath), Size(size), zerolog.Nop())
+		err := service.Upload(ctx, content, Path(filepath), Size(size), user.ID(testutil.Must(uuid.NewV7())))
 
 		require.NoError(t, err)
 	})
@@ -55,7 +51,7 @@ func TestService_Upload(t *testing.T) {
 		defer contentMock.AssertExpectations(t)
 		defer metadataMock.AssertExpectations(t)
 
-		err := service.Upload(ctx, *createdUser, content, Path(filepath), Size(size), zerolog.Nop())
+		err := service.Upload(ctx, content, Path(filepath), Size(size), user.ID(testutil.Must(uuid.NewV7())))
 
 		require.ErrorIs(t, err, ErrInvalidPath)
 	})
@@ -65,19 +61,16 @@ func TestService_Upload(t *testing.T) {
 		content := strings.NewReader("")
 		filepath := "filepath"
 		size := 10
-		expectedLogger := zerolog.Nop().With().Str("path", filepath).Int("size", size).Logger()
 		genericError := errors.New("generic error")
 
 		contentMock.On(
 			"Store",
-			mock.MatchedBy(func(u user.User) bool { return string(u.Username) == "username" }),
 			mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath }),
-			expectedLogger,
 		).Return(genericError).Once()
 		defer contentMock.AssertExpectations(t)
 		defer metadataMock.AssertExpectations(t)
 
-		err := service.Upload(ctx, *createdUser, content, Path(filepath), Size(size), zerolog.Nop())
+		err := service.Upload(ctx, content, Path(filepath), Size(size), user.ID(testutil.Must(uuid.NewV7())))
 
 		require.Error(t, err)
 	})
@@ -87,26 +80,21 @@ func TestService_Upload(t *testing.T) {
 		content := strings.NewReader("")
 		filepath := "filepath"
 		size := 10
-		expectedLogger := zerolog.Nop().With().Str("path", filepath).Int("size", size).Logger()
 		genericError := errors.New("generic error")
 
 		contentMock.On(
 			"Store",
-			mock.MatchedBy(func(u user.User) bool { return string(u.Username) == "username" }),
 			mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath }),
-			expectedLogger,
 		).Return(nil).Once()
 		metadataMock.On(
 			"Save",
-			mock.MatchedBy(func(u user.User) bool { return string(u.Username) == "username" }),
 			mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath }),
-			expectedLogger,
 		).Return((*File)(nil), genericError).Once()
 
 		defer contentMock.AssertExpectations(t)
 		defer metadataMock.AssertExpectations(t)
 
-		err := service.Upload(ctx, *createdUser, content, Path(filepath), Size(size), zerolog.Nop())
+		err := service.Upload(ctx, content, Path(filepath), Size(size), user.ID(testutil.Must(uuid.NewV7())))
 
 		require.Error(t, err)
 	})
