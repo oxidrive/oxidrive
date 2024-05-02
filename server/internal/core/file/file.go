@@ -57,10 +57,10 @@ func isValid(path Path) bool {
 	return filepath.IsLocal(cleaned)
 }
 
-type FilesContent interface {
+type Contents interface {
 	Store(context.Context, File) error
 }
 
-type FilesMetadata interface {
+type Files interface {
 	Save(context.Context, File) (*File, error)
 }

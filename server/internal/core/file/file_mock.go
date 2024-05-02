@@ -7,34 +7,34 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-type FilesContentMock struct {
+type ContentsMock struct {
 	mock.Mock
 }
 
-func NewFilesContentMock(t *testing.T) *FilesContentMock {
-	m := FilesContentMock{}
+func NewContentsMock(t *testing.T) *ContentsMock {
+	m := ContentsMock{}
 	m.Test(t)
 
 	return &m
 }
 
-func (f *FilesContentMock) Store(_ context.Context, file File) error {
-	args := f.Called(file)
+func (c *ContentsMock) Store(_ context.Context, file File) error {
+	args := c.Called(file)
 	return args.Error(0)
 }
 
-type FilesMetadataMock struct {
+type FilesMock struct {
 	mock.Mock
 }
 
-func NewFilesMetadataMock(t *testing.T) *FilesMetadataMock {
-	m := FilesMetadataMock{}
+func NewFilesMock(t *testing.T) *FilesMock {
+	m := FilesMock{}
 	m.Test(t)
 
 	return &m
 }
 
-func (f *FilesMetadataMock) Save(_ context.Context, file File) (*File, error) {
+func (f *FilesMock) Save(_ context.Context, file File) (*File, error) {
 	args := f.Called(file)
 	return args.Get(0).(*File), args.Error(1)
 }

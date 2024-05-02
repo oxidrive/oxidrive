@@ -18,9 +18,9 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/testutil"
 )
 
-func TestBlobFS_Store(t *testing.T) {
+func TestContentFS_Store(t *testing.T) {
 	contentStr := "This is a test!"
-	content := strings.NewReader(contentStr)
+	fileContent := strings.NewReader(contentStr)
 
 	t.Run("stores a file", func(t *testing.T) {
 		t.Parallel()
@@ -29,11 +29,11 @@ func TestBlobFS_Store(t *testing.T) {
 		defer done()
 
 		path := testutil.TempDirFromContext(ctx, t)
-		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
-		f, err := file.Create(content, "this/dir/without_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
+		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
+		f, err := file.Create(fileContent, "this/dir/without_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
 		require.NoError(t, err)
 
-		err = blob.Store(context.Background(), *f)
+		err = content.Store(context.Background(), *f)
 
 		require.NoError(t, err)
 		testFileContet(t, filepath.Join(path, f.OwnerID.String(), string(f.Path)), contentStr)
@@ -46,13 +46,13 @@ func TestBlobFS_Store(t *testing.T) {
 		defer done()
 
 		path := testutil.TempDirFromContext(ctx, t)
-		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
-		f, err := file.Create(content, "this/dir/timeout_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
+		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
+		f, err := file.Create(fileContent, "this/dir/timeout_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
 		require.NoError(t, err)
 		ctx, cancel := context.WithTimeout(context.Background(), 0*time.Nanosecond)
 		defer cancel()
 
-		err = blob.Store(ctx, *f)
+		err = content.Store(ctx, *f)
 
 		require.Error(t, err)
 		_, err = os.Stat(filepath.Join(path, f.OwnerID.String(), string(f.Path)))
@@ -66,13 +66,13 @@ func TestBlobFS_Store(t *testing.T) {
 		defer done()
 
 		path := testutil.TempDirFromContext(ctx, t)
-		blob := NewBlobFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
-		f, err := file.Create(content, "this/dir/ctx_cancelled_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
+		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
+		f, err := file.Create(fileContent, "this/dir/ctx_cancelled_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
 		require.NoError(t, err)
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 
-		err = blob.Store(ctx, *f)
+		err = content.Store(ctx, *f)
 
 		require.Error(t, err)
 		_, err = os.Stat(filepath.Join(path, f.OwnerID.String(), string(f.Path)))
