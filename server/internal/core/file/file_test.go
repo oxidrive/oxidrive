@@ -5,50 +5,41 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 	"github.com/oxidrive/oxidrive/server/internal/testutil"
 )
 
 func Test_Create(t *testing.T) {
-	t.Run("creates a new valid file", func(t *testing.T) {
-		t.Parallel()
-
-		file, err := Create(nil, "this/is/a/directory/filename.txt", 5, user.ID(testutil.Must(uuid.NewV7())))
-
-		assert.NotNil(t, file)
-		assert.NoError(t, err)
-	})
-
-	t.Run("returns an error with an invalid path", func(t *testing.T) {
-		t.Parallel()
-
-		file, err := Create(nil, "/this/is/a/directory/filename.txt", 5, user.ID(testutil.Must(uuid.NewV7())))
-
-		assert.Nil(t, file)
-		assert.ErrorIs(t, err, ErrInvalidPath)
-	})
-}
-
-func TestFile_isValid(t *testing.T) {
 	testCases := []struct {
-		testName string
-		filename string
-		expected bool
+		testName         string
+		filename         string
+		expectedErr      error
+		expectedFilepath *string
 	}{
-		{testName: "is invalid when it points to a ancestor directory", filename: "../../test.txt", expected: false},
-		{testName: "is invalid when it points to a ancestor directory with complex path", filename: "this/is/the/./directory/../../../../../../test.txt", expected: false},
-		{testName: "is invalid with absolute filepath", filename: "/this/is/the/directory/test.txt", expected: false},
-		{testName: "is invalid when absolute filepath pointing to an ancestor", filename: "/../../../test.txt", expected: false},
-		{testName: "is valid with local filepath", filename: "this/is/the/direcory/test.txt", expected: true},
+		{testName: "returns an error when the provided path points to a ancestor directory", filename: "../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
+		{testName: "returns an error when the provided path points to a ancestor directory with complex path", filename: "this/is/the/./directory/../../../../../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
+		{testName: "returns an error when the provided path is absolute", filename: "/this/is/the/directory/test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
+		{testName: "returns an error when the provided path is absolute and points to an ancestor directory", filename: "/../../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
+		{testName: "returns a file when the provided path is valid", filename: "this/is/the/direcory/test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/direcory/test.txt")},
+		{testName: "returns a file with a valid cleaned path when the provided path contains .. and .", filename: "this/is/the/direcory/../test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/test.txt")},
 	}
 
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
-			require.Equal(t, testCase.expected, isValid(Path(testCase.filename)))
+
+			file, err := Create(nil, Path(testCase.filename), 5, user.ID(testutil.Must(uuid.NewV7())))
+
+			if testCase.expectedFilepath != nil {
+				assert.Equal(t, *testCase.expectedFilepath, string(file.Path))
+			} else {
+				assert.Nil(t, file)
+			}
+			assert.ErrorIs(t, err, testCase.expectedErr)
 		})
 	}
+
 }
