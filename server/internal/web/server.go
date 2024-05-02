@@ -6,15 +6,14 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/oxidrive/oxidrive/server/internal/core"
-	"github.com/oxidrive/oxidrive/server/internal/web/handler"
 )
 
 type Config struct {
-	Address        string
-	Application    *core.Application
-	Logger         zerolog.Logger
-	FrontendFolder string
-	handler.Config
+	Address            string
+	Application        *core.Application
+	Logger             zerolog.Logger
+	FrontendFolder     string
+	MultipartMaxMemory int64
 }
 
 func Run(cfg Config) error {

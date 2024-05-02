@@ -1,0 +1,55 @@
+openapi: "3.0.0"
+info:
+  title: Oxidrive Files API
+  version: 1.0.0
+
+paths:
+  /api/files:
+    post:
+      operationId: filesUpload
+      summary: Upload a file to Oxidrive
+      tags: [files]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/FileUpload'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadResponse'
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: './openapi.yaml#/components/schemas/GenericError'          
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: './openapi.yaml#/components/schemas/GenericError'
+
+components:
+  schemas:
+    FileUpload:
+      type: object
+      required:
+        - path
+        - file
+      properties:
+        path:
+          type: string
+        file:
+          type: string
+          format: binary
+    FileUploadResponse:
+      type: object
+      required:
+        - ok
+      properties:
+        ok:
+          type: boolean

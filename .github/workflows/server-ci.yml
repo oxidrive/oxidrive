@@ -32,13 +32,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Go
-        uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
-      - name: Install dependencies
-        run: go mod download
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - run: npx @redocly/cli@latest join -o server/openapi/out.yml server/openapi/openapi.yaml server/openapi/*.yaml
+      - run: go mod download
+      - run: go generate ./...
       - name: Run tests
         run: go test -v ./...
         env:
@@ -54,13 +57,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Go
-        uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
-      - name: Install dependencies
-        run: go mod download
+      - run: go mod download
       - name: Check formatting
         run: test -z $(gofmt -l .)
 
@@ -70,13 +71,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Setup Go
-        uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
-      - name: Install dependencies
-        run: go mod download
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - run: npx @redocly/cli@latest join -o server/openapi/out.yml server/openapi/openapi.yaml server/openapi/*.yaml
+      - run: go mod download
+      - run: go generate ./...
       - name: Check for issues
         run: go vet ./...
 
@@ -90,7 +94,12 @@ jobs:
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
-          cache: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+      - run: npx @redocly/cli@latest join -o server/openapi/out.yml server/openapi/openapi.yaml server/openapi/*.yaml
+      - run: go mod download
+      - run: go generate ./...
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:

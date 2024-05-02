@@ -1,4 +1,14 @@
-FROM public.ecr.aws/docker/library/golang:1.22-alpine as server-build
+FROM ghcr.io/redocly/cli as openapi
+
+WORKDIR /app
+
+COPY server/openapi .
+
+RUN redocly join -o out.yml openapi.yaml ./*.yaml
+
+# ========================================================================= #
+
+FROM golang:1.22-alpine as server-build
 
 WORKDIR /app
 
@@ -6,13 +16,15 @@ COPY go.* .
 
 RUN go mod download
 
+COPY --from=openapi /app/out.yml ./server/openapi/out.yml
 COPY server ./server
 
+RUN go generate ./server/...
 RUN go build -o ./bin/oxidrive ./server/cmd/oxidrive
 
 # ========================================================================= #
 
-FROM public.ecr.aws/docker/library/node:20-alpine as css-build
+FROM node:20-alpine as css-build
 
 WORKDIR /app
 
@@ -26,7 +38,7 @@ RUN npx tailwindcss -i ./input.css -o ./output.css
 
 # ========================================================================= #
 
-FROM public.ecr.aws/docker/library/rust:1-slim as web-build
+FROM rust:1-slim as web-build
 
 RUN apt-get update && apt-get install wget -y
 

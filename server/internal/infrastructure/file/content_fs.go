@@ -20,6 +20,7 @@ const (
 )
 
 type contentFS struct {
+	dataDir     string
 	filesPrefix string
 	throughput  int
 	logger      zerolog.Logger
@@ -27,6 +28,7 @@ type contentFS struct {
 
 func NewContentFS(cfg config.StorageConfig, logger zerolog.Logger) *contentFS {
 	return &contentFS{
+		dataDir:     cfg.StorageFSDataDir,
 		filesPrefix: cfg.StoragePrefix,
 		throughput:  cfg.ThroughputInByte,
 		logger:      logger,
@@ -34,7 +36,7 @@ func NewContentFS(cfg config.StorageConfig, logger zerolog.Logger) *contentFS {
 }
 
 func (c *contentFS) Store(ctx context.Context, f file.File) (err error) {
-	fsPath := filepath.Join(c.filesPrefix, f.OwnerID.String(), string(f.Path))
+	fsPath := filepath.Join(c.dataDir, c.filesPrefix, f.OwnerID.String(), string(f.Path))
 	if err := ensureDir(fsPath); err != nil {
 		return err
 	}

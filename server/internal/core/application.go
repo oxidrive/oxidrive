@@ -10,6 +10,7 @@ import (
 type Application struct {
 	instance instance.Service
 	files    file.Service
+	users    user.Users
 }
 
 type ApplicationDependencies struct {
@@ -26,6 +27,7 @@ func NewApplication(cfg config.Config, deps ApplicationDependencies) *Applicatio
 			FileStorage: instance.StatusFileStorageFS, // TODO: add real file store
 		}, deps.Users),
 		files: file.InitService(deps.Contents, deps.Files),
+		users: deps.Users,
 	}
 }
 
@@ -35,4 +37,8 @@ func (app *Application) Instance() *instance.Service {
 
 func (app *Application) Files() *file.Service {
 	return &app.files
+}
+
+func (app *Application) Users() user.Users {
+	return app.users
 }
