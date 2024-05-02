@@ -14,29 +14,29 @@ type FileUpload struct {
 }
 
 type Service struct {
-	filesContent  FilesContent
-	filesMetadata FilesMetadata
+	contents Contents
+	files    Files
 }
 
-func InitService(filesContent FilesContent, filesMetadata FilesMetadata) Service {
+func InitService(filesContent Contents, filesMetadata Files) Service {
 	return Service{
-		filesContent:  filesContent,
-		filesMetadata: filesMetadata,
+		contents: filesContent,
+		files:    filesMetadata,
 	}
 }
 
-func (s *Service) Upload(ctx context.Context, toUpload FileUpload, owner user.ID) error {
+func (s *Service) Upload(ctx context.Context, upload FileUpload, owner user.ID) error {
 	// TODO add user validation logic
-	f, err := Create(toUpload.Content, toUpload.Path, toUpload.Size, owner)
+	f, err := Create(upload.Content, upload.Path, upload.Size, owner)
 	if err != nil {
 		return err
 	}
 
-	if err := s.filesContent.Store(ctx, *f); err != nil {
+	if err := s.contents.Store(ctx, *f); err != nil {
 		return fmt.Errorf("failed to store the file content: %w", err)
 	}
 
-	if _, err = s.filesMetadata.Save(ctx, *f); err != nil {
+	if _, err = s.files.Save(ctx, *f); err != nil {
 		return fmt.Errorf("failed to save the file metadata: %w", err)
 	}
 

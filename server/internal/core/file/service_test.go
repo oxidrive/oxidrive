@@ -18,20 +18,20 @@ func TestService_Upload(t *testing.T) {
 	t.Run("uploads with valid path", func(t *testing.T) {
 		t.Parallel()
 
-		contentMock := NewFilesContentMock(t)
-		metadataMock := NewFilesMetadataMock(t)
+		contentsMock := NewContentsMock(t)
+		filesMock := NewFilesMock(t)
 
-		service := InitService(contentMock, metadataMock)
+		service := InitService(contentsMock, filesMock)
 
 		ctx := context.Background()
 		content := strings.NewReader("")
 		filepath := "filepath"
 		size := 10
 
-		contentMock.On("Store", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return(nil).Once()
-		metadataMock.On("Save", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return((*File)(nil), nil).Once()
-		defer contentMock.AssertExpectations(t)
-		defer metadataMock.AssertExpectations(t)
+		contentsMock.On("Store", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return(nil).Once()
+		filesMock.On("Save", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return((*File)(nil), nil).Once()
+		defer contentsMock.AssertExpectations(t)
+		defer filesMock.AssertExpectations(t)
 		toUpload := FileUpload{Content: content, Path: Path(filepath), Size: Size(size)}
 
 		err := service.Upload(ctx, toUpload, user.ID(testutil.Must(uuid.NewV7())))
@@ -42,18 +42,18 @@ func TestService_Upload(t *testing.T) {
 	t.Run("uploads with invalid path", func(t *testing.T) {
 		t.Parallel()
 
-		contentMock := NewFilesContentMock(t)
-		metadataMock := NewFilesMetadataMock(t)
+		contentsMock := NewContentsMock(t)
+		filesMock := NewFilesMock(t)
 
-		service := InitService(contentMock, metadataMock)
+		service := InitService(contentsMock, filesMock)
 
 		ctx := context.Background()
 		content := strings.NewReader("")
 		filepath := "/abs/filepath"
 		size := 10
 
-		defer contentMock.AssertExpectations(t)
-		defer metadataMock.AssertExpectations(t)
+		defer contentsMock.AssertExpectations(t)
+		defer filesMock.AssertExpectations(t)
 		toUpload := FileUpload{Content: content, Path: Path(filepath), Size: Size(size)}
 
 		err := service.Upload(ctx, toUpload, user.ID(testutil.Must(uuid.NewV7())))
@@ -64,10 +64,10 @@ func TestService_Upload(t *testing.T) {
 	t.Run("uploads with error while storing the content", func(t *testing.T) {
 		t.Parallel()
 
-		contentMock := NewFilesContentMock(t)
-		metadataMock := NewFilesMetadataMock(t)
+		contentsMock := NewContentsMock(t)
+		filesMock := NewFilesMock(t)
 
-		service := InitService(contentMock, metadataMock)
+		service := InitService(contentsMock, filesMock)
 
 		ctx := context.Background()
 		content := strings.NewReader("")
@@ -75,9 +75,9 @@ func TestService_Upload(t *testing.T) {
 		size := 10
 		genericError := errors.New("generic error")
 
-		contentMock.On("Store", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return(genericError).Once()
-		defer contentMock.AssertExpectations(t)
-		defer metadataMock.AssertExpectations(t)
+		contentsMock.On("Store", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return(genericError).Once()
+		defer contentsMock.AssertExpectations(t)
+		defer filesMock.AssertExpectations(t)
 		toUpload := FileUpload{Content: content, Path: Path(filepath), Size: Size(size)}
 
 		err := service.Upload(ctx, toUpload, user.ID(testutil.Must(uuid.NewV7())))
@@ -88,10 +88,10 @@ func TestService_Upload(t *testing.T) {
 	t.Run("uploads with error while saving metadata", func(t *testing.T) {
 		t.Parallel()
 
-		contentMock := NewFilesContentMock(t)
-		metadataMock := NewFilesMetadataMock(t)
+		contentsMock := NewContentsMock(t)
+		filesMock := NewFilesMock(t)
 
-		service := InitService(contentMock, metadataMock)
+		service := InitService(contentsMock, filesMock)
 
 		ctx := context.Background()
 		content := strings.NewReader("")
@@ -99,11 +99,11 @@ func TestService_Upload(t *testing.T) {
 		size := 10
 		genericError := errors.New("generic error")
 
-		contentMock.On("Store", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return(nil).Once()
-		metadataMock.On("Save", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return((*File)(nil), genericError).Once()
+		contentsMock.On("Store", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return(nil).Once()
+		filesMock.On("Save", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return((*File)(nil), genericError).Once()
 
-		defer contentMock.AssertExpectations(t)
-		defer metadataMock.AssertExpectations(t)
+		defer contentsMock.AssertExpectations(t)
+		defer filesMock.AssertExpectations(t)
 		toUpload := FileUpload{Content: content, Path: Path(filepath), Size: Size(size)}
 
 		err := service.Upload(ctx, toUpload, user.ID(testutil.Must(uuid.NewV7())))

@@ -42,7 +42,7 @@ func Upload(logger zerolog.Logger, app *core.Application, cfg handler.Config) ht
 
 		toUpload := file.FileUpload{Content: file.Content(req.File), Path: file.Path(req.FileHeader.Filename), Size: file.Size(req.FileHeader.Size)}
 
-		if err := app.File().Upload(ctx, toUpload, user.ID(userID)); err != nil {
+		if err := app.Files().Upload(ctx, toUpload, user.ID(userID)); err != nil {
 			handler.RespondWithJson(w, http.StatusInternalServerError, handler.ErrorResponse{
 				Error:   "upload_failed",
 				Message: err.Error(),

@@ -14,24 +14,24 @@ import (
 
 func Setup(cfg config.Config, db *sqlx.DB, logger zerolog.Logger) core.ApplicationDependencies {
 	var users user.Users
-	var filesContent file.FilesContent
-	var filesMetadata file.FilesMetadata
+	var contents file.Contents
+	var files file.Files
 
 	switch db.DriverName() {
 	case config.DriverPG:
 		users = userinfra.NewPgUsers(db)
-		filesMetadata = fileinfra.NewPgFiles(db)
+		files = fileinfra.NewPgFiles(db)
 	case config.DriverSqlite:
 		users = userinfra.NewSqliteUsers(db)
-		filesMetadata = fileinfra.NewSqliteFiles(db)
+		files = fileinfra.NewSqliteFiles(db)
 	}
 
-	filesContent = fileinfra.NewBlobFS(cfg.StorageConfig, logger)
+	contents = fileinfra.NewContentFS(cfg.StorageConfig, logger)
 
 	return core.ApplicationDependencies{
-		Users:         users,
-		FilesMetadata: filesMetadata,
-		FilesContent:  filesContent,
+		Users:    users,
+		Files:    files,
+		Contents: contents,
 	}
 
 }

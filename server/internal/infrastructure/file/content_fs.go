@@ -19,27 +19,27 @@ const (
 	directoryPermission = 0755
 )
 
-type blobFS struct {
+type contentFS struct {
 	filesPrefix string
 	throughput  int
 	logger      zerolog.Logger
 }
 
-func NewBlobFS(cfg config.StorageConfig, logger zerolog.Logger) *blobFS {
-	return &blobFS{
+func NewContentFS(cfg config.StorageConfig, logger zerolog.Logger) *contentFS {
+	return &contentFS{
 		filesPrefix: cfg.StoragePrefix,
 		throughput:  cfg.ThroughputInByte,
 		logger:      logger,
 	}
 }
 
-func (b *blobFS) Store(ctx context.Context, f file.File) (err error) {
-	fsPath := filepath.Join(b.filesPrefix, f.OwnerID.String(), string(f.Path))
+func (c *contentFS) Store(ctx context.Context, f file.File) (err error) {
+	fsPath := filepath.Join(c.filesPrefix, f.OwnerID.String(), string(f.Path))
 	if err := ensureDir(fsPath); err != nil {
 		return err
 	}
 
-	logger := b.logger.With().Str("path", string(f.Path)).Int("size", int(f.Size)).Logger()
+	logger := c.logger.With().Str("path", string(f.Path)).Int("size", int(f.Size)).Logger()
 	fsFile, err := os.OpenFile(fsPath, os.O_RDWR|os.O_CREATE, filePermission)
 	if err != nil {
 		return err
@@ -58,7 +58,7 @@ func (b *blobFS) Store(ctx context.Context, f file.File) (err error) {
 			return fmt.Errorf("context invalidated while saving the file in blob fs: %w", err)
 		}
 
-		if _, err = io.CopyN(fsFile, f.Content, int64(b.throughput)); err != nil {
+		if _, err = io.CopyN(fsFile, f.Content, int64(c.throughput)); err != nil {
 			if errors.Is(err, io.EOF) {
 				return nil
 			}

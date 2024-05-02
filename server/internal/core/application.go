@@ -9,13 +9,13 @@ import (
 
 type Application struct {
 	instance instance.Service
-	file     file.Service
+	files    file.Service
 }
 
 type ApplicationDependencies struct {
-	Users         user.Users
-	FilesContent  file.FilesContent
-	FilesMetadata file.FilesMetadata
+	Users    user.Users
+	Files    file.Files
+	Contents file.Contents
 }
 
 func NewApplication(cfg config.Config, deps ApplicationDependencies) *Application {
@@ -25,7 +25,7 @@ func NewApplication(cfg config.Config, deps ApplicationDependencies) *Applicatio
 			Database:    instance.StatusDB(cfg.DatabaseName()),
 			FileStorage: instance.StatusFileStorageFS, // TODO: add real file store
 		}, deps.Users),
-		file: file.InitService(deps.FilesContent, deps.FilesMetadata),
+		files: file.InitService(deps.Contents, deps.Files),
 	}
 }
 
@@ -33,6 +33,6 @@ func (app *Application) Instance() *instance.Service {
 	return &app.instance
 }
 
-func (app *Application) File() *file.Service {
-	return &app.file
+func (app *Application) Files() *file.Service {
+	return &app.files
 }
