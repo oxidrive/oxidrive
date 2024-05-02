@@ -45,7 +45,7 @@ func Create(content Content, path Path, size Size, ownerID user.ID) (*File, erro
 		ID:      ID(uuid.Must(uuid.NewV7())),
 		Content: content,
 		Name:    name,
-		Path:    path,
+		Path:    Path(filepath.Clean(string(path))),
 		Size:    size,
 		OwnerID: ownerID,
 	}, nil
