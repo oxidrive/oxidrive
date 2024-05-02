@@ -14,7 +14,6 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/core"
 	"github.com/oxidrive/oxidrive/server/internal/infrastructure"
 	"github.com/oxidrive/oxidrive/server/internal/web"
-	"github.com/oxidrive/oxidrive/server/internal/web/handler"
 	"github.com/oxidrive/oxidrive/server/migrations"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -40,13 +39,11 @@ func main() {
 	app := core.NewApplication(cfg, infrastructure.Setup(cfg, db, logger))
 
 	err = web.Run(web.Config{
-		Address:        cfg.ListenAddress(),
-		Application:    app,
-		Logger:         logger,
-		FrontendFolder: cfg.AssetsFolderPath(),
-		Config: handler.Config{
-			MultipartMaxMemory: cfg.MultipartMaxMemory,
-		},
+		Address:            cfg.ListenAddress(),
+		Application:        app,
+		Logger:             logger,
+		FrontendFolder:     cfg.AssetsFolderPath(),
+		MultipartMaxMemory: cfg.MultipartMaxMemory,
 	})
 
 	if errors.Is(err, http.ErrServerClosed) {

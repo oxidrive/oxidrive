@@ -9,6 +9,8 @@
 !server/cmd
 !server/internal
 !server/migrations
+!server/openapi/
+server/openapi/out.yml
 
 !web/*/Cargo.toml
 !web/*/src/

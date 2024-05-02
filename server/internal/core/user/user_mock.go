@@ -26,3 +26,8 @@ func (s *UsersMock) Save(ctx context.Context, user User) (*User, error) {
 	args := s.Called(ctx, user)
 	return args.Get(0).(*User), args.Error(1)
 }
+
+func (s *UsersMock) ByUsername(ctx context.Context, username string) (*User, error) {
+	args := s.Called(ctx, username)
+	return args.Get(0).(*User), args.Error(1)
+}

@@ -1,0 +1,107 @@
+openapi: "3.0.0"
+info:
+  title: Oxidrive Instance API
+  version: 1.0.0
+
+paths:
+  /api/instance:
+    get:
+      operationId: instanceStatus
+      summary: Get the instance status
+      tags: [instance]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceStatus'
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: './openapi.yaml#/components/schemas/GenericError'
+
+
+  /api/instance/setup:
+    post:
+      operationId: instanceSetup
+      summary: Setup the instance and create the initial admin user
+      tags: [instance]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceSetupRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceSetupResponse'
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '409':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        default:
+          description: Unexpected Error
+          content:
+            application/json:
+              schema:
+                $ref: './openapi.yaml#/components/schemas/GenericError'
+components:
+  schemas:
+    InstanceStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: object
+          required:
+          - publicURL
+          - database
+          - fileStorage
+          - setupCompleted
+          properties:
+            publicURL:
+              type: string
+              format: uri
+              example: https://storage.example.com
+            database:
+              type: string
+              enum: [postgresql, sqlite]
+            fileStorage:
+              type: string
+              enum: [filesystem, s3]
+            setupCompleted:
+              type: boolean
+    InstanceSetupRequest:
+      type: object
+      required:
+        - admin
+      properties:
+        admin:
+          type: object
+          required:
+            - username
+            - password
+          properties:
+            username:
+              type: string
+            password:
+              type: string
+    InstanceSetupResponse:
+      type: object
+      required:
+        - ok
+      properties:
+        ok:
+          type: boolean
