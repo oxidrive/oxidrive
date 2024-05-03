@@ -17,7 +17,10 @@ type Config struct {
 }
 
 func Run(cfg Config) error {
-	router := routes(&cfg)
+	router, err := routes(&cfg)
+	if err != nil {
+		return err
+	}
 
 	cfg.Logger.Info().Str("listen", cfg.Address).Msg("starting oxidrive server")
 	return http.ListenAndServe(cfg.Address, router)

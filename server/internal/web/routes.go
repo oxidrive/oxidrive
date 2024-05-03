@@ -4,13 +4,15 @@ import (
 	"net/http"
 )
 
-func routes(cfg *Config) *http.ServeMux {
+func routes(cfg *Config) (*http.ServeMux, error) {
 	router := http.NewServeMux()
 
 	// Routes
-	mountApi(router, cfg)
+	if err := mountApi(router, cfg); err != nil {
+		return nil, err
+	}
 
 	router.Handle("/", serveFrontend(cfg.FrontendFolder))
 
-	return router
+	return router, nil
 }
