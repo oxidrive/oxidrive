@@ -5,6 +5,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/mock"
+
+	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
 
 type ContentsMock struct {
@@ -36,5 +38,10 @@ func NewFilesMock(t *testing.T) *FilesMock {
 
 func (f *FilesMock) Save(_ context.Context, file File) (*File, error) {
 	args := f.Called(file)
+	return args.Get(0).(*File), args.Error(1)
+}
+
+func (f *FilesMock) ByOwnerByPath(_ context.Context, owner user.ID, path Path) (*File, error) {
+	args := f.Called(owner, path)
 	return args.Get(0).(*File), args.Error(1)
 }

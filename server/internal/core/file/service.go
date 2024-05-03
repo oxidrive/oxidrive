@@ -26,8 +26,17 @@ func InitService(filesContent Contents, filesMetadata Files) Service {
 }
 
 func (s *Service) Upload(ctx context.Context, upload FileUpload, owner user.ID) error {
-	// TODO add user validation logic
-	f, err := Create(upload.Content, upload.Path, upload.Size, owner)
+	f, err := s.files.ByOwnerByPath(ctx, owner, upload.Path)
+	if err != nil {
+		return err
+	}
+
+	if f == nil {
+		f, err = Create(upload.Content, upload.Path, upload.Size, owner)
+	} else {
+		err = f.Update(upload.Content, upload.Path, upload.Size)
+	}
+
 	if err != nil {
 		return err
 	}
