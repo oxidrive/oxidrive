@@ -94,6 +94,51 @@ func TestPgFiles_Save(t *testing.T) {
 	})
 }
 
+func TestPgFiles_ByOwnerByPath(t *testing.T) {
+	t.Run("returns an existing file", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
+		defer done()
+
+		db := testutil.PgDBFromContext(ctx, t)
+		u := insertPgUser(t, db, "username", "pwd")
+
+		files := NewPgFiles(db)
+
+		readerMock := strings.NewReader("")
+		file, err := file.Create(readerMock, "filepath", 10, u.ID)
+		require.NoError(t, err)
+
+		file, err = files.Save(ctx, *file)
+		require.NoError(t, err)
+
+		found, err := files.ByOwnerByPath(ctx, u.ID, file.Path)
+		assert.NoError(t, err)
+		assert.Equal(t, file.ID, found.ID)
+		assert.Equal(t, file.Name, found.Name)
+		assert.Equal(t, file.Path, found.Path)
+		assert.Equal(t, file.Size, found.Size)
+		assert.Equal(t, file.OwnerID, found.OwnerID)
+	})
+
+	t.Run("returns nil if the file doesn't exist", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
+		defer done()
+
+		db := testutil.PgDBFromContext(ctx, t)
+		u := insertPgUser(t, db, "username", "pwd")
+
+		files := NewPgFiles(db)
+
+		found, err := files.ByOwnerByPath(ctx, u.ID, "some/path")
+		assert.NoError(t, err)
+		assert.Nil(t, found)
+	})
+}
+
 func insertPgUser(t *testing.T, db *sqlx.DB, username string, password string) user.User {
 	t.Helper()
 

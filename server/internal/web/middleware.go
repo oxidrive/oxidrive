@@ -1,9 +1,6 @@
 package web
 
 import (
-	"context"
-
-	"github.com/getkin/kin-openapi/openapi3filter"
 	middleware "github.com/oapi-codegen/nethttp-middleware"
 	"github.com/rs/zerolog"
 
@@ -27,22 +24,12 @@ func defaultMiddlewares(logger zerolog.Logger) ([]api.MiddlewareFunc, error) {
 	return middlewares, nil
 }
 
-func validator(logger zerolog.Logger) (api.MiddlewareFunc, error) {
-	logger = logger.With().Str("middleware", "oapi_request_authentication").Logger()
-
+func validator(_ zerolog.Logger) (api.MiddlewareFunc, error) {
 	spec, err := api.GetSwagger()
 	if err != nil {
 		return nil, err
 	}
 
-	validator := middleware.OapiRequestValidatorWithOptions(spec, &middleware.Options{
-		Options: openapi3filter.Options{
-			AuthenticationFunc: func(ctx context.Context, auth *openapi3filter.AuthenticationInput) error {
-				logger.Info().Interface("auth", auth)
-				return nil
-			},
-		},
-		SilenceServersWarning: false,
-	})
+	validator := middleware.OapiRequestValidatorWithOptions(spec, &middleware.Options{})
 	return api.MiddlewareFunc(validator), nil
 }

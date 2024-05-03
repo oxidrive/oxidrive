@@ -25,16 +25,18 @@ func TestService_Upload(t *testing.T) {
 
 		ctx := context.Background()
 		content := strings.NewReader("")
-		filepath := "filepath"
+		filepath := Path("filepath")
 		size := 10
+		owner := user.ID(testutil.Must(uuid.NewV7()))
 
-		contentsMock.On("Store", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return(nil).Once()
-		filesMock.On("Save", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return((*File)(nil), nil).Once()
+		filesMock.On("ByOwnerByPath", owner, filepath).Return((*File)(nil), nil).Once()
+		contentsMock.On("Store", mock.MatchedBy(func(f File) bool { return f.Path == filepath })).Return(nil).Once()
+		filesMock.On("Save", mock.MatchedBy(func(f File) bool { return f.Path == filepath })).Return((*File)(nil), nil).Once()
 		defer contentsMock.AssertExpectations(t)
 		defer filesMock.AssertExpectations(t)
 		toUpload := FileUpload{Content: content, Path: Path(filepath), Size: Size(size)}
 
-		err := service.Upload(ctx, toUpload, user.ID(testutil.Must(uuid.NewV7())))
+		err := service.Upload(ctx, toUpload, owner)
 
 		require.NoError(t, err)
 	})
@@ -49,14 +51,17 @@ func TestService_Upload(t *testing.T) {
 
 		ctx := context.Background()
 		content := strings.NewReader("")
-		filepath := "/abs/filepath"
+		filepath := Path("/abs/filepath")
 		size := 10
+		owner := user.ID(testutil.Must(uuid.NewV7()))
 
+		filesMock.On("ByOwnerByPath", owner, filepath).Return((*File)(nil), nil).Once()
 		defer contentsMock.AssertExpectations(t)
 		defer filesMock.AssertExpectations(t)
-		toUpload := FileUpload{Content: content, Path: Path(filepath), Size: Size(size)}
 
-		err := service.Upload(ctx, toUpload, user.ID(testutil.Must(uuid.NewV7())))
+		toUpload := FileUpload{Content: content, Path: filepath, Size: Size(size)}
+
+		err := service.Upload(ctx, toUpload, owner)
 
 		require.ErrorIs(t, err, ErrInvalidPath)
 	})
@@ -71,16 +76,18 @@ func TestService_Upload(t *testing.T) {
 
 		ctx := context.Background()
 		content := strings.NewReader("")
-		filepath := "filepath"
+		filepath := Path("filepath")
 		size := 10
 		genericError := errors.New("generic error")
+		owner := user.ID(testutil.Must(uuid.NewV7()))
 
-		contentsMock.On("Store", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return(genericError).Once()
+		filesMock.On("ByOwnerByPath", owner, filepath).Return((*File)(nil), nil).Once()
+		contentsMock.On("Store", mock.MatchedBy(func(f File) bool { return f.Path == filepath })).Return(genericError).Once()
 		defer contentsMock.AssertExpectations(t)
 		defer filesMock.AssertExpectations(t)
-		toUpload := FileUpload{Content: content, Path: Path(filepath), Size: Size(size)}
+		toUpload := FileUpload{Content: content, Path: filepath, Size: Size(size)}
 
-		err := service.Upload(ctx, toUpload, user.ID(testutil.Must(uuid.NewV7())))
+		err := service.Upload(ctx, toUpload, owner)
 
 		require.Error(t, err)
 	})
@@ -95,19 +102,50 @@ func TestService_Upload(t *testing.T) {
 
 		ctx := context.Background()
 		content := strings.NewReader("")
-		filepath := "filepath"
+		filepath := Path("filepath")
 		size := 10
 		genericError := errors.New("generic error")
+		owner := user.ID(testutil.Must(uuid.NewV7()))
 
-		contentsMock.On("Store", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return(nil).Once()
-		filesMock.On("Save", mock.MatchedBy(func(f File) bool { return string(f.Path) == filepath })).Return((*File)(nil), genericError).Once()
+		filesMock.On("ByOwnerByPath", owner, filepath).Return((*File)(nil), nil).Once()
+		contentsMock.On("Store", mock.MatchedBy(func(f File) bool { return f.Path == filepath })).Return(nil).Once()
+		filesMock.On("Save", mock.MatchedBy(func(f File) bool { return f.Path == filepath })).Return((*File)(nil), genericError).Once()
 
 		defer contentsMock.AssertExpectations(t)
 		defer filesMock.AssertExpectations(t)
 		toUpload := FileUpload{Content: content, Path: Path(filepath), Size: Size(size)}
 
-		err := service.Upload(ctx, toUpload, user.ID(testutil.Must(uuid.NewV7())))
+		err := service.Upload(ctx, toUpload, owner)
 
 		require.Error(t, err)
+	})
+
+	t.Run("updates a file that already exists", func(t *testing.T) {
+		t.Parallel()
+
+		contentsMock := NewContentsMock(t)
+		filesMock := NewFilesMock(t)
+
+		service := InitService(contentsMock, filesMock)
+
+		ctx := context.Background()
+		content := strings.NewReader("")
+		filepath := Path("filepath")
+		size := 10
+		owner := user.ID(testutil.Must(uuid.NewV7()))
+
+		file, err := Create(content, "original", Size(size), owner)
+		require.NoError(t, err)
+
+		filesMock.On("ByOwnerByPath", owner, filepath).Return((*File)(file), nil).Once()
+		contentsMock.On("Store", mock.MatchedBy(func(f File) bool { return f.ID == file.ID && f.Path == filepath })).Return(nil).Once()
+		filesMock.On("Save", mock.MatchedBy(func(f File) bool { return f.ID == file.ID && f.Path == filepath })).Return((*File)(nil), nil).Once()
+		defer contentsMock.AssertExpectations(t)
+		defer filesMock.AssertExpectations(t)
+		toUpload := FileUpload{Content: content, Path: Path(filepath), Size: Size(size)}
+
+		err = service.Upload(ctx, toUpload, owner)
+
+		require.NoError(t, err)
 	})
 }

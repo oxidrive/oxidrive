@@ -51,6 +51,18 @@ func Create(content Content, path Path, size Size, ownerID user.ID) (*File, erro
 	}, nil
 }
 
+func (f *File) Update(content Content, path Path, size Size) error {
+	if !isValid(path) {
+		return ErrInvalidPath
+	}
+
+	f.Content = content
+	f.Name = Name(filepath.Base(string(path)))
+	f.Path = Path(filepath.Clean(string(path)))
+	f.Size = size
+	return nil
+}
+
 func isValid(path Path) bool {
 	cleaned := filepath.Clean(string(path))
 
@@ -63,4 +75,5 @@ type Contents interface {
 
 type Files interface {
 	Save(context.Context, File) (*File, error)
+	ByOwnerByPath(context.Context, user.ID, Path) (*File, error)
 }
