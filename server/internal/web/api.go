@@ -15,7 +15,7 @@ type Api struct {
 	instance handler.Instance
 }
 
-func mountApi(router *http.ServeMux, cfg *Config) {
+func mountApi(router *http.ServeMux, cfg *Config) error {
 	a := &Api{
 		files: handler.Files{
 			Logger: cfg.Logger.With().Str("handler", "files").Logger(),
@@ -27,8 +27,18 @@ func mountApi(router *http.ServeMux, cfg *Config) {
 		},
 	}
 
-	api.HandlerFromMux(api.NewStrictHandler(a, []api.StrictMiddlewareFunc{}), router)
+	middlewares, err := defaultMiddlewares(cfg.Logger)
+	if err != nil {
+		return err
+	}
+
+	api.HandlerWithOptions(api.NewStrictHandler(a, []api.StrictMiddlewareFunc{}), api.StdHTTPServerOptions{
+		BaseRouter:  router,
+		Middlewares: middlewares,
+	})
 	mountSwagger(router)
+
+	return nil
 }
 
 func (api *Api) InstanceStatus(ctx context.Context, request api.InstanceStatusRequestObject) (api.InstanceStatusResponseObject, error) {
