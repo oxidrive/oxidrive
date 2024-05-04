@@ -36,22 +36,24 @@ in
         };
 
         pre-commit.settings.hooks =
-          let
-            rustCheck = {
+          {
+            cargo-check = { enable = true; package = rust; };
+            clippy = {
               enable = true;
               package = rust;
               packageOverrides = {
-                rustc = rust;
                 cargo = rust;
-                rustfmt = rust;
                 clippy = rust;
               };
             };
-          in
-          {
-            cargo-check = rustCheck;
-            clippy = rustCheck;
-            rustfmt = rustCheck;
+            rustfmt = {
+              enable = true;
+              package = rust;
+              packageOverrides = {
+                cargo = rust;
+                rustfmt = rust;
+              };
+            };
           };
       };
     };
