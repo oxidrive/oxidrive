@@ -11,7 +11,7 @@
       };
 
       pre-commit.settings.hooks = {
-        rome.enable = true;
+        biome.enable = true;
       };
     };
 }

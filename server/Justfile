@@ -16,8 +16,8 @@ test path="./...": generate
 
     cd .. && gremlins run ./server/internal --test-cpu=2 --workers=2
 
-test-integration:
-    INTEGRATION_TEST=1 just test
+test-integration *args:
+    INTEGRATION_TEST=1 just test {{ args }}
 
 watch: fmt
     air
