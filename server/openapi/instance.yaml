@@ -16,11 +16,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/InstanceStatus'
         default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: './openapi.yaml#/components/schemas/GenericError'
+          $ref: './openapi.yaml#/components/responses/InternalError'
 
 
   /api/instance/setup:
@@ -41,21 +37,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/InstanceSetupResponse'
         '400':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericError'
+          $ref: './openapi.yaml#/components/responses/Error'
         '409':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GenericError'
+          description: Returned if the first time setup flow has already been completed
+          $ref: './openapi.yaml#/components/responses/Error'
         default:
-          description: Unexpected Error
-          content:
-            application/json:
-              schema:
-                $ref: './openapi.yaml#/components/schemas/GenericError'
+          $ref: './openapi.yaml#/components/responses/InternalError'
+
 components:
   schemas:
     InstanceStatus:

@@ -22,7 +22,7 @@ func (i Instance) Setup(ctx context.Context, request api.InstanceSetupRequestObj
 	}
 
 	if completed {
-		return api.InstanceSetup409JSONResponse(api.GenericError{
+		return api.InstanceSetup409JSONResponse(api.Error{
 			Error:   "setup_already_completed",
 			Message: "first time setup has already been completed",
 		}), nil
@@ -32,10 +32,10 @@ func (i Instance) Setup(ctx context.Context, request api.InstanceSetupRequestObj
 		Username: request.Body.Admin.Username,
 		Password: request.Body.Admin.Password,
 	}); err != nil {
-		return api.InstanceSetup400JSONResponse(api.GenericError{
+		return api.InstanceSetup400JSONResponse{ErrorJSONResponse: api.ErrorJSONResponse(api.Error{
 			Error:   "setup_failed",
 			Message: err.Error(),
-		}), nil
+		})}, nil
 	}
 
 	return api.InstanceSetup200JSONResponse(api.InstanceSetupResponse{
