@@ -14,6 +14,8 @@ import (
 	"github.com/rs/zerolog"
 )
 
+var _ file.Contents = (*contentFS)(nil)
+
 const (
 	filePermission      = 0644
 	directoryPermission = 0755

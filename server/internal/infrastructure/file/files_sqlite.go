@@ -12,6 +12,8 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
 
+var _ file.Files = (*SqliteFiles)(nil)
+
 type SqliteFiles struct {
 	db *sqlx.DB
 }

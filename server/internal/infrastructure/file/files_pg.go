@@ -12,6 +12,8 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
 
+var _ file.Files = (*PgFiles)(nil)
+
 type PgFiles struct {
 	db *sqlx.DB
 }
