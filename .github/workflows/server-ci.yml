@@ -39,11 +39,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
+      - uses: actions-go/go-install@0607b3e7a61b8f1b55e1169a884804d084db73af
+        with:
+          module: gotest.tools/gotestsum@latest
       - run: npx @redocly/cli@latest join -o server/openapi/out.yml server/openapi/openapi.yaml server/openapi/*.yaml
       - run: go mod download
       - run: go generate ./...
       - name: Run tests
-        run: go test -v ./...
+        run: gotestsum --format testdox
         env:
           INTEGRATION_TEST: 'yes'
       - name: Run mutations
