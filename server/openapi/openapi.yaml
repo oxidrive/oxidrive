@@ -4,8 +4,26 @@ info:
   version: 1.0.0
 
 components:
+  securitySchemes:
+    token:
+      type: http
+      scheme: bearer
+
+  responses:
+    Error:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InternalError:
+      description: Unexpected Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
   schemas:
-    GenericError:
+    Error:
       type: object
       required:
         - error

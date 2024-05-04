@@ -24,20 +24,20 @@ func (f *Files) Upload(ctx context.Context, request api.FilesUploadRequestObject
 
 	paths := form.Value["path"]
 	if len(paths) == 0 {
-		return api.FilesUpload400JSONResponse(api.GenericError{
+		return api.FilesUpload400JSONResponse{ErrorJSONResponse: api.ErrorJSONResponse(api.Error{
 			Error:   "missing_path",
 			Message: "form is missing required parameter 'path'",
-		}), nil
+		})}, nil
 	}
 
 	p := paths[0]
 
 	files := form.File["file"]
 	if len(files) == 0 {
-		return api.FilesUpload400JSONResponse(api.GenericError{
+		return api.FilesUpload400JSONResponse{ErrorJSONResponse: api.ErrorJSONResponse(api.Error{
 			Error:   "missing_file",
 			Message: "form is missing required parameter 'file'",
-		}), nil
+		})}, nil
 	}
 
 	fh := files[0]

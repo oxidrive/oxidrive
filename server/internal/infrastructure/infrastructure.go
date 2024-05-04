@@ -4,34 +4,40 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 
+	"github.com/oxidrive/oxidrive/server/internal/auth"
 	"github.com/oxidrive/oxidrive/server/internal/config"
 	"github.com/oxidrive/oxidrive/server/internal/core"
 	"github.com/oxidrive/oxidrive/server/internal/core/file"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
+	authinfra "github.com/oxidrive/oxidrive/server/internal/infrastructure/auth"
 	fileinfra "github.com/oxidrive/oxidrive/server/internal/infrastructure/file"
 	userinfra "github.com/oxidrive/oxidrive/server/internal/infrastructure/user"
 )
 
 func Setup(cfg config.Config, db *sqlx.DB, logger zerolog.Logger) core.ApplicationDependencies {
-	var users user.Users
 	var contents file.Contents
 	var files file.Files
+	var tokens auth.Tokens
+	var users user.Users
 
 	switch db.DriverName() {
 	case config.DriverPG:
 		users = userinfra.NewPgUsers(db)
 		files = fileinfra.NewPgFiles(db)
+		tokens = authinfra.NewPgTokens(db)
 	case config.DriverSqlite:
 		users = userinfra.NewSqliteUsers(db)
 		files = fileinfra.NewSqliteFiles(db)
+		tokens = authinfra.NewSqliteTokens(db)
 	}
 
 	contents = fileinfra.NewContentFS(cfg.StorageConfig, logger)
 
 	return core.ApplicationDependencies{
-		Users:    users,
-		Files:    files,
 		Contents: contents,
+		Files:    files,
+		Tokens:   tokens,
+		Users:    users,
 	}
 
 }

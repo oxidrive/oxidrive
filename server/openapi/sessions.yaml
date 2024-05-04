@@ -1,0 +1,78 @@
+openapi: "3.0.0"
+info:
+  title: Oxidrive Session API
+  version: 1.0.0
+
+paths:
+  /api/sessions:
+    post:
+      operationId: authCreateSession
+      summary: Create a new session and generate the corresponding token
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionRequest'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '401':
+          description: The supplied credentials are invalid
+          $ref: './openapi.yaml#/components/responses/Error'
+        default:
+          $ref: './openapi.yaml#/components/responses/InternalError'
+
+components:
+  schemas:
+    SessionRequest:
+      type: object
+      required:
+        - credentials
+      properties:
+        credentials:
+          $ref: '#/components/schemas/Credentials'
+
+    Session:
+      type: object
+      required:
+        - token
+        - expiresAt
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+
+    Credentials:
+      allOf:
+        - type: object
+          required:
+            - kind
+          properties:
+            kind:
+              type: string
+              enum: [password]
+        - oneOf:
+            - $ref: '#/components/schemas/PasswordCredentials'
+
+    PasswordCredentials:
+      type: object
+      required:
+        - kind
+        - username
+        - password
+      properties:
+        kind:
+          type: string
+          enum: [password]
+        username:
+          type: string
+        password:
+          type: string
+
