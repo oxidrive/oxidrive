@@ -2,15 +2,10 @@ package user
 
 import (
 	"context"
-	"errors"
 
 	"github.com/google/uuid"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/password"
-)
-
-var (
-	ErrUserNotFound error = errors.New("user does not exist")
 )
 
 type ID (uuid.UUID)
@@ -21,6 +16,15 @@ func (i ID) String() string {
 
 func MustID(s string) ID {
 	return ID(uuid.MustParse(s))
+}
+
+func NewID() (ID, error) {
+	id, err := uuid.NewV7()
+	if err != nil {
+		return ID{}, err
+	}
+
+	return ID(id), nil
 }
 
 type User struct {
@@ -49,5 +53,6 @@ func (u User) VerifyPassword(password string) (bool, error) {
 type Users interface {
 	Count(context.Context) (int, error)
 	Save(context.Context, User) (*User, error)
+	ByID(context.Context, ID) (*User, error)
 	ByUsername(context.Context, string) (*User, error)
 }

@@ -75,6 +75,46 @@ func TestSqliteUsers_Save(t *testing.T) {
 	})
 }
 
+func TestSqliteUsers_ByID(t *testing.T) {
+	t.Run("returns the correct user", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		db := testutil.SqliteDBFromContext(ctx, t)
+
+		users := NewSqliteUsers(db)
+
+		u := testutil.Must(users.Save(ctx, *testutil.Must(user.Create("a", "a"))))
+
+		found, err := users.ByID(ctx, u.ID)
+
+		assert.NoError(t, err)
+		assert.Equal(t, u.ID, found.ID)
+		assert.Equal(t, u.Username, found.Username)
+	})
+
+	t.Run("does not return a different user", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		db := testutil.SqliteDBFromContext(ctx, t)
+
+		users := NewSqliteUsers(db)
+		id := testutil.Must(user.NewID())
+
+		testutil.Must(users.Save(ctx, *testutil.Must(user.Create("a", "a"))))
+
+		found, err := users.ByID(ctx, id)
+
+		assert.NoError(t, err)
+		assert.Nil(t, found)
+	})
+}
+
 func TestSqliteUsers_ByUsername(t *testing.T) {
 	t.Run("returns the correct user", func(t *testing.T) {
 		t.Parallel()
@@ -110,7 +150,7 @@ func TestSqliteUsers_ByUsername(t *testing.T) {
 
 		found, err := users.ByUsername(ctx, username)
 
-		assert.ErrorIs(t, err, user.ErrUserNotFound)
+		assert.NoError(t, err)
 		assert.Nil(t, found)
 
 	})

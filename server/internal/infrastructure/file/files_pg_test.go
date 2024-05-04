@@ -18,8 +18,6 @@ import (
 
 func TestPgFiles_Save(t *testing.T) {
 	t.Run("saves a new file", func(t *testing.T) {
-		t.Parallel()
-
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 
@@ -40,8 +38,6 @@ func TestPgFiles_Save(t *testing.T) {
 	})
 
 	t.Run("saves an existing file", func(t *testing.T) {
-		t.Parallel()
-
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 
@@ -73,8 +69,6 @@ func TestPgFiles_Save(t *testing.T) {
 	})
 
 	t.Run("do not saves with a not existing user", func(t *testing.T) {
-		t.Parallel()
-
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 
@@ -96,8 +90,6 @@ func TestPgFiles_Save(t *testing.T) {
 
 func TestPgFiles_ByOwnerByPath(t *testing.T) {
 	t.Run("returns an existing file", func(t *testing.T) {
-		t.Parallel()
-
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 
@@ -123,8 +115,6 @@ func TestPgFiles_ByOwnerByPath(t *testing.T) {
 	})
 
 	t.Run("returns nil if the file doesn't exist", func(t *testing.T) {
-		t.Parallel()
-
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 

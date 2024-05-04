@@ -32,8 +32,8 @@ func TestInstanceService_FirstTimeSetup(t *testing.T) {
 
 		created := testutil.Must(user.Create(initial.Username, initial.Password))
 		users := user.NewUsersMock(t)
-		users.On("Count", ctx).Return(0, nil).Twice()
-		users.On("Save", ctx, mock.MatchedBy(func(u user.User) bool { return u.Username == created.Username })).Return((*user.User)(nil), nil).Once()
+		users.On("Count").Return(0, nil).Twice()
+		users.On("Save", mock.MatchedBy(func(u user.User) bool { return u.Username == created.Username })).Return((*user.User)(nil), nil).Once()
 
 		svc := InitService(info, users)
 
@@ -51,7 +51,7 @@ func TestInstanceService_FirstTimeSetup(t *testing.T) {
 		ctx := context.Background()
 
 		users := user.NewUsersMock(t)
-		users.On("Count", ctx).Return(1, nil).Twice()
+		users.On("Count").Return(1, nil).Twice()
 
 		svc := InitService(info, users)
 
@@ -81,7 +81,7 @@ func TestInstanceService_Status(t *testing.T) {
 		}
 
 		users := user.NewUsersMock(t)
-		users.On("Count", ctx).Return(1, nil).Twice()
+		users.On("Count").Return(1, nil).Twice()
 
 		svc := InitService(info, users)
 
