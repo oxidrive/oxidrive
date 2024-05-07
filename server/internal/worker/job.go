@@ -3,6 +3,7 @@ package worker
 import "context"
 
 type Job interface {
+	Name() string
 	Run(context.Context) error
 }
 
