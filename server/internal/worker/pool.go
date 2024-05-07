@@ -11,6 +11,7 @@ import (
 
 type Pool struct {
 	pool        *pond.WorkerPool
+	logger      zerolog.Logger
 	stopTimeout time.Duration
 }
 
@@ -22,10 +23,11 @@ func PoolStopTimeout(t time.Duration) PoolOption {
 	}
 }
 
-func NewPool(options ...PoolOption) *Pool {
+func NewPool(logger zerolog.Logger, options ...PoolOption) *Pool {
 	pool := pond.New(100, 1000)
 	p := &Pool{
 		pool:        pool,
+		logger:      logger,
 		stopTimeout: 5 * time.Second,
 	}
 
@@ -41,12 +43,18 @@ func (p *Pool) Shutdown() {
 }
 
 func (p *Pool) Submit(ctx context.Context, j Job) JobHandle {
+	l := p.logger.With().Str("job", j.Name()).Logger()
+
 	ch := make(chan error)
 
 	p.pool.Submit(func() {
-		ch <- j.Run(ctx)
+		l.Debug().Msg("starting job run...")
+		err := j.Run(ctx)
+		l.Debug().Err(err).Msg("job run completed")
+		ch <- err
 	})
 
+	l.Debug().Msg("job scheduled successfully")
 	return &defaultHandle{ch}
 }
 

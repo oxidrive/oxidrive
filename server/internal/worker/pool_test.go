@@ -37,7 +37,7 @@ func TestWorkerPool(t *testing.T) {
 		ctx, done := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer done()
 
-		p := NewPool(PoolStopTimeout(1 * time.Millisecond))
+		p := NewPool(zerolog.New(zerolog.NewTestWriter(t)), PoolStopTimeout(1*time.Millisecond))
 		defer p.Shutdown()
 
 		j := p.Submit(ctx, &testJob{})
@@ -56,7 +56,7 @@ func TestWorkerPool(t *testing.T) {
 		ctx, done := context.WithTimeout(context.Background(), 200*time.Millisecond)
 		defer done()
 
-		p := NewPool(PoolStopTimeout(1 * time.Millisecond))
+		p := NewPool(zerolog.New(zerolog.NewTestWriter(t)), PoolStopTimeout(1*time.Millisecond))
 		defer p.Shutdown()
 
 		j := p.Submit(ctx, &testJob{sleep: 1 * time.Second})
