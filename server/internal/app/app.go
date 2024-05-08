@@ -54,6 +54,6 @@ func (app *Application) Users() user.Users {
 	return app.users
 }
 
-func (app *Application) TokenVerifier() *auth.TokenService {
+func (app *Application) Tokens() *auth.TokenService {
 	return &app.tokens
 }
