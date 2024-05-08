@@ -51,8 +51,8 @@ func (t tokenAuthenticator) authenticate(ctx context.Context, input *openapi3fil
 		return ErrTokenAuthenticationFailed
 	}
 
-	if err := t.app.TokenVerifier().VerifyToken(ctx, auth.TokenID(token)); err != nil {
-		t.logger.Warn().Err(err).Msg("token authentication failed")
+	if err := t.app.TokenVerifier().Verify(ctx, auth.TokenID(token)); err != nil {
+		t.logger.Debug().Err(err).Msg("token authentication failed")
 		return ErrTokenAuthenticationFailed
 	}
 

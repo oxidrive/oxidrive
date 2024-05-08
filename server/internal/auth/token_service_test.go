@@ -16,7 +16,9 @@ type testCase struct {
 	token string
 }
 
-func TestTokenVerifier(t *testing.T) {
+func TestTokenService_Verify(t *testing.T) {
+	ttl := 1 * time.Hour
+
 	t.Run("verifies a valid token", func(t *testing.T) {
 		t.Parallel()
 
@@ -26,13 +28,13 @@ func TestTokenVerifier(t *testing.T) {
 		defer tokens.AssertExpectations(t)
 
 		u := testutil.Must(user.Create("test", "test"))
-		token := testutil.Must(TokenFor(u))
+		token := testutil.Must(NewToken(u, time.Now().Add(ttl)))
 
 		tokens.On("ByID", token.Value).Return(token, nil).Once()
 
-		verifier := NewTokenVerifier(tokens)
+		svc := NewTokenService(tokens, ttl)
 
-		err := verifier.VerifyToken(ctx, token.Value)
+		err := svc.Verify(ctx, token.Value)
 		assert.NoError(t, err)
 	})
 
@@ -49,9 +51,9 @@ func TestTokenVerifier(t *testing.T) {
 			tokens := NewTokensMock(t)
 			defer tokens.AssertExpectations(t)
 
-			verifier := NewTokenVerifier(tokens)
+			svc := NewTokenService(tokens, ttl)
 
-			err := verifier.VerifyToken(ctx, TokenID(tc.token))
+			err := svc.Verify(ctx, TokenID(tc.token))
 			assert.ErrorIs(t, err, ErrInvalidToken)
 		})
 	}
@@ -65,14 +67,33 @@ func TestTokenVerifier(t *testing.T) {
 		defer tokens.AssertExpectations(t)
 
 		u := testutil.Must(user.Create("test", "test"))
-		token := testutil.Must(TokenFor(u))
+		token := testutil.Must(NewToken(u, time.Now().Add(ttl)))
 		token.ExpiresAt = time.Now().Add(-1 * time.Hour)
 
 		tokens.On("ByID", token.Value).Return(token, nil).Once()
 
-		verifier := NewTokenVerifier(tokens)
+		svc := NewTokenService(tokens, ttl)
 
-		err := verifier.VerifyToken(ctx, token.Value)
+		err := svc.Verify(ctx, token.Value)
+		assert.ErrorIs(t, err, ErrInvalidToken)
+	})
+
+	t.Run("refuses a token that does not exist", func(t *testing.T) {
+		t.Parallel()
+
+		ctx := context.Background()
+
+		tokens := NewTokensMock(t)
+		defer tokens.AssertExpectations(t)
+
+		u := testutil.Must(user.Create("test", "test"))
+		token := testutil.Must(NewToken(u, time.Now().Add(ttl)))
+
+		tokens.On("ByID", token.Value).Return((*Token)(nil), nil).Once()
+
+		svc := NewTokenService(tokens, ttl)
+
+		err := svc.Verify(ctx, token.Value)
 		assert.ErrorIs(t, err, ErrInvalidToken)
 	})
 }

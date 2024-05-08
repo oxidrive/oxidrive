@@ -46,7 +46,7 @@ func (p *PgTokens) Store(ctx context.Context, t auth.Token) (*auth.Token, error)
         $1,
         $2,
         $3
-    )`, t.String(), t.UserID.String(), t.ExpiresAt)
+    )`, t.Value.String(), t.UserID.String(), t.ExpiresAt)
 	if err != nil {
 		return nil, err
 	}

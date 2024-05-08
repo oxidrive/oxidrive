@@ -21,7 +21,7 @@ func TestService_Upload(t *testing.T) {
 		contentsMock := NewContentsMock(t)
 		filesMock := NewFilesMock(t)
 
-		service := InitService(contentsMock, filesMock)
+		service := NewService(contentsMock, filesMock)
 
 		ctx := context.Background()
 		content := strings.NewReader("")
@@ -47,7 +47,7 @@ func TestService_Upload(t *testing.T) {
 		contentsMock := NewContentsMock(t)
 		filesMock := NewFilesMock(t)
 
-		service := InitService(contentsMock, filesMock)
+		service := NewService(contentsMock, filesMock)
 
 		ctx := context.Background()
 		content := strings.NewReader("")
@@ -72,7 +72,7 @@ func TestService_Upload(t *testing.T) {
 		contentsMock := NewContentsMock(t)
 		filesMock := NewFilesMock(t)
 
-		service := InitService(contentsMock, filesMock)
+		service := NewService(contentsMock, filesMock)
 
 		ctx := context.Background()
 		content := strings.NewReader("")
@@ -98,7 +98,7 @@ func TestService_Upload(t *testing.T) {
 		contentsMock := NewContentsMock(t)
 		filesMock := NewFilesMock(t)
 
-		service := InitService(contentsMock, filesMock)
+		service := NewService(contentsMock, filesMock)
 
 		ctx := context.Background()
 		content := strings.NewReader("")
@@ -126,7 +126,7 @@ func TestService_Upload(t *testing.T) {
 		contentsMock := NewContentsMock(t)
 		filesMock := NewFilesMock(t)
 
-		service := InitService(contentsMock, filesMock)
+		service := NewService(contentsMock, filesMock)
 
 		ctx := context.Background()
 		content := strings.NewReader("")

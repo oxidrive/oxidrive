@@ -18,7 +18,7 @@ type Service struct {
 	files    Files
 }
 
-func InitService(filesContent Contents, filesMetadata Files) Service {
+func NewService(filesContent Contents, filesMetadata Files) Service {
 	return Service{
 		contents: filesContent,
 		files:    filesMetadata,

@@ -14,6 +14,8 @@ import (
 )
 
 func TestPgTokens(t *testing.T) {
+	exp := time.Now().Add(1 * time.Hour)
+
 	t.Run("stores and returns a token by ID", func(t *testing.T) {
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
@@ -23,7 +25,7 @@ func TestPgTokens(t *testing.T) {
 		tokens := NewPgTokens(db)
 
 		u := testutil.Must(user.Create("a", "a"))
-		token := testutil.Must(tokens.Store(ctx, *testutil.Must(auth.TokenFor(u))))
+		token := testutil.Must(tokens.Store(ctx, *testutil.Must(auth.NewToken(u, exp))))
 
 		found, err := tokens.ByID(ctx, token.Value)
 
@@ -42,10 +44,10 @@ func TestPgTokens(t *testing.T) {
 		tokens := NewPgTokens(db)
 
 		u := testutil.Must(user.Create("a", "a"))
-		t1 := testutil.Must(auth.TokenFor(u))
+		t1 := testutil.Must(auth.NewToken(u, exp))
 		t1.ExpiresAt = time.Now().Add(-1 * time.Hour)
 		t1 = testutil.Must(tokens.Store(ctx, *t1))
-		_ = testutil.Must(tokens.Store(ctx, *testutil.Must(auth.TokenFor(u))))
+		_ = testutil.Must(tokens.Store(ctx, *testutil.Must(auth.NewToken(u, exp))))
 
 		tt, err := tokens.ExpiringBefore(ctx, time.Now())
 
@@ -63,8 +65,8 @@ func TestPgTokens(t *testing.T) {
 		tokens := NewPgTokens(db)
 
 		u := testutil.Must(user.Create("a", "a"))
-		t1 := testutil.Must(tokens.Store(ctx, *testutil.Must(auth.TokenFor(u))))
-		t2 := testutil.Must(tokens.Store(ctx, *testutil.Must(auth.TokenFor(u))))
+		t1 := testutil.Must(tokens.Store(ctx, *testutil.Must(auth.NewToken(u, exp))))
+		t2 := testutil.Must(tokens.Store(ctx, *testutil.Must(auth.NewToken(u, exp))))
 
 		err := tokens.DeleteAll(ctx, []auth.Token{*t1, *t2})
 		require.NoError(t, err)
@@ -87,8 +89,8 @@ func TestPgTokens(t *testing.T) {
 		tokens := NewPgTokens(db)
 
 		u := testutil.Must(user.Create("a", "a"))
-		t1 := testutil.Must(tokens.Store(ctx, *testutil.Must(auth.TokenFor(u))))
-		t2 := testutil.Must(tokens.Store(ctx, *testutil.Must(auth.TokenFor(u))))
+		t1 := testutil.Must(tokens.Store(ctx, *testutil.Must(auth.NewToken(u, exp))))
+		t2 := testutil.Must(tokens.Store(ctx, *testutil.Must(auth.NewToken(u, exp))))
 
 		err := tokens.DeleteAll(ctx, []auth.Token{})
 		require.NoError(t, err)

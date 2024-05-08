@@ -43,7 +43,7 @@ func (p *SqliteTokens) Store(ctx context.Context, t auth.Token) (*auth.Token, er
         $1,
         $2,
         $3
-    )`, t.String(), t.UserID.String(), exp)
+    )`, t.Value.String(), t.UserID.String(), exp)
 	if err != nil {
 		return nil, err
 	}

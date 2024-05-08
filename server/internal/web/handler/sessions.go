@@ -40,7 +40,7 @@ func (a *Sessions) CreateSession(ctx context.Context, request api.AuthCreateSess
 
 		return api.AuthCreateSession200JSONResponse(api.Session{
 			ExpiresAt: t.ExpiresAt,
-			Token:     t.String(),
+			Token:     t.Value.String(),
 		}), nil
 	default:
 		a.Logger.Error().Str("kind", string(request.Body.Credentials.Kind)).Msg("invalid credentials kind. This should have been caught by the validation middleware!")
