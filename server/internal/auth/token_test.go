@@ -23,6 +23,7 @@ func TestTokenVerifier(t *testing.T) {
 		ctx := context.Background()
 
 		tokens := NewTokensMock(t)
+		defer tokens.AssertExpectations(t)
 
 		u := testutil.Must(user.Create("test", "test"))
 		token := testutil.Must(TokenFor(u))
@@ -46,6 +47,7 @@ func TestTokenVerifier(t *testing.T) {
 			ctx := context.Background()
 
 			tokens := NewTokensMock(t)
+			defer tokens.AssertExpectations(t)
 
 			verifier := NewTokenVerifier(tokens)
 
@@ -60,6 +62,7 @@ func TestTokenVerifier(t *testing.T) {
 		ctx := context.Background()
 
 		tokens := NewTokensMock(t)
+		defer tokens.AssertExpectations(t)
 
 		u := testutil.Must(user.Create("test", "test"))
 		token := testutil.Must(TokenFor(u))

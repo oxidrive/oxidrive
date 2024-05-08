@@ -10,10 +10,11 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/rs/zerolog"
 
+	"github.com/oxidrive/oxidrive/server/internal/app"
 	"github.com/oxidrive/oxidrive/server/internal/config"
-	"github.com/oxidrive/oxidrive/server/internal/core"
 	"github.com/oxidrive/oxidrive/server/internal/infrastructure"
 	"github.com/oxidrive/oxidrive/server/internal/web"
+	"github.com/oxidrive/oxidrive/server/internal/worker"
 	"github.com/oxidrive/oxidrive/server/migrations"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -36,7 +37,16 @@ func main() {
 		die(logger, err, "failed to open database connection")
 	}
 
-	app := core.NewApplication(cfg, infrastructure.Setup(cfg, db, logger))
+	deps := infrastructure.Setup(cfg, db, logger)
+	app := app.NewApplication(cfg, deps)
+
+	err = worker.StartScheduled(worker.Config{
+		Logger:  logger,
+		Crontab: cron(deps),
+	})
+	if err != nil {
+		die(logger, err, "background worker failed to start")
+	}
 
 	err = web.Run(web.Config{
 		Address:            cfg.ListenAddress(),

@@ -5,14 +5,14 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/oxidrive/oxidrive/server/internal/core"
+	"github.com/oxidrive/oxidrive/server/internal/app"
 	"github.com/oxidrive/oxidrive/server/internal/core/instance"
 	"github.com/oxidrive/oxidrive/server/internal/web/api"
 )
 
 type Instance struct {
 	Logger zerolog.Logger
-	App    *core.Application
+	App    *app.Application
 }
 
 func (i Instance) Setup(ctx context.Context, request api.InstanceSetupRequestObject) (api.InstanceSetupResponseObject, error) {

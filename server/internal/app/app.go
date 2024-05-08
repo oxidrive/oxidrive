@@ -1,4 +1,4 @@
-package core
+package app
 
 import (
 	"github.com/oxidrive/oxidrive/server/internal/auth"

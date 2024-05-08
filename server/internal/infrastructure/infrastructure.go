@@ -4,9 +4,9 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
 
+	"github.com/oxidrive/oxidrive/server/internal/app"
 	"github.com/oxidrive/oxidrive/server/internal/auth"
 	"github.com/oxidrive/oxidrive/server/internal/config"
-	"github.com/oxidrive/oxidrive/server/internal/core"
 	"github.com/oxidrive/oxidrive/server/internal/core/file"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 	authinfra "github.com/oxidrive/oxidrive/server/internal/infrastructure/auth"
@@ -14,7 +14,7 @@ import (
 	userinfra "github.com/oxidrive/oxidrive/server/internal/infrastructure/user"
 )
 
-func Setup(cfg config.Config, db *sqlx.DB, logger zerolog.Logger) core.ApplicationDependencies {
+func Setup(cfg config.Config, db *sqlx.DB, logger zerolog.Logger) app.ApplicationDependencies {
 	var contents file.Contents
 	var files file.Files
 	var tokens auth.Tokens
@@ -33,7 +33,7 @@ func Setup(cfg config.Config, db *sqlx.DB, logger zerolog.Logger) core.Applicati
 
 	contents = fileinfra.NewContentFS(cfg.StorageConfig, logger)
 
-	return core.ApplicationDependencies{
+	return app.ApplicationDependencies{
 		Contents: contents,
 		Files:    files,
 		Tokens:   tokens,

@@ -3,10 +3,10 @@ set dotenv-load
 build: generate
     go build -o ./bin/oxidrive ./cmd/oxidrive/
 
-run *args: generate fmt
+run *args: generate
     go run ./cmd/oxidrive {{ args }}
 
-test path="./...": generate
+test path="./...":
     @if command -v gotestsum &> /dev/null; then \
       gotestsum --format gotestdox {{ path }}; \
     fi
@@ -14,12 +14,13 @@ test path="./...": generate
       gotestdox {{ path }}; \
     fi
 
-    cd .. && gremlins run ./server/internal --test-cpu=2 --workers=2
+test-mutations:
+    cd .. && INTEGRATION_TEST=1 gremlins run ./server/internal --test-cpu=2 --workers=2
 
 test-integration *args:
     INTEGRATION_TEST=1 just test {{ args }}
 
-watch: fmt
+watch:
     air
 
 generate: openapi

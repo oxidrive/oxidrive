@@ -7,14 +7,14 @@ import (
 
 	"github.com/rs/zerolog"
 
+	"github.com/oxidrive/oxidrive/server/internal/app"
 	"github.com/oxidrive/oxidrive/server/internal/auth"
-	"github.com/oxidrive/oxidrive/server/internal/core"
 	"github.com/oxidrive/oxidrive/server/internal/web/api"
 )
 
 type Sessions struct {
 	Logger zerolog.Logger
-	App    *core.Application
+	App    *app.Application
 }
 
 func (a *Sessions) CreateSession(ctx context.Context, request api.AuthCreateSessionRequestObject) (api.AuthCreateSessionResponseObject, error) {
