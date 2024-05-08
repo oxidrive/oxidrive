@@ -110,6 +110,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/oapi-codegen/nethttp-middleware v1.0.1
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/steinfletcher/apitest v1.5.16
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.30.0
 	go.uber.org/atomic v1.9.0 // indirect
 	golang.org/x/exp v0.0.0-20240416160154-fe59bbe5cc7f // indirect
