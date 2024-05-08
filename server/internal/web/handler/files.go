@@ -5,14 +5,14 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/oxidrive/oxidrive/server/internal/core"
+	"github.com/oxidrive/oxidrive/server/internal/app"
 	"github.com/oxidrive/oxidrive/server/internal/core/file"
 	"github.com/oxidrive/oxidrive/server/internal/web/api"
 )
 
 type Files struct {
 	Logger             zerolog.Logger
-	App                *core.Application
+	App                *app.Application
 	MultipartMaxMemory int64
 }
 

@@ -34,6 +34,7 @@ func (p *SqliteTokens) ByID(ctx context.Context, id auth.TokenID) (*auth.Token, 
 }
 
 func (p *SqliteTokens) Store(ctx context.Context, t auth.Token) (*auth.Token, error) {
+	exp := t.ExpiresAt.UTC().Format(time.RFC3339)
 	_, err := p.db.ExecContext(ctx, `insert into tokens (
         id,
         user_id,
@@ -42,7 +43,7 @@ func (p *SqliteTokens) Store(ctx context.Context, t auth.Token) (*auth.Token, er
         $1,
         $2,
         $3
-    )`, t.String(), t.UserID.String(), t.ExpiresAt)
+    )`, t.String(), t.UserID.String(), exp)
 	if err != nil {
 		return nil, err
 	}
@@ -50,16 +51,64 @@ func (p *SqliteTokens) Store(ctx context.Context, t auth.Token) (*auth.Token, er
 	return &t, nil
 }
 
+func (p *SqliteTokens) ExpiringBefore(ctx context.Context, exp time.Time) ([]auth.Token, error) {
+	e := exp.UTC().Format(time.RFC3339)
+	stt := make([]sqliteToken, 0)
+	err := p.db.SelectContext(ctx, &stt, "select id, user_id, expires_at from tokens where expires_at <= $1", e)
+	if errors.Is(err, sql.ErrNoRows) {
+		return []auth.Token{}, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	tt := make([]auth.Token, len(stt))
+
+	for i, t := range stt {
+		tt[i] = *t.into()
+	}
+
+	return tt, nil
+}
+
+func (p *SqliteTokens) DeleteAll(ctx context.Context, tt []auth.Token) error {
+	if len(tt) == 0 {
+		return nil
+	}
+
+	ids := make([]string, len(tt))
+	for i, t := range tt {
+		ids[i] = t.Value.String()
+	}
+
+	query, args, err := sqlx.In("delete from tokens where id in (?)", ids)
+	if err != nil {
+		return err
+	}
+
+	query = p.db.Rebind(query)
+
+	_, err = p.db.ExecContext(ctx, query, args...)
+	return err
+}
+
 type sqliteToken struct {
 	ID        string    `db:"id"`
 	UserID    uuid.UUID `db:"user_id"`
-	ExpiresAt time.Time `db:"expires_at"`
+	ExpiresAt string    `db:"expires_at"`
 }
 
 func (t sqliteToken) into() *auth.Token {
+	exp, err := time.Parse(time.RFC3339, t.ExpiresAt)
+	if err != nil {
+		// We serialized the string, so it should be fine
+		panic(err)
+	}
+
 	return &auth.Token{
 		Value:     auth.TokenID(t.ID),
 		UserID:    user.ID(t.UserID),
-		ExpiresAt: t.ExpiresAt,
+		ExpiresAt: exp,
 	}
 }

@@ -34,7 +34,6 @@ func WithSqliteDB(cfg SqliteDBConfig) IntegrationDependency {
 		}
 
 		url := fmt.Sprintf("sqlite://%s?%s", path.Join(dir, cfg.DbName), cfg.DbParams)
-		fmt.Println(url)
 
 		ctx = context.WithValue(ctx, sqliteKey{}, url)
 		return ctx, func() {

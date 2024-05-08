@@ -30,6 +30,10 @@ func (p *PgTokens) ByID(ctx context.Context, id auth.TokenID) (*auth.Token, erro
 		return nil, nil
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	return t.into(), nil
 }
 
@@ -48,6 +52,47 @@ func (p *PgTokens) Store(ctx context.Context, t auth.Token) (*auth.Token, error)
 	}
 
 	return &t, nil
+}
+
+func (p *PgTokens) ExpiringBefore(ctx context.Context, exp time.Time) ([]auth.Token, error) {
+	ptt := make([]pgToken, 0)
+	err := p.db.SelectContext(ctx, &ptt, "select id, user_id, expires_at from tokens where expires_at <= $1", exp)
+	if errors.Is(err, sql.ErrNoRows) {
+		return []auth.Token{}, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	tt := make([]auth.Token, len(ptt))
+
+	for i, t := range ptt {
+		tt[i] = *t.into()
+	}
+
+	return tt, nil
+}
+
+func (p *PgTokens) DeleteAll(ctx context.Context, tt []auth.Token) error {
+	if len(tt) == 0 {
+		return nil
+	}
+
+	ids := make([]string, len(tt))
+	for i, t := range tt {
+		ids[i] = t.Value.String()
+	}
+
+	query, args, err := sqlx.In("delete from tokens where id in (?)", ids)
+	if err != nil {
+		return err
+	}
+
+	query = p.db.Rebind(query)
+
+	_, err = p.db.ExecContext(ctx, query, args...)
+	return err
 }
 
 type pgToken struct {

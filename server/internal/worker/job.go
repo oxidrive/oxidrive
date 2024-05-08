@@ -18,3 +18,8 @@ type defaultHandle struct {
 func (h *defaultHandle) Wait() <-chan error {
 	return h.ch
 }
+
+type CronJob struct {
+	Cron string
+	Job  Job
+}

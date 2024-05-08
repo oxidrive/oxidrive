@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 	"github.com/oxidrive/oxidrive/server/internal/testutil"
@@ -24,7 +25,7 @@ func TestPgUsers_Count(t *testing.T) {
 
 		count, err := users.Count(ctx)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, 2, count)
 
 	})
@@ -42,7 +43,7 @@ func TestPgUsers_Save(t *testing.T) {
 		users := NewPgUsers(db)
 
 		created, err := users.Save(ctx, *testutil.Must(user.Create(username, "a")))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, username, created.Username)
 
 	})
@@ -58,14 +59,14 @@ func TestPgUsers_Save(t *testing.T) {
 		users := NewPgUsers(db)
 
 		created, err := users.Save(ctx, *testutil.Must(user.Create(username, "a")))
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, username, created.Username)
 
 		changedUsername := "changed"
 		created.Username = changedUsername
 
 		updated, err := users.Save(ctx, *created)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, created.ID, updated.ID)
 		assert.Equal(t, changedUsername, updated.Username)
 
@@ -85,7 +86,7 @@ func TestPgUsers_ByID(t *testing.T) {
 
 		found, err := users.ByID(ctx, u.ID)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, u.ID, found.ID)
 		assert.Equal(t, u.Username, found.Username)
 	})
@@ -103,7 +104,7 @@ func TestPgUsers_ByID(t *testing.T) {
 
 		found, err := users.ByID(ctx, id)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Nil(t, found)
 	})
 }
@@ -122,7 +123,7 @@ func TestPgUsers_ByUsername(t *testing.T) {
 
 		found, err := users.ByUsername(ctx, username)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, username, found.Username)
 	})
 
@@ -139,7 +140,7 @@ func TestPgUsers_ByUsername(t *testing.T) {
 
 		found, err := users.ByUsername(ctx, username)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Nil(t, found)
 	})
 }

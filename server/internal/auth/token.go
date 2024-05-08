@@ -16,6 +16,10 @@ const oneMonth = 730 * time.Hour
 
 type TokenID string
 
+func (id TokenID) String() string {
+	return string(id)
+}
+
 type Token struct {
 	Value TokenID
 
@@ -74,8 +78,10 @@ func (v *TokenVerifier) VerifyToken(ctx context.Context, token TokenID) error {
 }
 
 type Tokens interface {
+	ExpiringBefore(context.Context, time.Time) ([]Token, error)
 	ByID(context.Context, TokenID) (*Token, error)
 	Store(context.Context, Token) (*Token, error)
+	DeleteAll(context.Context, []Token) error
 }
 
 const alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"

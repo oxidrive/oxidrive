@@ -5,12 +5,12 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/oxidrive/oxidrive/server/internal/core"
+	"github.com/oxidrive/oxidrive/server/internal/app"
 )
 
 type Config struct {
 	Address            string
-	Application        *core.Application
+	Application        *app.Application
 	Logger             zerolog.Logger
 	FrontendFolder     string
 	MultipartMaxMemory int64

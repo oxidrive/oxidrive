@@ -11,15 +11,15 @@ import (
 	"github.com/go-http-utils/headers"
 	"github.com/rs/zerolog"
 
+	"github.com/oxidrive/oxidrive/server/internal/app"
 	"github.com/oxidrive/oxidrive/server/internal/auth"
-	"github.com/oxidrive/oxidrive/server/internal/core"
 )
 
 var (
 	ErrTokenAuthenticationFailed = errors.New("token authentication failed")
 )
 
-func authenticate(logger zerolog.Logger, app *core.Application) openapi3filter.AuthenticationFunc {
+func authenticate(logger zerolog.Logger, app *app.Application) openapi3filter.AuthenticationFunc {
 	return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
 		var auth authenticator
 		switch input.SecuritySchemeName {
@@ -42,7 +42,7 @@ type authenticator interface {
 
 type tokenAuthenticator struct {
 	logger zerolog.Logger
-	app    *core.Application
+	app    *app.Application
 }
 
 func (t tokenAuthenticator) authenticate(ctx context.Context, input *openapi3filter.AuthenticationInput) error {

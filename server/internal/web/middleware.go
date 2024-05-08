@@ -9,14 +9,14 @@ import (
 	"github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
 	"github.com/rs/zerolog"
 
+	"github.com/oxidrive/oxidrive/server/internal/app"
 	"github.com/oxidrive/oxidrive/server/internal/auth"
-	"github.com/oxidrive/oxidrive/server/internal/core"
 	"github.com/oxidrive/oxidrive/server/internal/web/api"
 )
 
 type MiddlewareFactory func(zerolog.Logger) (api.MiddlewareFunc, error)
 
-func defaultMiddlewares(logger zerolog.Logger, app *core.Application) ([]api.MiddlewareFunc, error) {
+func defaultMiddlewares(logger zerolog.Logger, app *app.Application) ([]api.MiddlewareFunc, error) {
 	middlewares := make([]api.MiddlewareFunc, 1)
 
 	for i, mf := range []MiddlewareFactory{validator(app)} {
@@ -31,7 +31,7 @@ func defaultMiddlewares(logger zerolog.Logger, app *core.Application) ([]api.Mid
 	return middlewares, nil
 }
 
-func validator(app *core.Application) MiddlewareFactory {
+func validator(app *app.Application) MiddlewareFactory {
 	return func(logger zerolog.Logger) (api.MiddlewareFunc, error) {
 		spec, err := api.GetSwagger()
 		if err != nil {
@@ -47,7 +47,7 @@ func validator(app *core.Application) MiddlewareFactory {
 	}
 }
 
-func userFromToken(app *core.Application) api.StrictMiddlewareFunc {
+func userFromToken(app *app.Application) api.StrictMiddlewareFunc {
 	return api.StrictMiddlewareFunc(func(f nethttp.StrictHTTPHandlerFunc, operationID string) nethttp.StrictHTTPHandlerFunc {
 		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (response interface{}, err error) {
 			token := extractTokenFromRequest(r)
