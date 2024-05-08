@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-func routes(cfg *Config) (*http.ServeMux, error) {
+func Router(cfg *Config) (*http.ServeMux, error) {
 	router := http.NewServeMux()
 
 	// Routes

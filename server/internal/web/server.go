@@ -17,7 +17,7 @@ type Config struct {
 }
 
 func Run(cfg Config) error {
-	router, err := routes(&cfg)
+	router, err := Router(&cfg)
 	if err != nil {
 		return err
 	}
