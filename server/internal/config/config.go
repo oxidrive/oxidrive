@@ -27,6 +27,8 @@ type Config struct {
 
 	AssetsFolder string `env:"OXIDRIVE_ASSETS_FOLDER" default:"./assets"`
 
+	AuthConfig
+
 	DatabaseConfig
 
 	StorageConfig

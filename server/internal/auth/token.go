@@ -3,16 +3,12 @@ package auth
 import (
 	"context"
 	"crypto/rand"
-	"errors"
 	"fmt"
 	"math/big"
-	"strings"
 	"time"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
-
-const oneMonth = 730 * time.Hour
 
 type TokenID string
 
@@ -31,50 +27,17 @@ func (t *Token) IsExpired() bool {
 	return t.ExpiresAt.Before(time.Now())
 }
 
-func (t *Token) String() string {
-	return string(t.Value)
-}
-
-func TokenFor(u *user.User) (*Token, error) {
+func NewToken(u *user.User, expiresAt time.Time) (*Token, error) {
 	value, err := generate()
 	if err != nil {
 		return nil, err
 	}
-
-	expiresAt := time.Now().Add(oneMonth)
 
 	return &Token{
 		Value:     value,
 		UserID:    u.ID,
 		ExpiresAt: expiresAt,
 	}, nil
-}
-
-var ErrInvalidToken = errors.New("invalid token")
-
-type TokenVerifier struct {
-	tokens Tokens
-}
-
-func NewTokenVerifier(tokens Tokens) TokenVerifier {
-	return TokenVerifier{tokens: tokens}
-}
-
-func (v *TokenVerifier) VerifyToken(ctx context.Context, token TokenID) error {
-	if token == "" || !strings.HasPrefix(string(token), prefix) {
-		return ErrInvalidToken
-	}
-
-	t, err := v.tokens.ByID(ctx, token)
-	if err != nil {
-		return err
-	}
-
-	if t.IsExpired() {
-		return ErrInvalidToken
-	}
-
-	return nil
 }
 
 type Tokens interface {

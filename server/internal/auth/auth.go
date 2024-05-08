@@ -13,10 +13,10 @@ var (
 
 type Authenticator struct {
 	users  user.Users
-	tokens Tokens
+	tokens TokenService
 }
 
-func NewAuthenticator(users user.Users, tokens Tokens) Authenticator {
+func NewAuthenticator(users user.Users, tokens TokenService) Authenticator {
 	return Authenticator{users: users, tokens: tokens}
 }
 
@@ -39,7 +39,7 @@ func (a *Authenticator) AuthenticateWithPassword(ctx context.Context, username s
 		return nil, nil, ErrAuthenticationFailed
 	}
 
-	t, err := TokenFor(u)
+	t, err := a.tokens.Generate(ctx, u)
 	if err != nil {
 		return nil, nil, err
 	}
