@@ -98,7 +98,7 @@ func TestPgUsers_ByID(t *testing.T) {
 		db := testutil.PgDBFromContext(ctx, t)
 
 		users := NewPgUsers(db)
-		id := testutil.Must(user.NewID())
+		id := user.NewID()
 
 		testutil.Must(users.Save(ctx, *testutil.Must(user.Create("a", "a"))))
 

@@ -46,6 +46,9 @@ components:
       type: object
       required:
         - ok
+        - id
       properties:
         ok:
           type: boolean
+        id:
+          type: string

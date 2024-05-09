@@ -10,21 +10,25 @@ import (
 
 type ID (uuid.UUID)
 
-func (i ID) String() string {
-	return uuid.UUID(i).String()
+func EmptyID() ID {
+	return ID(uuid.UUID{})
 }
 
-func MustID(s string) ID {
-	return ID(uuid.MustParse(s))
+func NewID() ID {
+	return ID(uuid.Must(uuid.NewV7()))
 }
 
-func NewID() (ID, error) {
-	id, err := uuid.NewV7()
+func ParseID(s string) (ID, error) {
+	id, err := uuid.Parse(s)
 	if err != nil {
 		return ID{}, err
 	}
 
 	return ID(id), nil
+}
+
+func (i ID) String() string {
+	return uuid.UUID(i).String()
 }
 
 type User struct {
@@ -40,7 +44,7 @@ func Create(username string, pwd string) (*User, error) {
 	}
 
 	return &User{
-		ID:           ID(uuid.Must(uuid.NewV7())),
+		ID:           NewID(),
 		Username:     username,
 		PasswordHash: hash,
 	}, nil

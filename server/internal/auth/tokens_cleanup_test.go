@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
-	"github.com/oxidrive/oxidrive/server/internal/testutil"
 )
 
 func TestTokensCleanupJob(t *testing.T) {
@@ -18,7 +17,7 @@ func TestTokensCleanupJob(t *testing.T) {
 
 		expired := Token{
 			Value:     "b",
-			UserID:    testutil.Must(user.NewID()),
+			UserID:    user.NewID(),
 			ExpiresAt: time.Now().Add(-1 * time.Hour),
 		}
 
