@@ -104,7 +104,7 @@ func TestSqliteUsers_ByID(t *testing.T) {
 		db := testutil.SqliteDBFromContext(ctx, t)
 
 		users := NewSqliteUsers(db)
-		id := testutil.Must(user.NewID())
+		id := user.NewID()
 
 		testutil.Must(users.Save(ctx, *testutil.Must(user.Create("a", "a"))))
 

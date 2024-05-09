@@ -48,6 +48,20 @@ func (s *SqliteFiles) Save(ctx context.Context, f file.File) (*file.File, error)
 	return &f, nil
 }
 
+func (s *SqliteFiles) ByID(ctx context.Context, id file.ID) (*file.File, error) {
+	var f sqliteFile
+	err := s.db.GetContext(ctx, &f, "select id, name, path, size, user_id from files where id = $1", id.String())
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return f.into(), nil
+}
+
 func (s *SqliteFiles) ByOwnerByPath(ctx context.Context, owner user.ID, path file.Path) (*file.File, error) {
 	var f sqliteFile
 	err := s.db.GetContext(ctx, &f, "select id, name, path, size, user_id from files where user_id = $1 and path = $2", owner.String(), path)

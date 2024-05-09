@@ -4,11 +4,14 @@ import (
 	"context"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"time"
 
 	"testing"
 
 	"github.com/rs/zerolog"
+	"github.com/stretchr/testify/require"
 
 	"github.com/oxidrive/oxidrive/server/internal/app"
 	"github.com/oxidrive/oxidrive/server/internal/config"
@@ -24,6 +27,8 @@ func setup(ctx context.Context, t *testing.T) (*app.Application, http.Handler) {
 	dburl := testutil.Must(url.Parse(testutil.SqliteUrlFromContext(ctx, t)))
 	db := testutil.SqliteDBFromContext(ctx, t)
 
+	require.NoError(t, os.MkdirAll(filepath.Join(dir, "files"), 0700))
+
 	logger := zerolog.New(zerolog.NewTestWriter(t))
 
 	cfg := config.Config{
@@ -35,6 +40,9 @@ func setup(ctx context.Context, t *testing.T) (*app.Application, http.Handler) {
 			Url: dburl,
 		},
 		StorageConfig: config.StorageConfig{
+			StoragePrefix:      "/files",
+			ThroughputInByte:   32,
+			MultipartMaxMemory: 32,
 			StorageFSConfig: config.StorageFSConfig{
 				StorageFSDataDir: dir,
 			},

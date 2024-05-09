@@ -17,6 +17,23 @@ type Path string
 type Name string
 type Size int
 
+func EmptyID() ID {
+	return ID(uuid.UUID{})
+}
+
+func NewID() ID {
+	return ID(uuid.Must(uuid.NewV7()))
+}
+
+func ParseID(s string) (ID, error) {
+	id, err := uuid.Parse(s)
+	if err != nil {
+		return ID{}, err
+	}
+
+	return ID(id), nil
+}
+
 func (i ID) String() string {
 	return uuid.UUID(i).String()
 }
@@ -42,7 +59,7 @@ func Create(content Content, path Path, size Size, ownerID user.ID) (*File, erro
 	name := Name(filepath.Base(string(path)))
 
 	return &File{
-		ID:      ID(uuid.Must(uuid.NewV7())),
+		ID:      NewID(),
 		Content: content,
 		Name:    name,
 		Path:    Path(filepath.Clean(string(path))),
@@ -75,5 +92,6 @@ type Contents interface {
 
 type Files interface {
 	Save(context.Context, File) (*File, error)
+	ByID(context.Context, ID) (*File, error)
 	ByOwnerByPath(context.Context, user.ID, Path) (*File, error)
 }

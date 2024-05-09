@@ -56,11 +56,13 @@ func (f *Files) Upload(ctx context.Context, request api.FilesUploadRequestObject
 		return nil, err
 	}
 
-	if err := f.App.Files().Upload(ctx, upload, owner.ID); err != nil {
+	id, err := f.App.Files().Upload(ctx, upload, owner.ID)
+	if err != nil {
 		return nil, err
 	}
 
 	return api.FilesUpload200JSONResponse(api.FileUploadResponse{
 		Ok: true,
+		Id: id.String(),
 	}), nil
 }
