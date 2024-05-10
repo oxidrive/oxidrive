@@ -1,15 +1,20 @@
+use std::sync::Arc;
+
 use instance::InstanceService;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     RequestBuilder, Url,
 };
-use std::sync::Arc;
+
 pub mod instance;
+
 static USER_AGENT: &str = concat!("oxidrive-web", "/", env!("CARGO_PKG_VERSION"));
+
 #[derive(Clone)]
 pub struct Oxidrive {
     client: Client,
 }
+
 impl Oxidrive {
     pub fn new(base_url: impl AsRef<str>) -> Self {
         Self {
@@ -20,11 +25,13 @@ impl Oxidrive {
         InstanceService::new(self.client.clone())
     }
 }
+
 #[derive(Clone)]
 struct Client {
     base_url: Arc<Url>,
     inner: reqwest::Client,
 }
+
 impl Client {
     fn new(base_url: impl AsRef<str>) -> Self {
         let mut headers = HeaderMap::new();
@@ -49,9 +56,11 @@ impl Client {
         self.inner.post(url)
     }
 }
+
 #[derive(Debug, thiserror::Error)]
 pub enum ApiError {
     #[error(transparent)]
     Network(#[from] reqwest::Error),
 }
+
 pub type ApiResult<T> = Result<T, ApiError>;
