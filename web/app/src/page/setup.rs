@@ -5,6 +5,8 @@ use crate::{
         Logo, Pane, Size, TextField, Title, TitleColor,
     },
     i18n::use_localizer,
+    instance::use_instance_status,
+    toast::{self, ToastColor},
     Route,
 };
 use dioxus::prelude::*;
@@ -18,6 +20,7 @@ pub fn Setup() -> Element {
     let i18n = use_localizer();
     let api = use_oxidrive_api();
     let navigator = use_navigator();
+    let mut instance_status = use_instance_status();
 
     let future = use_resource(move || async move { api().instance().status().await });
     let Status {
@@ -26,7 +29,10 @@ pub fn Setup() -> Element {
         public_url,
         setup_completed,
     } = match future.read().as_ref() {
-        Some(Ok(StatusResponse { status })) => status.clone(),
+        Some(Ok(StatusResponse { status })) => {
+            instance_status.set(status.clone());
+            status.clone()
+        }
         Some(Err(err)) => {
             return rsx! {"Error: {err:?}"};
         }
@@ -37,9 +43,7 @@ pub fn Setup() -> Element {
 
     if setup_completed {
         log::info!("setup has already been completed, redirecting to home page...");
-        if let Some(err) = navigator.replace(Route::Home {}) {
-            return rsx! {"Error: {err:?}"};
-        }
+        navigator.replace(Route::Home {});
     }
 
     rsx! {
@@ -48,10 +52,16 @@ pub fn Setup() -> Element {
             Title { h: Heading::H1, color: TitleColor::Primary, {i18n.localize("setup-title")} }
             form {
                 class: "flex flex-col justify-space-evenly gap-6 w-full items-center content-stretch justify-center",
-                onsubmit: move |event| async move {
-                    submit(api, event.parsed_values().unwrap()).await.unwrap();
-                    if let Some(err) = navigator.replace(Route::Home {}) {
-                        panic!("{err:?}");
+                onsubmit: move |event| {
+                    let i18n = i18n.clone();
+                    async move {
+                        let _ = submit(api, event.parsed_values().unwrap()).await.throw();
+                        toast::add(
+                            ToastColor::Success,
+                            i18n.localize("setup-succeeded"),
+                            i18n.localize("setup-succeeded.message"),
+                        );
+                        navigator.replace(Route::Home {});
                     }
                 },
                 div { class: "flex flex-col gap-4 items-center content-stretch justify-center w-full",

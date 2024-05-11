@@ -15,13 +15,16 @@ oxidrive_api = { path = "web/api" }
 
 # crates.io
 assert2 = "0.3"
+chrono = { version = "0.4", features = ["serde"] }
 console_error_panic_hook = "0.1.7"
 dioxus = "0.5"
+dioxus-free-icons = "0.8"
 dioxus-logger = "0.4.1"
 env_logger = "0.11"
 fluent-bundle = "0.15.2"
 fluent-langneg = "0.13.0"
 gloo-timers = { version = "0.3.0", features = ["futures"] }
+gloo-storage = "0.3.0"
 log = "0.4.19"
 mockito = "1"
 reqwest = { version = "0.12.4", default-features = false, features = [
@@ -32,6 +35,7 @@ reqwest = { version = "0.12.4", default-features = false, features = [
 rstest = "0.19.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+strum = { version = "0.26", features = ["derive"] }
 thiserror = "1"
 tokio = "1"
 unic-langid = { version = "0.9.4", features = ["macros"] }

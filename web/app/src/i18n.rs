@@ -45,6 +45,8 @@ type Translations<'a> = &'a [(LanguageIdentifier, &'a str, &'a str)];
 
 static TRANSLATIONS: Translations = &[
     translation!("en", "page", "home.ftl"),
+    translation!("en", "page", "login.ftl"),
+    translation!("en", "page", "not-found.ftl"),
     translation!("en", "page", "setup.ftl"),
 ];
 
@@ -94,10 +96,10 @@ fn init_bundle(
         .filter(|(lang, _, _)| langs.contains(lang))
     {
         let resource = FluentResource::try_new((*content).into())
-            .unwrap_or_else(|_| panic!("failed to parse {lang}/{id}"));
+            .unwrap_or_else(|err| panic!("failed to parse {lang}/{id}: {err:?}"));
         bundle
             .add_resource(resource)
-            .unwrap_or_else(|_| panic!("failed to add resource {lang}/{id} to bundle"));
+            .unwrap_or_else(|err| panic!("failed to add resource {lang}/{id} to bundle: {err:?}"));
     }
 
     Rc::new(bundle)

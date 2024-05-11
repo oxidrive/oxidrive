@@ -10,3 +10,6 @@ setup-form-configuration-recap = Configuration Recap
 
 setup-form-submit-cta = Complete Setup
 setup-form-help-cta = Find help
+
+setup-succeeded = First time setup succeeded!
+    .message = You can now login with your username and password
