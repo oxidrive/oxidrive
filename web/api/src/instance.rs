@@ -1,5 +1,6 @@
-use crate::{ApiResult, Client};
+use crate::{ApiErrorFromResponse, ApiResult, Client};
 use serde::{Deserialize, Serialize};
+use strum::Display;
 
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct StatusResponse {
@@ -22,7 +23,7 @@ pub struct SetupResponse {
     pub ok: bool,
 }
 
-#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Default, Clone, PartialEq, Debug, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Status {
     pub database: String,
@@ -36,28 +37,40 @@ pub struct InstanceService {
     client: Client,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Display)]
+#[serde(rename_all = "snake_case")]
+#[strum(serialize_all = "snake_case")]
+pub enum ErrorKind {
+    #[serde(other)]
+    UnknownError,
+}
+
 impl InstanceService {
     pub(crate) fn new(client: Client) -> Self {
         Self { client }
     }
 
-    pub async fn status(&self) -> ApiResult<StatusResponse> {
+    pub async fn status(&self) -> ApiResult<StatusResponse, ErrorKind> {
         let response = self
             .client
             .get("/api/instance")
             .send()
+            .await?
+            .check_error_response()
             .await?
             .json()
             .await?;
         Ok(response)
     }
 
-    pub async fn setup(&self, req: SetupRequest) -> ApiResult<SetupResponse> {
+    pub async fn setup(&self, req: SetupRequest) -> ApiResult<SetupResponse, ErrorKind> {
         let response = self
             .client
             .post("/api/instance/setup")
             .json(&req)
             .send()
+            .await?
+            .check_error_response()
             .await?
             .json()
             .await?;
@@ -68,10 +81,12 @@ impl InstanceService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Oxidrive;
+    use crate::{
+        tests::{json, json_val},
+        Oxidrive,
+    };
     use assert2::check;
     use mockito::Matcher;
-    use serde::Serialize;
 
     #[tokio::test]
     async fn it_fetches_the_instance_status() {
@@ -125,13 +140,5 @@ mod tests {
 
         mock.assert_async().await;
         check!(response == expected);
-    }
-
-    fn json<T: Serialize>(body: &T) -> Vec<u8> {
-        serde_json::to_vec(body).unwrap()
-    }
-
-    fn json_val<T: Serialize>(body: &T) -> serde_json::Value {
-        serde_json::to_value(body).unwrap()
     }
 }

@@ -1,9 +1,11 @@
-import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { testAccessibility } from "./fixtures";
 
 test.describe("setup flow", () => {
 	test("should be completed to unlock the instance", async ({ page }) => {
+		const username = "playwright";
+		const password = "playwright";
+
 		await page.goto("/");
 		await page.waitForLoadState("networkidle");
 
@@ -18,11 +20,17 @@ test.describe("setup flow", () => {
 			page.getByRole("heading", { name: "Create an admin account" }),
 		).toBeVisible();
 
-		await page.getByPlaceholder("Username").fill("playwright");
-		await page.getByPlaceholder("Password", { exact: true }).fill("playwright");
-		await page.getByPlaceholder("Confirm Password").fill("playwright");
+		await page.getByPlaceholder("Username").fill(username);
+		await page.getByPlaceholder("Password", { exact: true }).fill(password);
+		await page.getByPlaceholder("Confirm Password").fill(password);
 
 		await page.getByRole("button", { name: "Complete Setup" }).click();
+
+		await expect(page).toHaveURL("/login");
+
+		await page.getByPlaceholder("Username").fill(username);
+		await page.getByPlaceholder("Password").fill(password);
+		await page.getByRole("button", { name: "Sign In" }).click();
 
 		await expect(page).toHaveURL("/");
 		await expect(

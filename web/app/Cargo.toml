@@ -9,12 +9,15 @@ oxidrive_api = { workspace = true }
 
 console_error_panic_hook = { workspace = true }
 dioxus = { workspace = true, features = ["web", "router"] }
+dioxus-free-icons = { workspace = true, features = ["font-awesome-brands", "font-awesome-regular", "font-awesome-solid"] }
 dioxus-logger = { workspace = true }
 fluent-bundle = { workspace = true }
 fluent-langneg = { workspace = true }
+gloo-storage = { workspace = true }
 gloo-timers = { workspace = true }
 log = { workspace = true }
 serde = { workspace = true }
+thiserror = { workspace = true }
 unic-langid = { workspace = true }
 web-sys = { workspace = true, features = ["Window", "Navigator", "Location"] }
 

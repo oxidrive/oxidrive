@@ -5,7 +5,9 @@ edition.workspace = true
 authors.workspace = true
 
 [dependencies]
+chrono = { workspace = true }
 serde = { workspace = true }
+strum = { workspace = true }
 reqwest = { workspace = true }
 thiserror = { workspace = true }
 
