@@ -32,6 +32,7 @@ in
             dioxus-cli
             rust
             cargo-nextest
+            cargo-watch
           ];
         };
 

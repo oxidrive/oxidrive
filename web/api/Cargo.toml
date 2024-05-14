@@ -6,6 +6,7 @@ authors.workspace = true
 
 [dependencies]
 chrono = { workspace = true }
+log = { workspace = true }
 serde = { workspace = true }
 strum = { workspace = true }
 reqwest = { workspace = true }

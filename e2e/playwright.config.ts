@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const SECONDS = 1000; // To convert seconds to milliseconds, do 60 * SECONDS
+const authFile = "playwright/.auth/user.json";
 
 /**
  * Read environment variables from file.
@@ -25,29 +25,35 @@ export default defineConfig({
 
 	/* Configure projects for major browsers */
 	projects: [
+		{ name: "setup", testMatch: /.*\.setup\.ts/ },
 		{
 			name: "chromium",
-			use: { ...devices["Desktop Chrome"] },
+			use: { ...devices["Desktop Chrome"], storageState: authFile },
+			dependencies: ["setup"],
 		},
 
 		{
 			name: "firefox",
-			use: { ...devices["Desktop Firefox"] },
+			use: { ...devices["Desktop Firefox"], storageState: authFile },
+			dependencies: ["setup"],
 		},
 
 		{
 			name: "webkit",
-			use: { ...devices["Desktop Safari"] },
+			use: { ...devices["Desktop Safari"], storageState: authFile },
+			dependencies: ["setup"],
 		},
 
 		/* Test against mobile viewports. */
 		{
 			name: "Mobile Chrome",
-			use: { ...devices["Pixel 5"] },
+			use: { ...devices["Pixel 5"], storageState: authFile },
+			dependencies: ["setup"],
 		},
 		{
 			name: "Mobile Safari",
-			use: { ...devices["iPhone 12"] },
+			use: { ...devices["iPhone 12"], storageState: authFile },
+			dependencies: ["setup"],
 		},
 
 		/* Test against branded browsers. */

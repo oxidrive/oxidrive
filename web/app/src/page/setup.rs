@@ -5,9 +5,7 @@ use crate::{
         Logo, Pane, Size, TextField, Title, TitleColor,
     },
     i18n::use_localizer,
-    instance::use_instance_status,
     toast::{self, ToastColor},
-    Route,
 };
 use dioxus::prelude::*;
 use oxidrive_api::{
@@ -20,7 +18,6 @@ pub fn Setup() -> Element {
     let i18n = use_localizer();
     let api = use_oxidrive_api();
     let navigator = use_navigator();
-    let mut instance_status = use_instance_status();
 
     let future = use_resource(move || async move { api().instance().status().await });
     let Status {
@@ -29,12 +26,9 @@ pub fn Setup() -> Element {
         public_url,
         setup_completed,
     } = match future.read().as_ref() {
-        Some(Ok(StatusResponse { status })) => {
-            instance_status.set(status.clone());
-            status.clone()
-        }
+        Some(Ok(StatusResponse { status })) => status.clone(),
         Some(Err(err)) => {
-            return rsx! {"Error: {err:?}"};
+            return Err(err.to_string()).throw();
         }
         None => {
             return rsx! { Loading {} };
@@ -42,8 +36,7 @@ pub fn Setup() -> Element {
     };
 
     if setup_completed {
-        log::info!("setup has already been completed, redirecting to home page...");
-        navigator.replace(Route::Home {});
+        navigator.replace("/files");
     }
 
     rsx! {
@@ -61,7 +54,7 @@ pub fn Setup() -> Element {
                             i18n.localize("setup-succeeded"),
                             i18n.localize("setup-succeeded.message"),
                         );
-                        navigator.replace(Route::Home {});
+                        navigator.replace("/");
                     }
                 },
                 div { class: "flex flex-col gap-4 items-center content-stretch justify-center w-full",

@@ -23,8 +23,9 @@ func mountApi(router *http.ServeMux, cfg *Config) error {
 			App:    cfg.Application,
 		},
 		files: handler.Files{
-			Logger: cfg.Logger.With().Str("handler", "files").Logger(),
-			App:    cfg.Application,
+			Logger:             cfg.Logger.With().Str("handler", "files").Logger(),
+			App:                cfg.Application,
+			MultipartMaxMemory: cfg.MultipartMaxMemory,
 		},
 		instance: handler.Instance{
 			Logger: cfg.Logger.With().Str("handler", "instance").Logger(),

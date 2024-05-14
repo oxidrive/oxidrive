@@ -1,10 +1,15 @@
+use chrono::Utc;
 use dioxus::prelude::*;
+use oxidrive_api::sessions::Session;
 
-use crate::storage::{use_local_storage, UseLocalStorage};
+use crate::{
+    api::use_oxidrive_api,
+    storage::{use_local_storage, UseLocalStorage},
+};
 
 const SESSION_KEY: &str = "oxidrive-auth-session";
 
-pub type MaybeToken = Option<String>;
+pub type SessionStorage = UseLocalStorage<Option<Session>>;
 
 #[derive(Debug)]
 pub struct CurrentUser {
@@ -17,28 +22,46 @@ pub fn use_current_user() -> Signal<Option<CurrentUser>> {
 }
 
 pub fn init() -> Signal<Option<CurrentUser>> {
-    let token_storage = use_token_storage();
-    use_context_provider::<Signal<Option<CurrentUser>>>(|| match token_storage.get() {
-        Some(token) => Signal::new(Some(CurrentUser {
-            id: "".into(),
-            token,
-        })),
-        None => Signal::new(None),
+    let mut api = use_oxidrive_api();
+    let token_storage = use_session_storage();
+
+    use_context_provider::<Signal<Option<CurrentUser>>>(move || {
+        let mut api = api.write();
+
+        match token_storage.get() {
+            Some(Session { token, expires_at }) => {
+                if expires_at <= Utc::now() {
+                    return Signal::new(None);
+                }
+
+                api.set_token(token.clone());
+
+                Signal::new(Some(CurrentUser {
+                    id: "".into(),
+                    token,
+                }))
+            }
+            None => {
+                api.remove_token();
+
+                Signal::new(None)
+            }
+        }
     })
 }
 
-pub fn use_token_storage() -> UseLocalStorage<MaybeToken> {
+pub fn use_session_storage() -> SessionStorage {
     use_local_storage(SESSION_KEY, || None)
 }
 
 pub fn store_token(
-    token_storage: &mut UseLocalStorage<MaybeToken>,
+    token_storage: &mut SessionStorage,
     mut current_user: Signal<Option<CurrentUser>>,
-    token: String,
+    session: Session,
 ) {
-    token_storage.set(Some(token.clone()));
+    token_storage.set(Some(session.clone()));
     *current_user.write() = Some(CurrentUser {
         id: "".into(),
-        token,
+        token: session.token,
     });
 }

@@ -1,12 +1,15 @@
 mod button;
 mod input;
 mod logo;
+mod navbar;
 mod pane;
 mod spinner;
 mod title;
+
 pub use button::*;
 pub use input::*;
 pub use logo::*;
+pub use navbar::*;
 pub use pane::*;
 pub use spinner::*;
 pub use title::*;
