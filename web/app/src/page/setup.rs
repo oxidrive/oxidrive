@@ -5,7 +5,7 @@ use crate::{
         Logo, Pane, Size, TextField, Title, TitleColor,
     },
     i18n::use_localizer,
-    toast::{self, ToastColor},
+    toast::{self, ToastLevel},
 };
 use dioxus::prelude::*;
 use oxidrive_api::{
@@ -50,7 +50,7 @@ pub fn Setup() -> Element {
                     async move {
                         let _ = submit(api, event.parsed_values().unwrap()).await.throw();
                         toast::add(
-                            ToastColor::Success,
+                            ToastLevel::Success,
                             i18n.localize("setup-succeeded"),
                             i18n.localize("setup-succeeded.message"),
                         );

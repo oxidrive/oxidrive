@@ -4,7 +4,7 @@ use oxidrive_api::{ApiError, ErrorResponse, Oxidrive};
 use serde::Deserialize;
 
 use crate::auth::{store_token, use_session_storage, CurrentUser, SessionStorage};
-use crate::toast::ToastColor;
+use crate::toast::ToastLevel;
 use crate::{
     api::use_oxidrive_api, auth::use_current_user, component::*, i18n::use_localizer, Route,
 };
@@ -49,7 +49,7 @@ pub fn Login(redirect_to: String) -> Element {
                             match result {
                                 AuthResult::Success => {
                                     toast::add(
-                                        ToastColor::Success,
+                                        ToastLevel::Success,
                                         i18n.localize("login-auth-succeeded"),
                                         i18n.localize("login-auth-succeeded.message"),
                                     );

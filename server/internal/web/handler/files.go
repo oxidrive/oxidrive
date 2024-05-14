@@ -8,6 +8,7 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/app"
 	"github.com/oxidrive/oxidrive/server/internal/auth"
 	"github.com/oxidrive/oxidrive/server/internal/core/file"
+	"github.com/oxidrive/oxidrive/server/internal/core/list"
 	"github.com/oxidrive/oxidrive/server/internal/web/api"
 )
 
@@ -15,6 +16,42 @@ type Files struct {
 	Logger             zerolog.Logger
 	App                *app.Application
 	MultipartMaxMemory int64
+}
+
+func (f *Files) List(ctx context.Context, request api.FilesListRequestObject) (api.FilesListResponseObject, error) {
+	var prefix *file.Path
+	if request.Params.Prefix != nil {
+		p, err := file.ParsePath(string(*request.Params.Prefix))
+		if err != nil {
+			return nil, err
+		}
+
+		prefix = &p
+	}
+
+	ff, err := f.App.Files().List(ctx, prefix, list.First(request.Params.First), list.After(request.Params.After))
+	if err != nil {
+		return nil, err
+	}
+
+	count := len(ff.Items)
+
+	items := make([]api.File, count)
+	for i, fi := range ff.Items {
+		items[i] = api.File{
+			Id:   fi.ID.AsUUID(),
+			Name: string(fi.Name),
+			Path: string(fi.Path),
+			Size: int(fi.Size),
+		}
+	}
+
+	return api.FilesList200JSONResponse(api.FileList{
+		Count: count,
+		Items: items,
+		Next:  ff.Next,
+		Total: ff.Total,
+	}), nil
 }
 
 func (f *Files) Upload(ctx context.Context, request api.FilesUploadRequestObject) (api.FilesUploadResponseObject, error) {

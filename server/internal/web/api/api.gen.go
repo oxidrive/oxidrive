@@ -69,6 +69,29 @@ type Error struct {
 	Message string `json:"message"`
 }
 
+// File defines model for File.
+type File struct {
+	Id   openapi_types.UUID `json:"id"`
+	Name string             `json:"name"`
+	Path string             `json:"path"`
+
+	// Size Size of the file in bytes
+	Size int `json:"size"`
+}
+
+// FileList defines model for FileList.
+type FileList struct {
+	// Count number of items in the current slice of the collection
+	Count int    `json:"count"`
+	Items []File `json:"items"`
+
+	// Next Cursor of the next element, to be used as the `after` parameter in paginated operations
+	Next *string `json:"next"`
+
+	// Total total number of items in the collection
+	Total int `json:"total"`
+}
+
 // FileUpload defines model for FileUpload.
 type FileUpload struct {
 	File openapi_types.File `json:"file"`
@@ -110,6 +133,18 @@ type InstanceStatusStatusDatabase string
 // InstanceStatusStatusFileStorage defines model for InstanceStatus.Status.FileStorage.
 type InstanceStatusStatusFileStorage string
 
+// ListInfo defines model for ListInfo.
+type ListInfo struct {
+	// Count number of items in the current slice of the collection
+	Count int `json:"count"`
+
+	// Next Cursor of the next element, to be used as the `after` parameter in paginated operations
+	Next *string `json:"next"`
+
+	// Total total number of items in the collection
+	Total int `json:"total"`
+}
+
 // PasswordCredentials defines model for PasswordCredentials.
 type PasswordCredentials struct {
 	Kind     PasswordCredentialsKind `json:"kind"`
@@ -131,8 +166,30 @@ type SessionRequest struct {
 	Credentials Credentials `json:"credentials"`
 }
 
+// After defines model for After.
+type After = string
+
+// FilePrefix defines model for FilePrefix.
+type FilePrefix = string
+
+// First defines model for First.
+type First = int
+
 // InternalError defines model for InternalError.
 type InternalError = Error
+
+// FilesListParams defines parameters for FilesList.
+type FilesListParams struct {
+	// First Limit the number of items to return to only the first N
+	First *First `form:"first,omitempty" json:"first,omitempty"`
+
+	// After Cursor to fetch the next slice of the collection
+	After *After `form:"after,omitempty" json:"after,omitempty"`
+
+	// Prefix Prefix to filter files for. This is matched against the directory the files resides in, not as a generic prefix.
+	// E.g. a prefix `hello` will match `hello/world.txt` but not `hello/dear/world.txt`.
+	Prefix *FilePrefix `form:"prefix,omitempty" json:"prefix,omitempty"`
+}
 
 // FilesUploadMultipartRequestBody defines body for FilesUpload for multipart/form-data ContentType.
 type FilesUploadMultipartRequestBody = FileUpload
@@ -214,6 +271,9 @@ func (t *Credentials) UnmarshalJSON(b []byte) error {
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// List all available files
+	// (GET /api/files)
+	FilesList(w http.ResponseWriter, r *http.Request, params FilesListParams)
 	// Upload a file to Oxidrive
 	// (POST /api/files)
 	FilesUpload(w http.ResponseWriter, r *http.Request)
@@ -236,6 +296,52 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// FilesList operation middleware
+func (siw *ServerInterfaceWrapper) FilesList(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	ctx = context.WithValue(ctx, TokenScopes, []string{})
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params FilesListParams
+
+	// ------------- Optional query parameter "first" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "first", r.URL.Query(), &params.First)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "first", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "after" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "after", r.URL.Query(), &params.After)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "after", Err: err})
+		return
+	}
+
+	// ------------- Optional query parameter "prefix" -------------
+
+	err = runtime.BindQueryParameter("form", true, false, "prefix", r.URL.Query(), &params.Prefix)
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "prefix", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FilesList(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
 
 // FilesUpload operation middleware
 func (siw *ServerInterfaceWrapper) FilesUpload(w http.ResponseWriter, r *http.Request) {
@@ -413,6 +519,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 		ErrorHandlerFunc:   options.ErrorHandlerFunc,
 	}
 
+	m.HandleFunc("GET "+options.BaseURL+"/api/files", wrapper.FilesList)
 	m.HandleFunc("POST "+options.BaseURL+"/api/files", wrapper.FilesUpload)
 	m.HandleFunc("GET "+options.BaseURL+"/api/instance", wrapper.InstanceStatus)
 	m.HandleFunc("POST "+options.BaseURL+"/api/instance/setup", wrapper.InstanceSetup)
@@ -424,6 +531,35 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 type ErrorJSONResponse Error
 
 type InternalErrorJSONResponse Error
+
+type FilesListRequestObject struct {
+	Params FilesListParams
+}
+
+type FilesListResponseObject interface {
+	VisitFilesListResponse(w http.ResponseWriter) error
+}
+
+type FilesList200JSONResponse FileList
+
+func (response FilesList200JSONResponse) VisitFilesListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type FilesListdefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response FilesListdefaultJSONResponse) VisitFilesListResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
 
 type FilesUploadRequestObject struct {
 	Body *multipart.Reader
@@ -578,6 +714,9 @@ func (response AuthCreateSessiondefaultJSONResponse) VisitAuthCreateSessionRespo
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// List all available files
+	// (GET /api/files)
+	FilesList(ctx context.Context, request FilesListRequestObject) (FilesListResponseObject, error)
 	// Upload a file to Oxidrive
 	// (POST /api/files)
 	FilesUpload(ctx context.Context, request FilesUploadRequestObject) (FilesUploadResponseObject, error)
@@ -619,6 +758,32 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// FilesList operation middleware
+func (sh *strictHandler) FilesList(w http.ResponseWriter, r *http.Request, params FilesListParams) {
+	var request FilesListRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.FilesList(ctx, request.(FilesListRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "FilesList")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(FilesListResponseObject); ok {
+		if err := validResponse.VisitFilesListResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // FilesUpload operation middleware
@@ -741,24 +906,33 @@ func (sh *strictHandler) AuthCreateSession(w http.ResponseWriter, r *http.Reques
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"H4sIAAAAAAAC/7xXS2/bOBD+K8LsHpk43fayumWD3SLAYlskyCnwYSyNbTYSyZCj1kag/74gKcl6xTHa",
-	"JKfY9Dy/+eaRJ8h0abQixQ7SJ7DkjFaOwpe/rdXWf8i0YlLsP6IxhcyQpVaLb04r/+ayLZXoP/1uaQ0p",
-	"/LY4WF3EX90iWqvruhZwrZiswuKNPAjIyWVWGm8EUrhTtDOUMeVJKyMamyHRK0s5KZZYhK9YFF/WkN4/",
-	"gbHakGUZ8XiQKvd/SVUlpPdg0Lkf2uawFMB7Q5CCYyvVJti39FhJS7mXDJoHKb36RhlDLZ5AK2p8Hcvs",
-	"a+OpH2i9rJe1OBRpGCu1z0MkSsy2UtGZJcxxVVAS5BLGDUxyEFCSc7ihqZltVaJKRkZa6ZfAiKEdrM/g",
-	"Av/Igu5MoTGfpraWRQhprW2JDCmspEK7n0vAIG+96PGAgpSIdo8Hc9O0xzQomc/4EaAfes8rrQtCNfGv",
-	"H0B4A3O+r5VjVBndElfmhh4rcjz1jnkp1fS5I+hcaJXzLVjSy/h0kmKO8m2sI6UY0gkpPYfoqdAddcHI",
-	"lZvads+858i4whhN1+Xa8caSeyxAgHssJNNMw0f63LK2TcO06v7Z7R1T6dU/zqqaalXI7O7m36C4w9J4",
-	"hsOW2bh0sXDR6nnzy3mmva2O/pWVc9x3Ht4r7TWY8hOwPEQhDkAM85pYfZEGDdJzRZobaukvzFzxWnwP",
-	"PsWJtBdwS85JPdN+tDPSkrvkwbTKkemMZUlzRWP9QOrlCKOY6Hk4EtizUyMbAn9sAQ0WzyiYvplZPjjK",
-	"Kit5f+uNRdddnsFBYCWhJXvAxJM/7nKp1jroSA5t8WUncyu/U3L59RoEfCcb4YcP5xfnF2HqGlJoJKTw",
-	"MTzFRRAcL9DIRejJgIeOuHhUwsVxnUMa5r1rtk9MlRz/pfP96FIpq4KlQcsLX9wz3zOnHyu9DVcPEWVb",
-	"UXjonWJ/XFy82pk0s87iVfYpOpnT7YJpjyx/Yq2xKvhljeGx1ydEuHsaKtwv66UAV5Wl3+UpxAgTTHyx",
-	"EtZJW3ZPEdy4brbC0psMdZXN2PcxbWimsqO98IYgjzzVzVX685B1wHwmTnhLSZts4tpkWlg6GKbILML8",
-	"fp76g918lPyvAE3/pHnnHpi/QX6mDT5d/PlOTdMxIAQ95ACqPMksIVPzLv08TsIRlvhFdpweLm6KIzPx",
-	"suLtVXDQrru3IcdoZ70zLdrcWiJ8eO/SRogTTBT9SJqqhOJuSPlyxPJm2kZzuVSbpD0G2vpixVtf27p7",
-	"eoJ4+DQDU8DuLJfOFLj/r//u/x9tBDuOTGW7n3riweVUNDz7sb47Y9x8troyg3C6TR42brPPx8NdTMXb",
-	"7h1p9Ig9o9TUdqTTgLWs/w8AAP//qkGgYwoRAAA=",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

@@ -5,6 +5,25 @@ info:
 
 paths:
   /api/files:
+    get:
+      operationId: filesList
+      summary: List all available files
+      tags: [files]
+      security:
+        - token: []
+      parameters:
+        - $ref: './openapi.yaml#/components/parameters/First'
+        - $ref: './openapi.yaml#/components/parameters/After'
+        - $ref: '#/components/parameters/FilePrefix'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileList'
+        default:
+          $ref: './openapi.yaml#/components/responses/InternalError'
+
     post:
       operationId: filesUpload
       summary: Upload a file to Oxidrive
@@ -29,7 +48,55 @@ paths:
           $ref: './openapi.yaml#/components/responses/InternalError'
 
 components:
+  parameters:
+    FilePrefix:
+      name: prefix
+      in: query
+      required: false
+      description: |
+        Prefix to filter files for. This is matched against the directory the files resides in, not as a generic prefix.
+        E.g. a prefix `hello` will match `hello/world.txt` but not `hello/dear/world.txt`.
+      schema:
+        type: string
+        format: path
+
   schemas:
+    File:
+      type: object
+      required:
+        - id
+        - path
+        - name
+        - size
+      properties:
+        id:
+          type: string
+          format: uuid
+        path:
+          type: string
+          format: path
+          example: "path/to/file.txt"
+        name:
+          type: string
+          example: file.txt
+        size:
+          type: integer
+          description: Size of the file in bytes
+          minimum: 0
+          example: 42
+
+    FileList:
+      allOf:
+        - $ref: './openapi.yaml#/components/schemas/ListInfo'
+        - type: object
+          required:
+            - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/File'
+
     FileUpload:
       type: object
       required:
