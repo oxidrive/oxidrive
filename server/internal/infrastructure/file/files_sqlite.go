@@ -4,11 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/file"
+	"github.com/oxidrive/oxidrive/server/internal/core/list"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
 
@@ -20,6 +22,68 @@ type SqliteFiles struct {
 
 func NewSqliteFiles(db *sqlx.DB) *SqliteFiles {
 	return &SqliteFiles{db: db}
+}
+
+func (s *SqliteFiles) List(ctx context.Context, prefix *file.Path, params list.Params) (list.Of[file.File], error) {
+	after := uuid.Nil
+	if params.After != nil {
+		a, err := uuid.Parse(*params.After)
+		if err != nil {
+			return list.Empty[file.File](), fmt.Errorf("%s: %w", list.ErrInvalidAfter, err)
+		}
+
+		after = a
+	}
+
+	regex := ".*"
+	if prefix != nil {
+		regex = fmt.Sprintf("^%s/[^/]*$", prefix.String())
+	}
+
+	// We fetch the required amount of items plus one from the next slice to use as the Next cursor
+	limit := params.First + 1
+
+	var count int
+	err := s.db.GetContext(ctx, &count, "select count(id) from files where path regexp $1", regex)
+	if err != nil {
+		return list.Empty[file.File](), err
+	}
+
+	if count == 0 {
+		return list.Empty[file.File](), nil
+	}
+
+	var pff []sqliteFile
+	err = s.db.SelectContext(ctx, &pff, "select id, name, path, size, user_id from files where id >= $1 and path regexp $2 order by id limit $3", after, regex, limit)
+	if err != nil {
+		return list.Empty[file.File](), err
+	}
+
+	if len(pff) == 0 {
+		return list.Empty[file.File](), nil
+	}
+
+	items := make([]file.File, len(pff))
+	for i, pf := range pff {
+		items[i] = *pf.into()
+	}
+
+	var next *string
+	if len(items) == limit {
+		// We remove the last one as it's not really part of the current slice, we just need its ID to  use as the Next cursor
+		// If we fetched less than params.Limit + 1, it means we're at the end of the collection and there are no more pages after that
+		idx := len(items) - 1
+		n := items[idx].ID.String()
+		next = &n
+		items = items[:idx]
+	}
+
+	return list.Of[file.File]{
+		Items: items,
+		Count: len(items),
+		Total: count,
+		Next:  next,
+	}, nil
 }
 
 func (s *SqliteFiles) Save(ctx context.Context, f file.File) (*file.File, error) {

@@ -51,6 +51,10 @@ func (api *Api) AuthCreateSession(ctx context.Context, request api.AuthCreateSes
 	return api.auth.CreateSession(ctx, request)
 }
 
+func (api *Api) FilesList(ctx context.Context, request api.FilesListRequestObject) (api.FilesListResponseObject, error) {
+	return api.files.List(ctx, request)
+}
+
 func (api *Api) FilesUpload(ctx context.Context, request api.FilesUploadRequestObject) (api.FilesUploadResponseObject, error) {
 	return api.files.Upload(ctx, request)
 }

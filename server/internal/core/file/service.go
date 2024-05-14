@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/oxidrive/oxidrive/server/internal/core/list"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
 
@@ -23,6 +24,10 @@ func NewService(filesContent Contents, filesMetadata Files) Service {
 		contents: filesContent,
 		files:    filesMetadata,
 	}
+}
+
+func (s *Service) List(ctx context.Context, prefix *Path, params ...list.Param) (list.Of[File], error) {
+	return s.files.List(ctx, prefix, list.NewParams(params...))
 }
 
 func (s *Service) ByID(ctx context.Context, id ID) (*File, error) {

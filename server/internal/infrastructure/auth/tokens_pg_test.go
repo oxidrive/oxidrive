@@ -17,6 +17,8 @@ func TestPgTokens(t *testing.T) {
 	exp := time.Now().Add(1 * time.Hour)
 
 	t.Run("stores and returns a token by ID", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 
@@ -36,6 +38,8 @@ func TestPgTokens(t *testing.T) {
 	})
 
 	t.Run("returns the list of all expiring tokens", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 
@@ -57,6 +61,8 @@ func TestPgTokens(t *testing.T) {
 	})
 
 	t.Run("deletes some tokens", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 
@@ -81,6 +87,8 @@ func TestPgTokens(t *testing.T) {
 	})
 
 	t.Run("doesn't delete anything if no tokens are provided", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 

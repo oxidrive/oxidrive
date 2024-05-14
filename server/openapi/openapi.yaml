@@ -22,6 +22,26 @@ components:
           schema:
             $ref: '#/components/schemas/Error'
 
+  parameters:
+    After:
+      name: after
+      in: query
+      required: false
+      description: Cursor to fetch the next slice of the collection
+      schema:
+        type: string
+
+    First:
+      name: first
+      in: query
+      required: false
+      description: Limit the number of items to return to only the first N
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 100
+
   schemas:
     Error:
       type: object
@@ -35,3 +55,26 @@ components:
         message:
           type: string
           description: human readable error message
+
+    ListInfo:
+      type: object
+      required:
+        - count
+        - total
+        - next
+      properties:
+        count:
+          type: integer
+          description: number of items in the current slice of the collection
+          minimum: 0
+          example: 1
+        total:
+          type: integer
+          description: total number of items in the collection
+          minimum: 0
+          example: 42
+        next:
+          type: string
+          description: Cursor of the next element, to be used as the `after` parameter in paginated operations
+          example: 6f6bed9b-320e-4917-a90a-e26e471c4a52
+          nullable: true

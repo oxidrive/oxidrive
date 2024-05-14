@@ -11,6 +11,7 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"github.com/oxidrive/oxidrive/server/internal/config"
+	"github.com/oxidrive/oxidrive/server/internal/sqlite"
 	"github.com/oxidrive/oxidrive/server/migrations"
 )
 
@@ -61,6 +62,8 @@ func SqliteUrlFromContext(ctx context.Context, t *testing.T) string {
 }
 
 func SqliteDBFromContext(ctx context.Context, t *testing.T) *sqlx.DB {
+	sqlite.Init()
+
 	u := SqliteUrlFromContext(ctx, t)
 	url, err := url.Parse(u)
 	if err != nil {

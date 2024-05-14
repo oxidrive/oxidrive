@@ -54,7 +54,7 @@ func TestService_Upload(t *testing.T) {
 
 		ctx := context.Background()
 		content := strings.NewReader("")
-		filepath := Path("/abs/filepath")
+		filepath := Path("../invalid/filepath")
 		size := 10
 		owner := user.ID(testutil.Must(uuid.NewV7()))
 

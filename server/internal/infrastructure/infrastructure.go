@@ -12,6 +12,7 @@ import (
 	authinfra "github.com/oxidrive/oxidrive/server/internal/infrastructure/auth"
 	fileinfra "github.com/oxidrive/oxidrive/server/internal/infrastructure/file"
 	userinfra "github.com/oxidrive/oxidrive/server/internal/infrastructure/user"
+	"github.com/oxidrive/oxidrive/server/internal/sqlite"
 )
 
 func Setup(cfg config.Config, db *sqlx.DB, logger zerolog.Logger) app.ApplicationDependencies {
@@ -64,4 +65,8 @@ func InitDB(cfg config.DatabaseConfig) (*sqlx.DB, error) {
 	}
 
 	return db, nil
+}
+
+func init() {
+	sqlite.Init()
 }

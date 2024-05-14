@@ -1,7 +1,14 @@
-use crate::{api::use_oxidrive_api, component::*, i18n::use_localizer};
+use crate::{
+    api::use_oxidrive_api,
+    component::*,
+    i18n::use_localizer,
+    loc_args,
+    toast::{self, ToastLevel},
+};
 use dioxus::prelude::*;
 use dioxus_free_icons::{icons::fa_solid_icons::*, Icon};
-use oxidrive_api::files::FileUpload;
+use oxidrive_api::{files::FileUpload, ApiError};
+use web_sys::{Document, HtmlInputElement};
 
 pub enum ViewMode {
     Grid,
@@ -14,14 +21,7 @@ pub fn Files(path: Vec<String>) -> Element {
     let i18n = use_localizer();
     let view_mode = use_signal(|| ViewMode::Grid);
 
-    // We can't trigger events programmatically with Dioxus yet
-    let upload = eval(
-        r#"
-const id = await dioxus.recv();
-const input = document.getElementById(id);
-input.click();
-"#,
-    );
+    let document = web_sys::window()?.document()?;
 
     rsx! {
         main { class: "bg-primary-500 w-full min-h-dvh",
@@ -36,7 +36,11 @@ input.click();
                 Fab {
                     label: "Upload",
                     onclick: move |_| {
-                        upload.send("fab-upload".into()).unwrap();
+                        let Some(input) = get_upload_input(&document) else {
+                            log::error!("could not find input with id 'fab-upload'");
+                            return;
+                        };
+                        input.click();
                     },
                     icon: FaPlus,
                     input {
@@ -45,8 +49,10 @@ input.click();
                         r#type: "file",
                         multiple: true,
                         hidden: true,
+                        onclick: move |evt| evt.stop_propagation(),
                         onchange: move |evt| {
                             let path = path.clone();
+                            let i18n = i18n.clone();
                             async move {
                                 if let Some(file_engine) = &evt.files() {
                                     let files = file_engine.files();
@@ -57,8 +63,31 @@ input.click();
                                             continue;
                                         };
                                         let path = path.join("/");
+                                        let args = loc_args!["file" => filename.clone()];
                                         let file = FileUpload { filename, content };
-                                        let _ = api().files().upload(path, file).await.throw();
+                                        match api().files().upload(path, file).await {
+                                            Ok(_) => {
+                                                toast::add(
+                                                    ToastLevel::Success,
+                                                    i18n.localize_with("files-upload-succeeded", &args),
+                                                    i18n.localize("files-upload-succeeded.message"),
+                                                )
+                                            }
+                                            Err(ApiError::Api(err)) => {
+                                                toast::add(
+                                                    ToastLevel::Error,
+                                                    i18n.localize_with("files-upload-failed", &args),
+                                                    err,
+                                                )
+                                            }
+                                            Err(err) => {
+                                                Result::<
+                                                    (),
+                                                    ApiError<oxidrive_api::files::ErrorKind>,
+                                                >::Err(err)
+                                                    .throw();
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -103,4 +132,10 @@ fn ActionBar(mut view_mode: Signal<ViewMode>) -> Element {
             }}
         }
     }
+}
+
+fn get_upload_input(document: &Document) -> Option<HtmlInputElement> {
+    use wasm_bindgen::JsCast as _;
+    let el = document.get_element_by_id("fab-upload")?;
+    el.dyn_into().throw()
 }

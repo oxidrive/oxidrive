@@ -31,6 +31,10 @@ test.describe("uploading a file", () => {
 			),
 		);
 		expect(ok).toBeTruthy();
+
+		const toast = page.getByTestId("toast-0");
+		await expect(toast).toBeVisible();
+		await expect(toast).toHaveAttribute("data-toast-level", "success");
 	});
 
 	test(

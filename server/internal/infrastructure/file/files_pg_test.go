@@ -8,6 +8,7 @@ import (
 	"github.com/jmoiron/sqlx"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/file"
+	"github.com/oxidrive/oxidrive/server/internal/core/list"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 	userinfra "github.com/oxidrive/oxidrive/server/internal/infrastructure/user"
 	"github.com/oxidrive/oxidrive/server/internal/testutil"
@@ -16,8 +17,148 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestPgFiles_List(t *testing.T) {
+	t.Run("returns all files", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
+		defer done()
+
+		db := testutil.PgDBFromContext(ctx, t)
+		u := insertPgUser(t, db, "username", "pwd")
+
+		files := NewPgFiles(db)
+
+		readerMock := strings.NewReader("")
+
+		f1 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "filepath1", 10, u.ID))))
+		f2 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "filepath2", 10, u.ID))))
+
+		ff, err := files.List(ctx, nil, list.DefaultParams)
+		require.NoError(t, err)
+
+		assert.Equal(t, 2, ff.Count)
+		assert.Equal(t, 2, ff.Total)
+		assert.Nil(t, ff.Next)
+		require.Equal(t, 2, len(ff.Items))
+
+		assert.Equal(t, f1.ID, ff.Items[0].ID)
+		assert.Equal(t, f1.Path, ff.Items[0].Path)
+		assert.Equal(t, f1.Size, ff.Items[0].Size)
+		assert.Equal(t, f1.OwnerID, ff.Items[0].OwnerID)
+
+		assert.Equal(t, f2.ID, ff.Items[1].ID)
+		assert.Equal(t, f2.Path, ff.Items[1].Path)
+		assert.Equal(t, f2.Size, ff.Items[1].Size)
+		assert.Equal(t, f2.OwnerID, ff.Items[1].OwnerID)
+	})
+
+	t.Run("returns a subset of files", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
+		defer done()
+
+		db := testutil.PgDBFromContext(ctx, t)
+		u := insertPgUser(t, db, "username", "pwd")
+
+		files := NewPgFiles(db)
+
+		readerMock := strings.NewReader("")
+
+		f1 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "filepath1", 10, u.ID))))
+		f2 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "filepath2", 10, u.ID))))
+
+		ff, err := files.List(ctx, nil, list.Params{
+			First: 1,
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, 1, ff.Count)
+		assert.Equal(t, 2, ff.Total)
+		assert.Equal(t, f2.ID.String(), *ff.Next)
+		require.Equal(t, 1, len(ff.Items))
+
+		assert.Equal(t, f1.ID, ff.Items[0].ID)
+		assert.Equal(t, f1.Path, ff.Items[0].Path)
+		assert.Equal(t, f1.Size, ff.Items[0].Size)
+		assert.Equal(t, f1.OwnerID, ff.Items[0].OwnerID)
+
+		ff, err = files.List(ctx, nil, list.Params{
+			First: 1,
+			After: ff.Next,
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, 1, ff.Count)
+		assert.Equal(t, 2, ff.Total)
+		assert.Nil(t, ff.Next)
+		require.Equal(t, 1, len(ff.Items))
+
+		assert.Equal(t, f2.ID, ff.Items[0].ID)
+		assert.Equal(t, f2.Path, ff.Items[0].Path)
+		assert.Equal(t, f2.Size, ff.Items[0].Size)
+		assert.Equal(t, f2.OwnerID, ff.Items[0].OwnerID)
+	})
+
+	t.Run("returns no files", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
+		defer done()
+
+		db := testutil.PgDBFromContext(ctx, t)
+
+		files := NewPgFiles(db)
+
+		ff, err := files.List(ctx, nil, list.DefaultParams)
+		require.NoError(t, err)
+
+		assert.Equal(t, 0, ff.Count)
+		assert.Equal(t, 0, ff.Total)
+		assert.Nil(t, ff.Next)
+		require.Equal(t, 0, len(ff.Items))
+	})
+
+	t.Run("returns all files matching a prefix", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
+		defer done()
+
+		db := testutil.PgDBFromContext(ctx, t)
+		u := insertPgUser(t, db, "username", "pwd")
+
+		files := NewPgFiles(db)
+
+		readerMock := strings.NewReader("")
+
+		f1 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "one/file", 10, u.ID))))
+		_ = testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "one/two/file", 10, u.ID))))
+
+		prefix := testutil.Must(file.ParsePath("one//"))
+
+		ff, err := files.List(ctx, &prefix, list.Params{
+			First: 1,
+		})
+		require.NoError(t, err)
+
+		assert.Equal(t, 1, ff.Count)
+		assert.Equal(t, 1, ff.Total)
+		assert.Nil(t, ff.Next)
+		require.Equal(t, 1, len(ff.Items))
+
+		assert.Equal(t, f1.ID, ff.Items[0].ID)
+		assert.Equal(t, f1.Path, ff.Items[0].Path)
+		assert.Equal(t, f1.Size, ff.Items[0].Size)
+		assert.Equal(t, f1.OwnerID, ff.Items[0].OwnerID)
+	})
+}
+
 func TestPgFiles_Save(t *testing.T) {
 	t.Run("saves a new file", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 
@@ -38,6 +179,8 @@ func TestPgFiles_Save(t *testing.T) {
 	})
 
 	t.Run("saves an existing file", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 
@@ -69,6 +212,8 @@ func TestPgFiles_Save(t *testing.T) {
 	})
 
 	t.Run("do not saves with a not existing user", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 
@@ -90,6 +235,8 @@ func TestPgFiles_Save(t *testing.T) {
 
 func TestPgFiles_ByID(t *testing.T) {
 	t.Run("returns an existing file", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 
@@ -115,6 +262,8 @@ func TestPgFiles_ByID(t *testing.T) {
 	})
 
 	t.Run("returns nil if the file doesn't exist", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 
@@ -130,6 +279,8 @@ func TestPgFiles_ByID(t *testing.T) {
 
 func TestPgFiles_ByOwnerByPath(t *testing.T) {
 	t.Run("returns an existing file", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 
@@ -155,6 +306,8 @@ func TestPgFiles_ByOwnerByPath(t *testing.T) {
 	})
 
 	t.Run("returns nil if the file doesn't exist", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
 		defer done()
 

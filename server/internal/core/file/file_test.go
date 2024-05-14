@@ -20,11 +20,11 @@ func Test_Create(t *testing.T) {
 		expectedFilepath *string
 	}{
 		{testName: "returns an error when the provided path points to a ancestor directory", filename: "../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
-		{testName: "returns an error when the provided path points to a ancestor directory with complex path", filename: "this/is/the/./directory/../../../../../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
-		{testName: "returns an error when the provided path is absolute", filename: "/this/is/the/directory/test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
-		{testName: "returns an error when the provided path is absolute and points to an ancestor directory", filename: "/../../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
+		{testName: "removes intermediate parent references", filename: "this/is/the/./directory/../to/../../../../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
+		{testName: "removes the starting slash when the provided path is absolute", filename: "/this/is/the/directory/test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/directory/test.txt")},
+		{testName: "removes intermediate parent references even when the provided path is absolute and points to an ancestor directory", filename: "/../../../test.txt", expectedErr: nil, expectedFilepath: proto.String("test.txt")},
 		{testName: "returns a file when the provided path is valid", filename: "this/is/the/direcory/test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/direcory/test.txt")},
-		{testName: "returns a file with a valid cleaned path when the provided path contains .. and .", filename: "this/is/the/direcory/../test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/test.txt")},
+		{testName: "returns a file with a valid cleaned path when the provided path contains .. and .", filename: "this/is/the/directory/../test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/test.txt")},
 	}
 
 	for _, testCase := range testCases {
@@ -35,6 +35,7 @@ func Test_Create(t *testing.T) {
 			file, err := Create(nil, Path(testCase.filename), 5, user.ID(testutil.Must(uuid.NewV7())))
 
 			if testCase.expectedFilepath != nil {
+				require.NotNil(t, file)
 				assert.Equal(t, *testCase.expectedFilepath, string(file.Path))
 			} else {
 				assert.Nil(t, file)
@@ -53,11 +54,11 @@ func Test_Update(t *testing.T) {
 		expectedFilepath *string
 	}{
 		{testName: "returns an error when the provided path points to a ancestor directory", filename: "../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
-		{testName: "returns an error when the provided path points to a ancestor directory with complex path", filename: "this/is/the/./directory/../../../../../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
-		{testName: "returns an error when the provided path is absolute", filename: "/this/is/the/directory/test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
-		{testName: "returns an error when the provided path is absolute and points to an ancestor directory", filename: "/../../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
-		{testName: "updates a file when the provided path is valid", filename: "this/is/the/direcory/test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/direcory/test.txt")},
-		{testName: "updates a file with a valid cleaned path when the provided path contains .. and .", filename: "this/is/the/direcory/../test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/test.txt")},
+		{testName: "removes intermediate parent references", filename: "this/is/the/./directory/../to/../../../../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
+		{testName: "removes the starting slash when the provided path is absolute", filename: "/this/is/the/directory/test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/directory/test.txt")},
+		{testName: "removes intermediate parent references even when the provided path is absolute and points to an ancestor directory", filename: "/../../../test.txt", expectedErr: nil, expectedFilepath: proto.String("test.txt")},
+		{testName: "returns a file when the provided path is valid", filename: "this/is/the/direcory/test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/direcory/test.txt")},
+		{testName: "returns a file with a valid cleaned path when the provided path contains .. and .", filename: "this/is/the/directory/../test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/test.txt")},
 	}
 
 	originalPath := Path("valid/filename.txt")

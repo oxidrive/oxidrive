@@ -18,9 +18,11 @@ gloo-storage = { workspace = true }
 gloo-timers = { workspace = true }
 log = { workspace = true }
 serde = { workspace = true }
+strum = { workspace = true }
 thiserror = { workspace = true }
 unic-langid = { workspace = true }
-web-sys = { workspace = true, features = ["Window", "Navigator", "Location"] }
+wasm-bindgen = { workspace = true }
+web-sys = { workspace = true, features = ["Document", "Element", "Event", "EventTarget", "Window", "Navigator", "Location"] }
 
 [dev-dependencies]
 assert2 = { workspace = true }

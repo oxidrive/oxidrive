@@ -1,23 +1,26 @@
 use dioxus::prelude::*;
 use dioxus_free_icons::{icons::fa_solid_icons::FaXmark, Icon};
+use strum::Display;
 
 static TOASTS: GlobalSignal<Vec<ToastData>> = Signal::global(Vec::default);
 
 #[derive(Debug, Clone, PartialEq)]
 struct ToastData {
-    color: ToastColor,
+    level: ToastLevel,
     title: String,
     message: String,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum ToastColor {
+#[derive(Debug, Clone, Copy, PartialEq, Display)]
+#[strum(serialize_all = "snake_case")]
+pub enum ToastLevel {
     Success,
+    Error,
 }
 
-pub fn add(color: ToastColor, title: impl ToString, message: impl ToString) {
+pub fn add(color: ToastLevel, title: impl ToString, message: impl ToString) {
     TOASTS.write().push(ToastData {
-        color,
+        level: color,
         title: title.to_string(),
         message: message.to_string(),
     });
@@ -46,12 +49,15 @@ fn Toast(idx: usize, toast: ToastData) -> Element {
 
     rsx! {
         span {
-            class: "p-2 rounded w-[12rem] max-w-[calc(100vw-2rem)] border-2",
-            class: match toast.color {
-                ToastColor::Success => "bg-success-200 border-success-500",
+            "data-testid": "toast-{idx}",
+            "data-toast-level": "{toast.level}",
+            class: "p-2 rounded min-w-[12rem] max-w-[75vw] md:max-w-[25vw] border-2",
+            class: match toast.level {
+                ToastLevel::Success => "bg-success-200 border-success-500",
+                ToastLevel::Error => "bg-danger-200 border-danger-500",
             },
             span { class: "flex flex-row items-center justify-between",
-                h3 { class: "font-bold text-l mb-1", "{toast.title}" }
+                h3 { class: "font-bold text-l mb-1 break-all", "{toast.title}" }
                 button {
                     onclick: move |_| {
                         TOASTS.write().remove(idx);
@@ -59,8 +65,9 @@ fn Toast(idx: usize, toast: ToastData) -> Element {
                     Icon {
                         width: 20,
                         height: 20,
-                        class: match toast.color {
-                            ToastColor::Success => "fill-success-800",
+                        class: match toast.level {
+                            ToastLevel::Success => "fill-success-800",
+                            ToastLevel::Error => "fill-danger-800",
                         },
                         icon: FaXmark
                     }

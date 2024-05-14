@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"testing"
@@ -20,8 +21,134 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/web/api"
 )
 
-func TestApi_Files(t *testing.T) {
+func TestApi_Files_List(t *testing.T) {
+	t.Run("returns all uploaded files", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+
+		ctx, done := testutil.IntegrationTest(ctx, t, testutil.WithTempDir(), testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		app, handler := setup(ctx, t)
+
+		username := "test"
+		password := "test"
+
+		testutil.Must(app.Users().Save(ctx, *testutil.Must(user.Create(username, password))))
+		tkn, u, err := app.Auth().AuthenticateWithPassword(ctx, username, password)
+		require.NoError(t, err)
+
+		body := "hello world!"
+		size := len(body)
+
+		id1 := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
+			Content: file.Content(strings.NewReader(body)),
+			Path:    file.Path("hello.txt"),
+			Size:    file.Size(size),
+		}, u.ID))
+
+		id2 := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
+			Content: file.Content(strings.NewReader(body)),
+			Path:    file.Path("something/else.txt"),
+			Size:    file.Size(size),
+		}, u.ID))
+
+		var resp api.FileList
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Get("/api/files").
+			WithContext(ctx).
+			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusOK).
+			End().
+			JSON(&resp)
+
+		assert.Equal(t, 2, resp.Count)
+		assert.Equal(t, 2, resp.Total)
+		require.Nil(t, resp.Next)
+		assert.Equal(t, len(resp.Items), resp.Count)
+
+		assert.Equal(t, id1.AsUUID(), resp.Items[0].Id)
+		assert.Equal(t, "hello.txt", resp.Items[0].Name)
+		assert.Equal(t, "hello.txt", resp.Items[0].Path)
+		assert.Equal(t, size, resp.Items[0].Size)
+
+		assert.Equal(t, id2.AsUUID(), resp.Items[1].Id)
+		assert.Equal(t, "else.txt", resp.Items[1].Name)
+		assert.Equal(t, "something/else.txt", resp.Items[1].Path)
+		assert.Equal(t, size, resp.Items[1].Size)
+	})
+
+	t.Run("returns uploaded files with a specific prefix", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+
+		ctx, done := testutil.IntegrationTest(ctx, t, testutil.WithTempDir(), testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		app, handler := setup(ctx, t)
+
+		username := "test"
+		password := "test"
+
+		testutil.Must(app.Users().Save(ctx, *testutil.Must(user.Create(username, password))))
+		tkn, u, err := app.Auth().AuthenticateWithPassword(ctx, username, password)
+		require.NoError(t, err)
+
+		body := "hello world!"
+		path := "path/to/hello.txt"
+		size := len(body)
+
+		id := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
+			Content: file.Content(strings.NewReader(body)),
+			Path:    file.Path(path),
+			Size:    file.Size(size),
+		}, u.ID))
+
+		_ = testutil.Must(app.Files().Upload(ctx, file.FileUpload{
+			Content: file.Content(strings.NewReader("")),
+			Path:    file.Path("path/to/something/else.txt"),
+			Size:    file.Size(0),
+		}, u.ID))
+
+		var resp api.FileList
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Get("/api/files").
+			Query("prefix", "path/to").
+			WithContext(ctx).
+			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusOK).
+			End().
+			JSON(&resp)
+
+		assert.Equal(t, 1, resp.Count)
+		assert.Equal(t, 1, resp.Total)
+		require.Nil(t, resp.Next)
+		assert.Equal(t, len(resp.Items), resp.Count)
+
+		f := resp.Items[0]
+		assert.Equal(t, id.AsUUID(), f.Id)
+		assert.Equal(t, "hello.txt", f.Name)
+		assert.Equal(t, path, f.Path)
+		assert.Equal(t, size, f.Size)
+	})
+}
+
+func TestApi_Files_Upload(t *testing.T) {
 	t.Run("uploads a new file", func(t *testing.T) {
+		t.Parallel()
+
 		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 		defer cancel()
 

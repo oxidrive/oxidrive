@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"io"
-	"path/filepath"
+	"path"
+	"strings"
 
 	"github.com/google/uuid"
 
+	"github.com/oxidrive/oxidrive/server/internal/core/list"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
 
@@ -34,6 +36,10 @@ func ParseID(s string) (ID, error) {
 	return ID(id), nil
 }
 
+func (i ID) AsUUID() uuid.UUID {
+	return uuid.UUID(i)
+}
+
 func (i ID) String() string {
 	return uuid.UUID(i).String()
 }
@@ -51,39 +57,57 @@ type File struct {
 	OwnerID user.ID
 }
 
-func Create(content Content, path Path, size Size, ownerID user.ID) (*File, error) {
-	if !isValid(path) {
-		return nil, ErrInvalidPath
+func Create(content Content, p Path, size Size, ownerID user.ID) (*File, error) {
+	p, err := ParsePath(string(p))
+	if err != nil {
+		return nil, err
 	}
 
-	name := Name(filepath.Base(string(path)))
+	name := Name(path.Base(string(p)))
 
 	return &File{
 		ID:      NewID(),
 		Content: content,
 		Name:    name,
-		Path:    Path(filepath.Clean(string(path))),
+		Path:    p,
 		Size:    size,
 		OwnerID: ownerID,
 	}, nil
 }
 
-func (f *File) Update(content Content, path Path, size Size) error {
-	if !isValid(path) {
-		return ErrInvalidPath
+func (f *File) Update(content Content, p Path, size Size) error {
+	p, err := ParsePath(string(p))
+	if err != nil {
+		return err
 	}
 
 	f.Content = content
-	f.Name = Name(filepath.Base(string(path)))
-	f.Path = Path(filepath.Clean(string(path)))
+	f.Name = p.Name()
+	f.Path = p
 	f.Size = size
 	return nil
 }
 
-func isValid(path Path) bool {
-	cleaned := filepath.Clean(string(path))
+func ParsePath(p string) (Path, error) {
+	cleaned := path.Clean(p)
 
-	return filepath.IsLocal(cleaned)
+	if path.IsAbs(cleaned) {
+		cleaned = strings.Replace(cleaned, "/", "", 1)
+	}
+
+	if strings.HasPrefix(cleaned, "../") {
+		return Path(""), ErrInvalidPath
+	}
+
+	return Path(cleaned), nil
+}
+
+func (p Path) Name() Name {
+	return Name(path.Base(string(p)))
+}
+
+func (p Path) String() string {
+	return string(p)
 }
 
 type Contents interface {
@@ -91,6 +115,7 @@ type Contents interface {
 }
 
 type Files interface {
+	List(ctx context.Context, prefix *Path, params list.Params) (list.Of[File], error)
 	Save(context.Context, File) (*File, error)
 	ByID(context.Context, ID) (*File, error)
 	ByOwnerByPath(context.Context, user.ID, Path) (*File, error)

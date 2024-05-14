@@ -1930,8 +1930,10 @@ dependencies = [
  "oxidrive_api",
  "rstest",
  "serde",
+ "strum",
  "thiserror",
  "unic-langid",
+ "wasm-bindgen",
  "web-sys",
 ]
 

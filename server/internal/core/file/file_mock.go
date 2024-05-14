@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/mock"
 
+	"github.com/oxidrive/oxidrive/server/internal/core/list"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
 
@@ -38,6 +39,11 @@ func NewFilesMock(t *testing.T) *FilesMock {
 	m.Test(t)
 
 	return &m
+}
+
+func (f *FilesMock) List(_ context.Context, prefix *Path, params list.Params) (list.Of[File], error) {
+	args := f.Called(prefix, params)
+	return args.Get(0).(list.Of[File]), args.Error(1)
 }
 
 func (f *FilesMock) Save(_ context.Context, file File) (*File, error) {
