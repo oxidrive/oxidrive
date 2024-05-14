@@ -13,7 +13,9 @@ watch: setup
     npx concurrently "just watch-app" "just watch-styles"
 
 watch-app: setup
-    dx serve --hot-reload --bin oxidrive
+    # https://github.com/DioxusLabs/dioxus/issues/2411
+    # dx serve --hot-reload --bin oxidrive
+    cargo watch -s 'dx build --bin oxidrive'
 
 watch-styles: setup
     #!/usr/bin/env sh

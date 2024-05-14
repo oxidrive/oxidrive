@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog"
 
 	"github.com/oxidrive/oxidrive/server/internal/app"
+	"github.com/oxidrive/oxidrive/server/internal/auth"
 	"github.com/oxidrive/oxidrive/server/internal/core/file"
 	"github.com/oxidrive/oxidrive/server/internal/web/api"
 )
@@ -17,6 +18,8 @@ type Files struct {
 }
 
 func (f *Files) Upload(ctx context.Context, request api.FilesUploadRequestObject) (api.FilesUploadResponseObject, error) {
+	owner := auth.GetCurrentUser(ctx)
+
 	form, err := request.Body.ReadForm(f.MultipartMaxMemory)
 	if err != nil {
 		return nil, err
@@ -50,10 +53,6 @@ func (f *Files) Upload(ctx context.Context, request api.FilesUploadRequestObject
 		Content: file.Content(ff),
 		Path:    file.Path(p),
 		Size:    file.Size(fh.Size),
-	}
-	owner, err := f.App.Users().ByUsername(ctx, "test")
-	if err != nil {
-		return nil, err
 	}
 
 	id, err := f.App.Files().Upload(ctx, upload, owner.ID)

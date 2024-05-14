@@ -1,5 +1,6 @@
 use std::{fmt::Display, sync::Arc};
 
+use files::FileService;
 use instance::InstanceService;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
@@ -8,6 +9,7 @@ use reqwest::{
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sessions::SessionService;
 
+pub mod files;
 pub mod instance;
 pub mod sessions;
 
@@ -16,13 +18,19 @@ static USER_AGENT: &str = concat!("oxidrive-web", "/", env!("CARGO_PKG_VERSION")
 #[derive(Clone)]
 pub struct Oxidrive {
     client: Client,
+    token: Option<String>,
 }
 
 impl Oxidrive {
     pub fn new(base_url: impl AsRef<str>) -> Self {
         Self {
             client: Client::new(base_url),
+            token: None,
         }
+    }
+
+    pub fn files(&self) -> FileService {
+        FileService::new(self.client.clone(), self.token.clone())
     }
 
     pub fn instance(&self) -> InstanceService {
@@ -31,6 +39,14 @@ impl Oxidrive {
 
     pub fn sessions(&self) -> SessionService {
         SessionService::new(self.client.clone())
+    }
+
+    pub fn set_token(&mut self, token: impl ToString) {
+        self.token = Some(token.to_string());
+    }
+
+    pub fn remove_token(&mut self) {
+        self.token = None;
     }
 }
 

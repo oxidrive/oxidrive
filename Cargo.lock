@@ -1805,6 +1805,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6877bb514081ee2a7ff5ef9de3281f14a4dd4bceac4c09388074a6b5df8a139a"
 
 [[package]]
+name = "mime_guess"
+version = "2.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4192263c238a5f0d0c6bfd21f336a313a4ce1c450542449ca191bb657b4642ef"
+dependencies = [
+ "mime",
+ "unicase",
+]
+
+[[package]]
 name = "miniz_oxide"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1907,6 +1917,7 @@ name = "oxidrive"
 version = "0.1.0"
 dependencies = [
  "assert2",
+ "chrono",
  "console_error_panic_hook",
  "dioxus",
  "dioxus-free-icons",
@@ -1931,6 +1942,7 @@ dependencies = [
  "assert2",
  "chrono",
  "env_logger",
+ "log",
  "mockito",
  "reqwest",
  "serde",
@@ -2163,6 +2175,7 @@ dependencies = [
  "js-sys",
  "log",
  "mime",
+ "mime_guess",
  "once_cell",
  "percent-encoding",
  "pin-project-lite",
@@ -2793,6 +2806,15 @@ dependencies = [
  "quote",
  "syn 2.0.60",
  "unic-langid-impl",
+]
+
+[[package]]
+name = "unicase"
+version = "2.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7d2d4dafb69621809a81864c9c1b864479e1235c0dd4e199924b9742439ed89"
+dependencies = [
+ "version_check",
 ]
 
 [[package]]

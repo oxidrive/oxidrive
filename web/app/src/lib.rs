@@ -2,60 +2,29 @@
 
 use std::fmt::{Debug, Display};
 
-use crate::{
-    page::{Home, Login, NotFound, Setup},
-    toast::Toasts,
-};
+use crate::{route::Route, toast::Toasts};
 use dioxus::{dioxus_core::CapturedError, prelude::*};
-use layout::{AppShell, Centered};
 use oxidrive_api::ApiError;
 
 mod api;
 mod auth;
 mod component;
 mod i18n;
-mod instance;
 mod layout;
 mod page;
+mod route;
 mod storage;
 mod toast;
 
-#[derive(Clone, Routable, Debug, PartialEq)]
-pub enum Route {
-    #[layout(AppShell)]
-    #[layout(Centered)]
-    #[route("/setup")]
-    Setup {},
-    #[route("/login")]
-    Login {},
-    #[route("/")]
-    Home {},
-    #[route("/:..path")]
-    NotFound { path: Vec<String> },
-}
-
-impl Route {
-    pub fn requires_setup(&self) -> bool {
-        !matches!(self, Self::Setup {})
-    }
-
-    pub fn requires_authentication(&self) -> bool {
-        matches!(self, Self::Home {})
-    }
-}
-
 pub fn App() -> Element {
-    auth::init();
-    i18n::init();
     api::init();
-    instance::init();
+    i18n::init();
+    auth::init();
 
     rsx! {
         ErrorBoundary { handle_error: ErrorMessage,
-            div {
-                Toasts {}
-                Router::<Route> {}
-            }
+            Toasts {}
+            Router::<Route> {}
         }
     }
 }

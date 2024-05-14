@@ -1,10 +1,9 @@
 use dioxus::prelude::*;
-use oxidrive_api::sessions::{self, Credentials, Session, SessionRequest};
+use oxidrive_api::sessions::{self, Credentials, SessionRequest};
 use oxidrive_api::{ApiError, ErrorResponse, Oxidrive};
 use serde::Deserialize;
 
-use crate::auth::{store_token, use_token_storage, CurrentUser};
-use crate::storage::UseLocalStorage;
+use crate::auth::{store_token, use_session_storage, CurrentUser, SessionStorage};
 use crate::toast::ToastColor;
 use crate::{
     api::use_oxidrive_api, auth::use_current_user, component::*, i18n::use_localizer, Route,
@@ -12,17 +11,17 @@ use crate::{
 use crate::{toast, GenericError};
 
 #[component]
-pub fn Login() -> Element {
+pub fn Login(redirect_to: String) -> Element {
     let current_user = use_current_user();
     let i18n = use_localizer();
     let api = use_oxidrive_api();
     let navigator = use_navigator();
-    let token_storage = use_token_storage();
+    let token_storage = use_session_storage();
 
     let mut auth_failed = use_signal(|| false);
 
     if current_user.read().is_some() {
-        navigator.replace(Route::Home {});
+        navigator.replace(redirect_to);
     }
 
     rsx! {
@@ -54,7 +53,7 @@ pub fn Login() -> Element {
                                         i18n.localize("login-auth-succeeded"),
                                         i18n.localize("login-auth-succeeded.message"),
                                     );
-                                    navigator.replace(Route::Home {});
+                                    navigator.replace(Route::Files { path: Vec::new() });
                                 }
                                 AuthResult::Failed => {
                                     auth_failed.set(true);
@@ -96,22 +95,24 @@ enum AuthResult {
 }
 
 async fn submit(
-    api: Signal<Oxidrive>,
-    mut token_storage: UseLocalStorage<Option<String>>,
+    mut api: Signal<Oxidrive>,
+    mut token_storage: SessionStorage,
     current_user: Signal<Option<CurrentUser>>,
     LoginFormData { username, password }: LoginFormData,
 ) -> Result<AuthResult, GenericError> {
     let username = username.into_iter().next().unwrap();
     let password = password.into_iter().next().unwrap();
 
-    let token = match api()
+    let mut api = api.write();
+
+    let session = match api
         .sessions()
         .create(SessionRequest {
             credentials: Credentials::Password { username, password },
         })
         .await
     {
-        Ok(Session { token, .. }) => token,
+        Ok(session) => session,
         Err(ApiError::Api(ErrorResponse { error, message })) => {
             return match error {
                 sessions::ErrorKind::AuthenticationFailed => Ok(AuthResult::Failed),
@@ -124,6 +125,7 @@ async fn submit(
         Err(err) => Err(err)?,
     };
 
-    store_token(&mut token_storage, current_user, token);
+    store_token(&mut token_storage, current_user, session.clone());
+    api.set_token(session.token);
     Ok(AuthResult::Success)
 }

@@ -1,4 +1,4 @@
-use crate::{auth::use_current_user, component::Loading, instance::use_instance_status, Route};
+use crate::{auth::use_current_user, component::Loading, Route};
 use dioxus::prelude::*;
 
 #[component]
@@ -17,15 +17,11 @@ pub fn AppShell() -> Element {
     let navigator = use_navigator();
     let route = use_route::<Route>();
     let current_user = use_current_user();
-    let status = use_instance_status();
-
-    if route.requires_setup() && !status.read().setup_completed {
-        navigator.replace(Route::Setup {})?;
-        return rsx! { Loading {} };
-    }
 
     if route.requires_authentication() && current_user.read().is_none() {
-        navigator.replace(Route::Login {})?;
+        navigator.replace(Route::Login {
+            redirect_to: route.to_string(),
+        })?;
         return rsx! { Loading {} };
     }
 

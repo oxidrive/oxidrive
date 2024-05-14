@@ -1,10 +1,10 @@
-mod home;
+mod files;
 mod login;
 mod setup;
 
 mod not_found;
 
-pub use home::Home;
+pub use files::Files;
 pub use login::Login;
 pub use setup::Setup;
 

@@ -12,8 +12,11 @@ stop:
 start:
     docker compose up -d
 
+restart: stop start
+
 rebuild: stop
     docker compose build
+    docker compose up -d
 
 record url="http://localhost:8080":
     npx playwright codegen {{ url }}
@@ -27,14 +30,16 @@ setup:
       echo "====== WARNING ======="
       echo "Playwright is not able to install browser on NixOS."
       echo "They should be automatically installed by the project's flake.nix, but until this PR is merged only Chromium will be available."
-      echo "Please run tests with just e2e/tests --project chromium to avoid failures due to missing browsers"
+      echo "Please run tests with just e2e/chromium to avoid failures due to missing browsers"
       echo ""
       echo "https://github.com/NixOS/nixpkgs/pull/298944"
     else
       npx playwright install
     fi
+    mkdir -p playwright/.auth
 
 [macos, windows]
 setup:
     npm install
     npx playwright install
+    mkdir -p playwright/.auth

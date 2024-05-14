@@ -1,4 +1,5 @@
 use dioxus::prelude::*;
+use dioxus_free_icons::{Icon, IconShape};
 
 const CLASS_PRIMARY: &str = "bg-primary-500 text-primary-50 py-2 px-6 flex flex-row content-stretch items-center justify-center rounded";
 const CLASS_GHOST: &str = "text-primary-500 underline p-1 flex flex-row content-stretch items-center justify-center rounded";
@@ -121,6 +122,24 @@ fn button_link(
             rel,
             to,
             { children }
+        }
+    }
+}
+
+#[component]
+pub fn Fab<I: IconShape + Clone + PartialEq + 'static>(
+    label: String,
+    icon: I,
+    onclick: EventHandler<MouseEvent>,
+    children: Element,
+) -> Element {
+    rsx! {
+        button {
+            "aria-label": label,
+            class: "rounded-full bg-primary-500 p-2 fixed z-50 bottom-0 right-0 m-8",
+            onclick: move |evt| onclick.call(evt),
+            Icon { fill: "white", height: 30, width: 30, icon: icon }
+            {children}
         }
     }
 }

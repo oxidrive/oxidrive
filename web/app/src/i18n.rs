@@ -44,6 +44,7 @@ static LOCALES: &[LanguageIdentifier] = &[langid!("en")];
 type Translations<'a> = &'a [(LanguageIdentifier, &'a str, &'a str)];
 
 static TRANSLATIONS: Translations = &[
+    translation!("en", "page", "files.ftl"),
     translation!("en", "page", "home.ftl"),
     translation!("en", "page", "login.ftl"),
     translation!("en", "page", "not-found.ftl"),

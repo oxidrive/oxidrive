@@ -1,6 +1,7 @@
 .env
 .env*
 !.env.example
+!e2e/.env.e2e
 node_modules/
 /test-results/
 /playwright-report/
