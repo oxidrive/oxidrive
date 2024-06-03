@@ -64,3 +64,36 @@ pub fn TextField(
         }
     }
 }
+
+#[derive(PartialEq, Clone, Props)]
+pub struct CheckboxProps {
+    #[props(into)]
+    pub name: String,
+    #[props(into)]
+    pub value: Option<bool>,
+    #[props(default = false)]
+    pub disabled: bool,
+    pub oninput: Option<EventHandler<FormEvent>>,
+}
+
+pub fn Checkbox(
+    CheckboxProps {
+        name,
+        value,
+        disabled,
+        oninput,
+    }: CheckboxProps,
+) -> Element {
+    let oninput = move |evt| oninput.unwrap_or_default().call(evt);
+
+    rsx! {
+        input {
+            r#type: "checkbox",
+            class: r#"accent-primary-500 rounded border border-primary-500 w-5 h-5"#,
+            name: name,
+            value: value,
+            disabled: disabled,
+            oninput: oninput,
+        }
+    }
+}

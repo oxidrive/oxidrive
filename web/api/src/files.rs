@@ -4,7 +4,7 @@ use reqwest::multipart::{Form, Part};
 use serde::{Deserialize, Serialize};
 use strum::Display;
 
-use crate::{ApiErrorFromResponse, ApiResult, Client};
+use crate::{ApiErrorFromResponse, ApiResult, Client, List};
 
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Display)]
 #[serde(rename_all = "snake_case")]
@@ -28,14 +28,43 @@ pub struct UploadResponse {
     pub id: String,
 }
 
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct ListFilesParams {
+    pub first: Option<usize>,
+    pub after: Option<String>,
+    pub prefix: Option<String>,
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct File {
+    pub id: String,
+    pub path: String,
+    pub name: String,
+    pub size: usize,
+}
+
 pub struct FileService {
     client: Client,
-    token: Option<String>,
 }
 
 impl FileService {
-    pub(crate) fn new(client: Client, token: Option<String>) -> Self {
-        Self { client, token }
+    pub(crate) fn new(client: Client) -> Self {
+        Self { client }
+    }
+
+    pub async fn list(&self, params: ListFilesParams) -> ApiResult<List<File>, ErrorKind> {
+        let response = self
+            .client
+            .get("/api/files")
+            .query(&params)
+            .send()
+            .await?
+            .check_error_response()
+            .await?
+            .json()
+            .await?;
+        Ok(response)
     }
 
     pub async fn upload(
@@ -46,11 +75,6 @@ impl FileService {
         let file = Part::bytes(file.content).file_name(file.filename);
         let form = Form::new().text("path", path).part("file", file);
         let req = self.client.post("/api/files");
-
-        let req = match self.token.as_ref() {
-            Some(token) => req.bearer_auth(token),
-            None => req,
-        };
 
         let response = req
             .multipart(form)
@@ -72,7 +96,7 @@ mod tests {
     use mockito::Matcher;
 
     #[tokio::test]
-    async fn it_creates_a_new_session_with_username_and_password() {
+    async fn it_uploads_a_file() {
         env_logger::init();
 
         let path = "path/to/hello.txt";
@@ -102,6 +126,83 @@ mod tests {
             .upload(path, FileUpload { content, filename })
             .await
             .unwrap();
+
+        mock.assert_async().await;
+        check!(response == expected);
+    }
+
+    #[tokio::test]
+    async fn it_lists_all_files_with_a_prefix() {
+        env_logger::init();
+
+        let expected = List {
+            count: 1,
+            total: 42,
+            next: Some("next".into()),
+            items: vec![File {
+                id: "some-file".into(),
+                path: "/path/to/file.txt".into(),
+                name: "file.txt".into(),
+                size: 42,
+            }],
+        };
+
+        let mut server = mockito::Server::new_async().await;
+
+        let mock = server
+            .mock("GET", "/api/files")
+            .match_query(Matcher::AllOf(vec![
+                Matcher::UrlEncoded("first".into(), "42".into()),
+                Matcher::UrlEncoded("after".into(), "test".into()),
+                Matcher::UrlEncoded("prefix".into(), "/path/to".into()),
+            ]))
+            .with_header("content-type", "application/json")
+            .with_body(json(&expected))
+            .create_async()
+            .await;
+
+        let files = Oxidrive::new(server.url()).files();
+        let response = files
+            .list(ListFilesParams {
+                first: Some(42),
+                after: Some("test".into()),
+                prefix: Some("/path/to".into()),
+            })
+            .await
+            .unwrap();
+
+        mock.assert_async().await;
+        check!(response == expected);
+    }
+
+    #[tokio::test]
+    async fn it_lists_all_files_using_default_params() {
+        env_logger::init();
+
+        let expected = List {
+            count: 1,
+            total: 42,
+            next: Some("next".into()),
+            items: vec![File {
+                id: "some-file".into(),
+                path: "/path/to/file.txt".into(),
+                name: "file.txt".into(),
+                size: 42,
+            }],
+        };
+
+        let mut server = mockito::Server::new_async().await;
+
+        let mock = server
+            .mock("GET", "/api/files")
+            .match_query(Matcher::Missing)
+            .with_header("content-type", "application/json")
+            .with_body(json(&expected))
+            .create_async()
+            .await;
+
+        let files = Oxidrive::new(server.url()).files();
+        let response = files.list(ListFilesParams::default()).await.unwrap();
 
         mock.assert_async().await;
         check!(response == expected);
