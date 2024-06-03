@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -37,7 +38,7 @@ func (s *SqliteFiles) List(ctx context.Context, prefix *file.Path, params list.P
 
 	regex := ".*"
 	if prefix != nil {
-		regex = fmt.Sprintf("^%s/[^/]*$", prefix.String())
+		regex = fmt.Sprintf("^%s/[^/]*$", strings.TrimSuffix(prefix.String(), "/"))
 	}
 
 	// We fetch the required amount of items plus one from the next slice to use as the Next cursor

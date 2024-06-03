@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"strings"
 
 	"github.com/rs/zerolog"
 
@@ -21,7 +22,9 @@ type Files struct {
 func (f *Files) List(ctx context.Context, request api.FilesListRequestObject) (api.FilesListResponseObject, error) {
 	var prefix *file.Path
 	if request.Params.Prefix != nil {
-		p, err := file.ParsePath(string(*request.Params.Prefix))
+		pfx := string(*request.Params.Prefix)
+		pfx = strings.TrimPrefix(pfx, "/")
+		p, err := file.ParsePath(pfx)
 		if err != nil {
 			return nil, err
 		}
