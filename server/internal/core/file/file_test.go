@@ -19,12 +19,12 @@ func Test_Create(t *testing.T) {
 		expectedErr      error
 		expectedFilepath *string
 	}{
+		{testName: "returns root for an empty path", filename: "", expectedErr: nil, expectedFilepath: proto.String("/")},
 		{testName: "returns an error when the provided path points to a ancestor directory", filename: "../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
 		{testName: "removes intermediate parent references", filename: "this/is/the/./directory/../to/../../../../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
-		{testName: "removes the starting slash when the provided path is absolute", filename: "/this/is/the/directory/test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/directory/test.txt")},
-		{testName: "removes intermediate parent references even when the provided path is absolute and points to an ancestor directory", filename: "/../../../test.txt", expectedErr: nil, expectedFilepath: proto.String("test.txt")},
-		{testName: "returns a file when the provided path is valid", filename: "this/is/the/direcory/test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/direcory/test.txt")},
-		{testName: "returns a file with a valid cleaned path when the provided path contains .. and .", filename: "this/is/the/directory/../test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/test.txt")},
+		{testName: "removes intermediate parent references even when the provided path is absolute and points to an ancestor directory", filename: "/../../../test.txt", expectedErr: nil, expectedFilepath: proto.String("/test.txt")},
+		{testName: "returns a file when the provided path is valid", filename: "/this/is/the/direcory/test.txt", expectedErr: nil, expectedFilepath: proto.String("/this/is/the/direcory/test.txt")},
+		{testName: "returns a file with a valid cleaned path when the provided path contains .. and .", filename: "this/is/the/directory/../test.txt", expectedErr: nil, expectedFilepath: proto.String("/this/is/the/test.txt")},
 	}
 
 	for _, testCase := range testCases {
@@ -55,13 +55,12 @@ func Test_Update(t *testing.T) {
 	}{
 		{testName: "returns an error when the provided path points to a ancestor directory", filename: "../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
 		{testName: "removes intermediate parent references", filename: "this/is/the/./directory/../to/../../../../../test.txt", expectedErr: ErrInvalidPath, expectedFilepath: nil},
-		{testName: "removes the starting slash when the provided path is absolute", filename: "/this/is/the/directory/test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/directory/test.txt")},
-		{testName: "removes intermediate parent references even when the provided path is absolute and points to an ancestor directory", filename: "/../../../test.txt", expectedErr: nil, expectedFilepath: proto.String("test.txt")},
-		{testName: "returns a file when the provided path is valid", filename: "this/is/the/direcory/test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/direcory/test.txt")},
-		{testName: "returns a file with a valid cleaned path when the provided path contains .. and .", filename: "this/is/the/directory/../test.txt", expectedErr: nil, expectedFilepath: proto.String("this/is/the/test.txt")},
+		{testName: "removes intermediate parent references even when the provided path is absolute and points to an ancestor directory", filename: "/../../../test.txt", expectedErr: nil, expectedFilepath: proto.String("/test.txt")},
+		{testName: "returns a file when the provided path is valid", filename: "/this/is/the/direcory/test.txt", expectedErr: nil, expectedFilepath: proto.String("/this/is/the/direcory/test.txt")},
+		{testName: "returns a file with a valid cleaned path when the provided path contains .. and .", filename: "this/is/the/directory/../test.txt", expectedErr: nil, expectedFilepath: proto.String("/this/is/the/test.txt")},
 	}
 
-	originalPath := Path("valid/filename.txt")
+	originalPath := Path("/valid/filename.txt")
 
 	for _, testCase := range testCases {
 		testCase := testCase

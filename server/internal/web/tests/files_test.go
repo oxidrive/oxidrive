@@ -45,13 +45,13 @@ func TestApi_Files_List(t *testing.T) {
 
 		id1 := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
 			Content: file.Content(strings.NewReader(body)),
-			Path:    file.Path("hello.txt"),
+			Path:    file.Path("/hello.txt"),
 			Size:    file.Size(size),
 		}, u.ID))
 
 		id2 := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
 			Content: file.Content(strings.NewReader(body)),
-			Path:    file.Path("something/else.txt"),
+			Path:    file.Path("/something/else.txt"),
 			Size:    file.Size(size),
 		}, u.ID))
 
@@ -75,12 +75,12 @@ func TestApi_Files_List(t *testing.T) {
 
 		assert.Equal(t, id1.AsUUID(), resp.Items[0].Id)
 		assert.Equal(t, "hello.txt", resp.Items[0].Name)
-		assert.Equal(t, "hello.txt", resp.Items[0].Path)
+		assert.Equal(t, "/hello.txt", resp.Items[0].Path)
 		assert.Equal(t, size, resp.Items[0].Size)
 
 		assert.Equal(t, id2.AsUUID(), resp.Items[1].Id)
 		assert.Equal(t, "else.txt", resp.Items[1].Name)
-		assert.Equal(t, "something/else.txt", resp.Items[1].Path)
+		assert.Equal(t, "/something/else.txt", resp.Items[1].Path)
 		assert.Equal(t, size, resp.Items[1].Size)
 	})
 
@@ -103,7 +103,7 @@ func TestApi_Files_List(t *testing.T) {
 		require.NoError(t, err)
 
 		body := "hello world!"
-		path := "path/to/hello.txt"
+		path := "/path/to/hello.txt"
 		size := len(body)
 
 		id := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
@@ -114,7 +114,7 @@ func TestApi_Files_List(t *testing.T) {
 
 		_ = testutil.Must(app.Files().Upload(ctx, file.FileUpload{
 			Content: file.Content(strings.NewReader("")),
-			Path:    file.Path("path/to/something/else.txt"),
+			Path:    file.Path("/path/to/something/else.txt"),
 			Size:    file.Size(0),
 		}, u.ID))
 
@@ -124,7 +124,67 @@ func TestApi_Files_List(t *testing.T) {
 			Debug().
 			Handler(handler).
 			Get("/api/files").
-			Query("prefix", "path/to").
+			Query("prefix", "/path/to").
+			WithContext(ctx).
+			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusOK).
+			End().
+			JSON(&resp)
+
+		assert.Equal(t, 1, resp.Count)
+		assert.Equal(t, 1, resp.Total)
+		require.Nil(t, resp.Next)
+		assert.Equal(t, len(resp.Items), resp.Count)
+
+		f := resp.Items[0]
+		assert.Equal(t, id.AsUUID(), f.Id)
+		assert.Equal(t, "hello.txt", f.Name)
+		assert.Equal(t, path, f.Path)
+		assert.Equal(t, size, f.Size)
+	})
+
+	t.Run("returns uploaded files in the root folder", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+
+		ctx, done := testutil.IntegrationTest(ctx, t, testutil.WithTempDir(), testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		app, handler := setup(ctx, t)
+
+		username := "test"
+		password := "test"
+
+		testutil.Must(app.Users().Save(ctx, *testutil.Must(user.Create(username, password))))
+		tkn, u, err := app.Auth().AuthenticateWithPassword(ctx, username, password)
+		require.NoError(t, err)
+
+		body := "hello world!"
+		path := "/hello.txt"
+		size := len(body)
+
+		id := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
+			Content: file.Content(strings.NewReader(body)),
+			Path:    file.Path(path),
+			Size:    file.Size(size),
+		}, u.ID))
+
+		_ = testutil.Must(app.Files().Upload(ctx, file.FileUpload{
+			Content: file.Content(strings.NewReader("")),
+			Path:    file.Path("/path/to/something/else.txt"),
+			Size:    file.Size(0),
+		}, u.ID))
+
+		var resp api.FileList
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Get("/api/files").
+			Query("prefix", "/").
 			WithContext(ctx).
 			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
 			Expect(t).
@@ -166,7 +226,7 @@ func TestApi_Files_Upload(t *testing.T) {
 		tkn, u, err := app.Auth().AuthenticateWithPassword(ctx, username, password)
 		require.NoError(t, err)
 
-		path := "hello/test.txt"
+		path := "/hello/test.txt"
 		fpath := filepath.Join(dir, "test.txt")
 
 		require.NoError(t, os.WriteFile(fpath, []byte("hello world!"), 0700))

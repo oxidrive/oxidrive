@@ -3,6 +3,7 @@ package file
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"path"
 	"strings"
@@ -89,14 +90,18 @@ func (f *File) Update(content Content, p Path, size Size) error {
 }
 
 func ParsePath(p string) (Path, error) {
-	cleaned := path.Clean(p)
-
-	if path.IsAbs(cleaned) {
-		cleaned = strings.Replace(cleaned, "/", "", 1)
+	if p == "" {
+		return Path("/"), nil
 	}
+
+	cleaned := path.Clean(p)
 
 	if strings.HasPrefix(cleaned, "../") {
 		return Path(""), ErrInvalidPath
+	}
+
+	if !path.IsAbs(cleaned) {
+		cleaned = fmt.Sprintf("/%s", cleaned)
 	}
 
 	return Path(cleaned), nil

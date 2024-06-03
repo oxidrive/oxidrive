@@ -26,7 +26,7 @@ func TestService_Upload(t *testing.T) {
 
 		ctx := context.Background()
 		content := strings.NewReader("")
-		filepath := Path("filepath")
+		filepath := Path("/filepath")
 		size := Size(10)
 		owner := user.ID(testutil.Must(uuid.NewV7()))
 		file := testutil.Must(Create(content, filepath, size, owner))
@@ -80,7 +80,7 @@ func TestService_Upload(t *testing.T) {
 
 		ctx := context.Background()
 		content := strings.NewReader("")
-		filepath := Path("filepath")
+		filepath := Path("/filepath")
 		size := 10
 		genericError := errors.New("generic error")
 		owner := user.ID(testutil.Must(uuid.NewV7()))
@@ -107,7 +107,7 @@ func TestService_Upload(t *testing.T) {
 
 		ctx := context.Background()
 		content := strings.NewReader("")
-		filepath := Path("filepath")
+		filepath := Path("/filepath")
 		size := 10
 		genericError := errors.New("generic error")
 		owner := user.ID(testutil.Must(uuid.NewV7()))
@@ -136,7 +136,7 @@ func TestService_Upload(t *testing.T) {
 
 		ctx := context.Background()
 		content := strings.NewReader("")
-		filepath := Path("filepath")
+		filepath := Path("/filepath")
 		size := 10
 		owner := user.ID(testutil.Must(uuid.NewV7()))
 
