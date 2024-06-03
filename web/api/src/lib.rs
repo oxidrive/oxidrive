@@ -13,24 +13,25 @@ pub mod files;
 pub mod instance;
 pub mod sessions;
 
+mod list;
+pub use list::*;
+
 static USER_AGENT: &str = concat!("oxidrive-web", "/", env!("CARGO_PKG_VERSION"));
 
 #[derive(Clone)]
 pub struct Oxidrive {
     client: Client,
-    token: Option<String>,
 }
 
 impl Oxidrive {
     pub fn new(base_url: impl AsRef<str>) -> Self {
         Self {
             client: Client::new(base_url),
-            token: None,
         }
     }
 
     pub fn files(&self) -> FileService {
-        FileService::new(self.client.clone(), self.token.clone())
+        FileService::new(self.client.clone())
     }
 
     pub fn instance(&self) -> InstanceService {
@@ -42,11 +43,11 @@ impl Oxidrive {
     }
 
     pub fn set_token(&mut self, token: impl ToString) {
-        self.token = Some(token.to_string());
+        self.client.set_token(token)
     }
 
     pub fn remove_token(&mut self) {
-        self.token = None;
+        self.client.remove_token()
     }
 }
 
@@ -54,6 +55,7 @@ impl Oxidrive {
 struct Client {
     base_url: Arc<Url>,
     inner: reqwest::Client,
+    token: Option<String>,
 }
 
 impl Client {
@@ -71,17 +73,39 @@ impl Client {
             .unwrap();
 
         let base_url = Arc::new(Url::parse(base_url.as_ref()).unwrap());
-        Self { base_url, inner }
+        Self {
+            base_url,
+            inner,
+            token: None,
+        }
+    }
+
+    pub fn set_token(&mut self, token: impl ToString) {
+        self.token = Some(token.to_string());
+    }
+
+    pub fn remove_token(&mut self) {
+        self.token = None;
     }
 
     fn get(&self, path: impl AsRef<str>) -> RequestBuilder {
         let url = self.base_url.join(path.as_ref()).unwrap();
-        self.inner.get(url)
+        let req = self.inner.get(url);
+
+        match self.token.as_ref() {
+            Some(token) => req.bearer_auth(token),
+            None => req,
+        }
     }
 
     fn post(&self, path: impl AsRef<str>) -> RequestBuilder {
         let url = self.base_url.join(path.as_ref()).unwrap();
-        self.inner.post(url)
+        let req = self.inner.post(url);
+
+        match self.token.as_ref() {
+            Some(token) => req.bearer_auth(token),
+            None => req,
+        }
     }
 }
 

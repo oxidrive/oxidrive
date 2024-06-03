@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crate::{
     api::use_oxidrive_api,
     component::*,
@@ -7,9 +9,13 @@ use crate::{
 };
 use dioxus::prelude::*;
 use dioxus_free_icons::{icons::fa_solid_icons::*, Icon};
-use oxidrive_api::{files::FileUpload, ApiError};
+use oxidrive_api::{
+    files::{File, FileUpload, ListFilesParams},
+    ApiError, List,
+};
 use web_sys::{Document, HtmlInputElement};
 
+#[derive(Clone, Copy, PartialEq)]
 pub enum ViewMode {
     Grid,
     List,
@@ -17,11 +23,39 @@ pub enum ViewMode {
 
 #[component]
 pub fn Files(path: Vec<String>) -> Element {
+    let prefix = format!("/{}", path.join("/"));
+
     let api = use_oxidrive_api();
     let i18n = use_localizer();
     let view_mode = use_signal(|| ViewMode::Grid);
 
     let document = web_sys::window()?.document()?;
+
+    let future = use_resource(move || {
+        let prefix = prefix.clone();
+
+        async move {
+            api()
+                .files()
+                .list(ListFilesParams {
+                    prefix: Some(prefix),
+                    ..Default::default()
+                })
+                .await
+        }
+    });
+
+    let files = match future.read().as_ref() {
+        Some(Ok(files)) => files.clone(),
+        Some(Err(err)) => {
+            return Err(err.to_string()).throw();
+        }
+        None => {
+            return rsx! { Loading {} };
+        }
+    };
+
+    let selected = use_signal(|| HashSet::with_capacity(files.count));
 
     rsx! {
         main { class: "bg-primary-500 w-full min-h-dvh",
@@ -29,9 +63,11 @@ pub fn Files(path: Vec<String>) -> Element {
             Navbar {}
             div { class: "bg-white w-full min-h-[calc(100dvh-66px)] rounded-t-2xl",
                 ActionBar { view_mode: view_mode }
-                div { class: "w-full h-96 flex flex-col items-center justify-center",
-                    Icon { class: "fill-primary-200", height: 80, width: 80, icon: FaFolder }
-                    p { {i18n.localize("files-empty")} }
+                FilesView {
+                    files: files,
+                    view_mode: view_mode,
+                    selected: selected,
+                    empty_message: i18n.localize("files-empty"),
                 }
                 Fab {
                     label: "Upload",
@@ -130,6 +166,120 @@ fn ActionBar(mut view_mode: Signal<ViewMode>) -> Element {
                     }
                 },
             }}
+        }
+    }
+}
+
+#[component]
+fn FilesView(
+    files: List<File>,
+    view_mode: Signal<ViewMode>,
+    selected: Signal<HashSet<String>>,
+    empty_message: String,
+) -> Element {
+    if files.items.is_empty() {
+        return rsx! {
+            div { class: "w-full h-96 flex flex-col justify-center items-center",
+                  Icon { class: "fill-primary-200", height: 80, width: 80, icon: FaFolder }
+                  p { {empty_message} }
+            }
+        };
+    }
+
+    match view_mode() {
+        ViewMode::Grid => FilesGrid(files, selected),
+        ViewMode::List => FilesList(files, selected),
+    }
+}
+
+fn FilesGrid(files: List<File>, mut selected: Signal<HashSet<String>>) -> Element {
+    rsx! {
+        div {
+            class: "p-4 grid gap-6 grid-cols-[repeat(auto-fill,minmax(160px,1fr))]",
+            for file in files.items {
+                FileBox {
+                    file: file.clone(),
+                    selected: selected().contains(&file.path),
+                    onselected: move |is_selected| {
+                        let mut selected = selected.write();
+                        if is_selected {
+                            selected.insert(file.path.clone());
+                        } else {
+                            selected.remove(&file.path);
+                        }
+                    },
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn FileBox(file: File, selected: bool, onselected: EventHandler<bool>) -> Element {
+    rsx! {
+        div {
+            title: "{file.name}",
+            class: "flex flex-col items-center w-full h-full hover:bg-primary-50 p-2",
+            div {
+                class: "flex flex-row justify-between items-center w-full",
+                Checkbox {
+                    name: "selected",
+                    value: selected,
+                    oninput: move |ev: Event<FormData>| onselected.call(ev.data().parsed::<bool>().throw().unwrap_or_default()),
+                }
+            },
+            Icon { class: "m-2", height: 80, width: 80, icon: FaFile },
+            div {
+                class: "flex flex-row justify-between items-center gap-4 p-2 w-full",
+                p { class: "text-primary-500 truncate", "{file.name}" }
+                Icon { class: "fill-primary-500 grow-0 shrink-0", height: 15, width: 15, icon: FaEllipsis },
+            }
+        }
+    }
+}
+
+fn FilesList(files: List<File>, mut selected: Signal<HashSet<String>>) -> Element {
+    rsx! {
+        div {
+            class: "p-4 flex flex-col",
+            for file in files.items {
+                FileRow {
+                    file: file.clone(),
+                    selected: selected().contains(&file.path),
+                    onselected: move |is_selected| {
+                        let mut selected = selected.write();
+                        if is_selected {
+                            selected.insert(file.path.clone());
+                        } else {
+                            selected.remove(&file.path);
+                        }
+                    },
+                }
+            }
+        }
+    }
+}
+
+#[component]
+fn FileRow(file: File, selected: bool, onselected: EventHandler<bool>) -> Element {
+    rsx! {
+        div {
+            class: "flex flex-col gap-2 items-center",
+            div {
+                class: "flex flex-row flex-nowrap items-center justify-between w-full",
+                span {
+                    class: "flex flex-row flex-nowrap items-center justify-start",
+                    Checkbox {
+                        name: "selected",
+                        value: selected,
+                        oninput: move |ev: Event<FormData>| onselected.call(ev.data().parsed::<bool>().throw().unwrap_or_default()),
+                    }
+                    Icon { class: "m-2", height: 40, width: 40, icon: FaFile },
+                    p { "{file.name}" }
+                }
+                Icon { class: "fill-primary-500 grow-0 shrink-0", height: 15, width: 15, icon: FaEllipsis },
+            }
+            hr { class: "w-full h-[1px] bg-primary-300" }
         }
     }
 }
