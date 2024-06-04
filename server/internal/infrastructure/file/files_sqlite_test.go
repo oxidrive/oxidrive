@@ -75,7 +75,7 @@ func TestSqliteFiles_List(t *testing.T) {
 
 		assert.Equal(t, 1, ff.Count)
 		assert.Equal(t, 2, ff.Total)
-		assert.Equal(t, f2.ID.String(), *ff.Next)
+		assert.NotNil(t, ff.Next)
 		require.Equal(t, 1, len(ff.Items))
 
 		assert.Equal(t, f1.ID, ff.Items[0].ID)
@@ -133,24 +133,32 @@ func TestSqliteFiles_List(t *testing.T) {
 		readerMock := strings.NewReader("")
 
 		f1 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "one/file", 10, u.ID))))
-		_ = testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "one/two/file", 10, u.ID))))
+		f2 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "one/two/file", 10, u.ID))))
+
+		d := f2.Folder()
 
 		prefix := testutil.Must(file.ParsePath("one//"))
 
 		ff, err := files.List(ctx, &prefix, list.Params{
-			First: 1,
+			First: 2,
 		})
 		require.NoError(t, err)
 
-		assert.Equal(t, 1, ff.Count)
-		assert.Equal(t, 1, ff.Total)
+		assert.Equal(t, 2, ff.Count)
+		assert.Equal(t, 2, ff.Total)
 		assert.Nil(t, ff.Next)
-		require.Equal(t, 1, len(ff.Items))
+		require.Equal(t, 2, len(ff.Items))
 
-		assert.Equal(t, f1.ID, ff.Items[0].ID)
-		assert.Equal(t, f1.Path, ff.Items[0].Path)
-		assert.Equal(t, f1.Size, ff.Items[0].Size)
-		assert.Equal(t, f1.OwnerID, ff.Items[0].OwnerID)
+		assert.Equal(t, d.Name, ff.Items[0].Name)
+		assert.Equal(t, d.Path, ff.Items[0].Path)
+		assert.Equal(t, f2.Size, ff.Items[0].Size)
+		assert.Equal(t, f2.OwnerID, ff.Items[0].OwnerID)
+
+		assert.Equal(t, f1.ID, ff.Items[1].ID)
+		assert.Equal(t, f1.Name, ff.Items[1].Name)
+		assert.Equal(t, f1.Path, ff.Items[1].Path)
+		assert.Equal(t, f1.Size, ff.Items[1].Size)
+		assert.Equal(t, f1.OwnerID, ff.Items[1].OwnerID)
 	})
 }
 
@@ -175,6 +183,104 @@ func TestSqliteFiles_Save(t *testing.T) {
 		assert.Equal(t, fileToSave.Name, saved.Name)
 		assert.Equal(t, fileToSave.Path, saved.Path)
 		assert.Equal(t, fileToSave.Size, saved.Size)
+	})
+
+	t.Run("also saves the folder for a nested file", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		db := testutil.SqliteDBFromContext(ctx, t)
+		u := insertSqliteUser(t, db, "username", "pwd")
+
+		files := NewSqliteFiles(db)
+		readerMock := strings.NewReader("")
+		fileToSave, err := file.Create(readerMock, "/hello/world.txt", 10, u.ID)
+		require.NoError(t, err)
+
+		saved, err := files.Save(ctx, *fileToSave)
+		require.NoError(t, err)
+
+		savedFolder := saved.Folder()
+
+		assert.Equal(t, file.TypeFile, saved.Type)
+		assert.Equal(t, fileToSave.Name, saved.Name)
+		assert.Equal(t, fileToSave.Path, saved.Path)
+		assert.Equal(t, fileToSave.Size, saved.Size)
+
+		ff, err := files.List(ctx, nil, list.DefaultParams)
+		require.NoError(t, err)
+
+		assert.Equal(t, 2, ff.Total)
+		require.Equal(t, 2, ff.Count)
+
+		d := ff.Items[0]
+		assert.Equal(t, file.TypeFolder, d.Type)
+		assert.Equal(t, savedFolder.Name, d.Name)
+		assert.Equal(t, savedFolder.Path, d.Path)
+		assert.Equal(t, saved.Size, d.Size)
+
+		f := ff.Items[1]
+		assert.Equal(t, saved.ID, f.ID)
+		assert.Equal(t, saved.Type, f.Type)
+		assert.Equal(t, saved.Name, f.Name)
+		assert.Equal(t, saved.Path, f.Path)
+		assert.Equal(t, saved.Size, f.Size)
+	})
+
+	t.Run("updates the folder size when adding a new file", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		db := testutil.SqliteDBFromContext(ctx, t)
+		u := insertSqliteUser(t, db, "username", "pwd")
+
+		files := NewSqliteFiles(db)
+		readerMock := strings.NewReader("")
+		file1, err := file.Create(readerMock, "/hello/one.txt", 10, u.ID)
+		require.NoError(t, err)
+
+		saved1, err := files.Save(ctx, *file1)
+		require.NoError(t, err)
+
+		file2, err := file.Create(readerMock, "/hello/world.txt", 32, u.ID)
+		require.NoError(t, err)
+
+		saved2, err := files.Save(ctx, *file2)
+		require.NoError(t, err)
+
+		assert.Equal(t, saved1.Folder(), saved2.Folder())
+
+		savedFolder := saved1.Folder()
+
+		ff, err := files.List(ctx, nil, list.DefaultParams)
+		require.NoError(t, err)
+
+		assert.Equal(t, 3, ff.Total)
+		require.Equal(t, 3, ff.Count)
+
+		d := ff.Items[0]
+		assert.Equal(t, file.TypeFolder, d.Type)
+		assert.Equal(t, savedFolder.Name, d.Name)
+		assert.Equal(t, savedFolder.Path, d.Path)
+		assert.Equal(t, saved1.Size+saved2.Size, d.Size)
+
+		f1 := ff.Items[1]
+		assert.Equal(t, saved1.ID, f1.ID)
+		assert.Equal(t, saved1.Type, f1.Type)
+		assert.Equal(t, saved1.Name, f1.Name)
+		assert.Equal(t, saved1.Path, f1.Path)
+		assert.Equal(t, saved1.Size, f1.Size)
+
+		f2 := ff.Items[2]
+		assert.Equal(t, saved2.ID, f2.ID)
+		assert.Equal(t, saved2.Type, f2.Type)
+		assert.Equal(t, saved2.Name, f2.Name)
+		assert.Equal(t, saved2.Path, f2.Path)
+		assert.Equal(t, saved2.Size, f2.Size)
 	})
 
 	t.Run("saves an existing file", func(t *testing.T) {

@@ -68,20 +68,27 @@ func TestApi_Files_List(t *testing.T) {
 			End().
 			JSON(&resp)
 
-		assert.Equal(t, 2, resp.Count)
-		assert.Equal(t, 2, resp.Total)
+		assert.Equal(t, 3, resp.Count)
+		assert.Equal(t, 3, resp.Total)
 		require.Nil(t, resp.Next)
 		assert.Equal(t, len(resp.Items), resp.Count)
 
-		assert.Equal(t, id1.AsUUID(), resp.Items[0].Id)
-		assert.Equal(t, "hello.txt", resp.Items[0].Name)
-		assert.Equal(t, "/hello.txt", resp.Items[0].Path)
+		assert.Equal(t, "something", resp.Items[0].Name)
+		assert.Equal(t, "/something", resp.Items[0].Path)
+		assert.Equal(t, api.FileTypeFolder, resp.Items[0].Type)
 		assert.Equal(t, size, resp.Items[0].Size)
 
-		assert.Equal(t, id2.AsUUID(), resp.Items[1].Id)
-		assert.Equal(t, "else.txt", resp.Items[1].Name)
-		assert.Equal(t, "/something/else.txt", resp.Items[1].Path)
+		assert.Equal(t, id1.AsUUID(), resp.Items[1].Id)
+		assert.Equal(t, api.FileTypeFile, resp.Items[1].Type)
+		assert.Equal(t, "hello.txt", resp.Items[1].Name)
+		assert.Equal(t, "/hello.txt", resp.Items[1].Path)
 		assert.Equal(t, size, resp.Items[1].Size)
+
+		assert.Equal(t, id2.AsUUID(), resp.Items[2].Id)
+		assert.Equal(t, api.FileTypeFile, resp.Items[2].Type)
+		assert.Equal(t, "else.txt", resp.Items[2].Name)
+		assert.Equal(t, "/something/else.txt", resp.Items[2].Path)
+		assert.Equal(t, size, resp.Items[2].Size)
 	})
 
 	t.Run("returns uploaded files with a specific prefix", func(t *testing.T) {
@@ -132,13 +139,20 @@ func TestApi_Files_List(t *testing.T) {
 			End().
 			JSON(&resp)
 
-		assert.Equal(t, 1, resp.Count)
-		assert.Equal(t, 1, resp.Total)
+		assert.Equal(t, 2, resp.Count)
+		assert.Equal(t, 2, resp.Total)
 		require.Nil(t, resp.Next)
 		assert.Equal(t, len(resp.Items), resp.Count)
 
-		f := resp.Items[0]
+		d := resp.Items[0]
+		assert.Equal(t, "something", d.Name)
+		assert.Equal(t, api.FileTypeFolder, d.Type)
+		assert.Equal(t, "/path/to/something", d.Path)
+		assert.Equal(t, 0, d.Size)
+
+		f := resp.Items[1]
 		assert.Equal(t, id.AsUUID(), f.Id)
+		assert.Equal(t, api.FileTypeFile, f.Type)
 		assert.Equal(t, "hello.txt", f.Name)
 		assert.Equal(t, path, f.Path)
 		assert.Equal(t, size, f.Size)
@@ -199,6 +213,7 @@ func TestApi_Files_List(t *testing.T) {
 
 		f := resp.Items[0]
 		assert.Equal(t, id.AsUUID(), f.Id)
+		assert.Equal(t, api.FileTypeFile, f.Type)
 		assert.Equal(t, "hello.txt", f.Name)
 		assert.Equal(t, path, f.Path)
 		assert.Equal(t, size, f.Size)

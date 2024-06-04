@@ -46,11 +46,26 @@ func (i ID) String() string {
 }
 
 var (
-	ErrInvalidPath = errors.New("the provided file path is invalid")
+	ErrInvalidPath  = errors.New("the provided file path is invalid")
+	ErrFolderSave   = errors.New("cannot persist a folder")
+	ErrFolderUpdate = errors.New("cannot update a folder")
 )
+
+type Type string
+
+const (
+	TypeFile   Type = "file"
+	TypeFolder Type = "folder"
+)
+
+type Folder struct {
+	Name Name
+	Path Path
+}
 
 type File struct {
 	ID      ID
+	Type    Type
 	Content Content
 	Name    Name
 	Path    Path
@@ -68,6 +83,7 @@ func Create(content Content, p Path, size Size, ownerID user.ID) (*File, error) 
 
 	return &File{
 		ID:      NewID(),
+		Type:    TypeFile,
 		Content: content,
 		Name:    name,
 		Path:    p,
@@ -77,6 +93,10 @@ func Create(content Content, p Path, size Size, ownerID user.ID) (*File, error) 
 }
 
 func (f *File) Update(content Content, p Path, size Size) error {
+	if f.Type != TypeFile {
+		return ErrFolderUpdate
+	}
+
 	p, err := ParsePath(string(p))
 	if err != nil {
 		return err
@@ -87,6 +107,19 @@ func (f *File) Update(content Content, p Path, size Size) error {
 	f.Path = p
 	f.Size = size
 	return nil
+}
+
+func (f *File) Folder() *Folder {
+	p := path.Dir(string(f.Path))
+	if p == "/" {
+		return nil
+	}
+
+	n := path.Base(p)
+	return &Folder{
+		Name: Name(n),
+		Path: Path(p),
+	}
 }
 
 func ParsePath(p string) (Path, error) {
