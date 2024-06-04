@@ -81,3 +81,35 @@ func Test_Update(t *testing.T) {
 		})
 	}
 }
+
+func Test_Folder(t *testing.T) {
+	testCases := []struct {
+		testName       string
+		filename       string
+		expectedFolder *Folder
+	}{
+		{testName: "returns the folder for a file", filename: "/hello/world.txt", expectedFolder: &Folder{Name: Name("hello"), Path: Path("/hello")}},
+		{testName: "returns the last folder for a deeply nested file", filename: "/hello/world/one.txt", expectedFolder: &Folder{Name: Name("world"), Path: Path("/hello/world")}},
+		{testName: "returns nil as the root folder", filename: "/world.txt", expectedFolder: nil},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.testName, func(t *testing.T) {
+			t.Parallel()
+
+			file, err := Create(nil, Path(testCase.filename), 5, user.ID(testutil.Must(uuid.NewV7())))
+			require.NoError(t, err)
+
+			folder := file.Folder()
+
+			if testCase.expectedFolder != nil {
+				require.NotNil(t, folder)
+				assert.Equal(t, folder.Name, testCase.expectedFolder.Name)
+				assert.Equal(t, folder.Path, testCase.expectedFolder.Path)
+			} else {
+				assert.Nil(t, folder)
+			}
+		})
+	}
+}

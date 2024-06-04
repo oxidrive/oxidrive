@@ -65,6 +65,7 @@ components:
       type: object
       required:
         - id
+        - type
         - path
         - name
         - size
@@ -72,6 +73,9 @@ components:
         id:
           type: string
           format: uuid
+        type:
+          type: string
+          enum: [file, folder]
         path:
           type: string
           format: path

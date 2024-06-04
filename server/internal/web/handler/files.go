@@ -32,7 +32,7 @@ func (f *Files) List(ctx context.Context, request api.FilesListRequestObject) (a
 		prefix = &p
 	}
 
-	ff, err := f.App.Files().List(ctx, prefix, list.First(request.Params.First), list.After(request.Params.After))
+	ff, err := f.App.Files().List(ctx, prefix, list.First(request.Params.First), list.After(list.CursorFromString(request.Params.After)))
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +41,18 @@ func (f *Files) List(ctx context.Context, request api.FilesListRequestObject) (a
 
 	items := make([]api.File, count)
 	for i, fi := range ff.Items {
+		var typ api.FileType
+
+		switch fi.Type {
+		case file.TypeFile:
+			typ = api.FileTypeFile
+		case file.TypeFolder:
+			typ = api.FileTypeFolder
+		}
+
 		items[i] = api.File{
 			Id:   fi.ID.AsUUID(),
+			Type: typ,
 			Name: string(fi.Name),
 			Path: string(fi.Path),
 			Size: int(fi.Size),
@@ -52,7 +62,7 @@ func (f *Files) List(ctx context.Context, request api.FilesListRequestObject) (a
 	return api.FilesList200JSONResponse(api.FileList{
 		Count: count,
 		Items: items,
-		Next:  ff.Next,
+		Next:  ff.Next.ToString(),
 		Total: ff.Total,
 	}), nil
 }

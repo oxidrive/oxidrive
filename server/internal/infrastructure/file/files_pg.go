@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/google/uuid"
@@ -26,9 +27,10 @@ func NewPgFiles(db *sqlx.DB) *PgFiles {
 }
 
 func (p *PgFiles) List(ctx context.Context, prefix *file.Path, params list.Params) (list.Of[file.File], error) {
-	after := uuid.Nil
+	after := uint64(0)
 	if params.After != nil {
-		a, err := uuid.Parse(*params.After)
+		c := list.DecodeCursor(*params.After)
+		a, err := strconv.ParseUint(c, 10, 64)
 		if err != nil {
 			return list.Empty[file.File](), fmt.Errorf("%s: %w", list.ErrInvalidAfter, err)
 		}
@@ -55,7 +57,13 @@ func (p *PgFiles) List(ctx context.Context, prefix *file.Path, params list.Param
 	}
 
 	var pff []pgFile
-	err = p.db.SelectContext(ctx, &pff, "select id, name, path, size, user_id from files where id >= $1 and path ~* $2 order by id asc limit $3", after, regex, limit)
+	err = p.db.SelectContext(ctx, &pff, `
+with
+    numbered_files as (
+        select row_number() over (order by type desc, path) as cursor, * from files where path ~* $2 order by type desc, path
+    )
+select * from numbered_files where cursor >= $1 limit $3
+`, after, regex, limit)
 	if err != nil {
 		return list.Empty[file.File](), err
 	}
@@ -65,17 +73,19 @@ func (p *PgFiles) List(ctx context.Context, prefix *file.Path, params list.Param
 	}
 
 	items := make([]file.File, len(pff))
+	var cursor uint64
 	for i, pf := range pff {
+		cursor = pf.Cursor
 		items[i] = *pf.into()
 	}
 
-	var next *string
+	var next *list.Cursor
 	if len(items) == limit {
 		// We remove the last one as it's not really part of the current slice, we just need its ID to use as the Next cursor
 		// If we fetched less than params.Limit + 1, it means we're at the end of the collection and there are no more pages after that
 		idx := len(items) - 1
-		n := items[idx].ID.String()
-		next = &n
+		c := list.EncodeCursor(strconv.FormatUint(cursor, 10))
+		next = &c
 		items = items[:idx]
 	}
 
@@ -88,8 +98,25 @@ func (p *PgFiles) List(ctx context.Context, prefix *file.Path, params list.Param
 }
 
 func (p *PgFiles) Save(ctx context.Context, f file.File) (*file.File, error) {
-	if _, err := p.db.ExecContext(ctx, `insert into files (
+	if f.Type == file.TypeFolder {
+		return nil, file.ErrFolderSave
+	}
+
+	tx, err := p.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := p.saveFolder(ctx, tx, &f); err != nil {
+		if err := tx.Rollback(); err != nil {
+			return nil, err
+		}
+		return nil, err
+	}
+
+	_, err = tx.ExecContext(ctx, `insert into files (
         id,
+        type,
         name,
         path,
         size,
@@ -99,23 +126,65 @@ func (p *PgFiles) Save(ctx context.Context, f file.File) (*file.File, error) {
         $2,
         $3,
         $4,
-        $5
+        $5,
+        $6
     )
     on conflict (id)
     do update set
+      type = excluded.type,
       name = excluded.name,
       path = excluded.path,
       size = excluded.size
-    ;`, f.ID.String(), f.Name, f.Path, f.Size, f.OwnerID.String()); err != nil {
+    ;`, f.ID.String(), f.Type, f.Name, f.Path, f.Size, f.OwnerID.String())
+
+	if err != nil {
+		if err := tx.Rollback(); err != nil {
+			return nil, err
+		}
+
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
 
 	return &f, nil
 }
 
+func (p *PgFiles) saveFolder(ctx context.Context, tx *sqlx.Tx, f *file.File) error {
+	d := f.Folder()
+	if d == nil {
+		return nil
+	}
+
+	_, err := tx.ExecContext(ctx, `insert into files (
+        id,
+        type,
+        name,
+        path,
+        size,
+        user_id
+    ) values (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6
+    )
+    on conflict (path)
+    do update set
+      type = excluded.type,
+      size = files.size + excluded.size
+    ;`, file.NewID(), file.TypeFolder, d.Name, d.Path, f.Size, f.OwnerID)
+
+	return err
+}
+
 func (p *PgFiles) ByID(ctx context.Context, id file.ID) (*file.File, error) {
 	var f pgFile
-	err := p.db.GetContext(ctx, &f, "select id, name, path, size, user_id from files where id = $1", id.String())
+	err := p.db.GetContext(ctx, &f, "select id, type, name, path, size, user_id from files where id = $1", id.String())
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -129,7 +198,7 @@ func (p *PgFiles) ByID(ctx context.Context, id file.ID) (*file.File, error) {
 
 func (p *PgFiles) ByOwnerByPath(ctx context.Context, owner user.ID, path file.Path) (*file.File, error) {
 	var f pgFile
-	err := p.db.GetContext(ctx, &f, "select id, name, path, size, user_id from files where user_id = $1 and path = $2", owner.String(), path)
+	err := p.db.GetContext(ctx, &f, "select id, type, name, path, size, user_id from files where user_id = $1 and path = $2", owner.String(), path)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -142,7 +211,9 @@ func (p *PgFiles) ByOwnerByPath(ctx context.Context, owner user.ID, path file.Pa
 }
 
 type pgFile struct {
+	Cursor uint64    `db:"cursor"`
 	ID     uuid.UUID `db:"id"`
+	Type   string    `db:"type"`
 	Name   string    `db:"name"`
 	Path   string    `db:"path"`
 	Size   int       `db:"size"`
@@ -152,6 +223,7 @@ type pgFile struct {
 func (sf pgFile) into() *file.File {
 	return &file.File{
 		ID:      file.ID(sf.ID),
+		Type:    file.Type(sf.Type),
 		Content: nil,
 		Name:    file.Name(sf.Name),
 		Path:    file.Path(sf.Path),
