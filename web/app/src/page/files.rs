@@ -64,6 +64,7 @@ pub fn Files(path: Vec<String>) -> Element {
                     files: files,
                     view_mode: view_mode,
                     selected: selected,
+                    selected_label: i18n.localize("files-selected"),
                     empty_message: i18n.localize("files-empty"),
                 }
                 Fab {
@@ -172,6 +173,7 @@ fn FilesView(
     files: List<File>,
     view_mode: Signal<ViewMode>,
     selected: Signal<HashSet<String>>,
+    selected_label: String,
     empty_message: String,
 ) -> Element {
     if files.items.is_empty() {
@@ -184,12 +186,16 @@ fn FilesView(
     }
 
     match view_mode() {
-        ViewMode::Grid => FilesGrid(files, selected),
-        ViewMode::List => FilesList(files, selected),
+        ViewMode::Grid => FilesGrid(files, selected, selected_label),
+        ViewMode::List => FilesList(files, selected, selected_label),
     }
 }
 
-fn FilesGrid(files: List<File>, mut selected: Signal<HashSet<String>>) -> Element {
+fn FilesGrid(
+    files: List<File>,
+    mut selected: Signal<HashSet<String>>,
+    selected_label: String,
+) -> Element {
     rsx! {
         div {
             class: "p-4 grid gap-6 grid-cols-[repeat(auto-fill,minmax(160px,1fr))]",
@@ -198,6 +204,7 @@ fn FilesGrid(files: List<File>, mut selected: Signal<HashSet<String>>) -> Elemen
                     key: "{file.id}",
                     file: file.clone(),
                     selected: selected().contains(&file.path),
+                    selected_label: &selected_label,
                     onselected: move |is_selected| {
                         let mut selected = selected.write();
                         if is_selected {
@@ -213,7 +220,12 @@ fn FilesGrid(files: List<File>, mut selected: Signal<HashSet<String>>) -> Elemen
 }
 
 #[component]
-fn FileBox(file: File, selected: bool, onselected: EventHandler<bool>) -> Element {
+fn FileBox(
+    file: File,
+    selected: bool,
+    selected_label: String,
+    onselected: EventHandler<bool>,
+) -> Element {
     rsx! {
         div {
             title: "{file.name}",
@@ -221,6 +233,7 @@ fn FileBox(file: File, selected: bool, onselected: EventHandler<bool>) -> Elemen
             div {
                 class: "flex flex-row justify-between items-center w-full",
                 Checkbox {
+                    label: selected_label,
                     name: "selected",
                     value: selected,
                     oninput: move |ev: Event<FormData>| onselected.call(ev.data().parsed::<bool>().throw().unwrap_or_default()),
@@ -256,7 +269,11 @@ fn file_icon<I: IconShape + Clone + PartialEq + 'static>(
     rsx! { Icon { class: format!("m-2 {class}"), height: height, width: width, icon: icon } }
 }
 
-fn FilesList(files: List<File>, mut selected: Signal<HashSet<String>>) -> Element {
+fn FilesList(
+    files: List<File>,
+    mut selected: Signal<HashSet<String>>,
+    selected_label: String,
+) -> Element {
     rsx! {
         div {
             class: "p-4 flex flex-col",
@@ -265,6 +282,7 @@ fn FilesList(files: List<File>, mut selected: Signal<HashSet<String>>) -> Elemen
                     key: "{file.id}",
                     file: file.clone(),
                     selected: selected().contains(&file.path),
+                    selected_label: &selected_label,
                     onselected: move |is_selected| {
                         let mut selected = selected.write();
                         if is_selected {
@@ -280,7 +298,12 @@ fn FilesList(files: List<File>, mut selected: Signal<HashSet<String>>) -> Elemen
 }
 
 #[component]
-fn FileRow(file: File, selected: bool, onselected: EventHandler<bool>) -> Element {
+fn FileRow(
+    file: File,
+    selected: bool,
+    selected_label: String,
+    onselected: EventHandler<bool>,
+) -> Element {
     rsx! {
         div {
             class: "flex flex-col gap-2 items-center",
@@ -289,6 +312,7 @@ fn FileRow(file: File, selected: bool, onselected: EventHandler<bool>) -> Elemen
                 span {
                     class: "flex flex-row flex-nowrap items-center justify-start",
                     Checkbox {
+                        label: selected_label,
                         name: "selected",
                         value: selected,
                         oninput: move |ev: Event<FormData>| onselected.call(ev.data().parsed::<bool>().throw().unwrap_or_default()),

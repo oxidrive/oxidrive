@@ -1,5 +1,6 @@
 files-title = Your files
 
+files-selected = Selected
 files-empty = No files in here
 
 files-upload-succeeded = { $file } uploaded

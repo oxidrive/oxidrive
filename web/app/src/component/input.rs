@@ -70,6 +70,8 @@ pub struct CheckboxProps {
     #[props(into)]
     pub name: String,
     #[props(into)]
+    pub label: Option<String>,
+    #[props(into)]
     pub value: Option<bool>,
     #[props(default = false)]
     pub disabled: bool,
@@ -79,6 +81,7 @@ pub struct CheckboxProps {
 pub fn Checkbox(
     CheckboxProps {
         name,
+        label,
         value,
         disabled,
         oninput,
@@ -91,6 +94,7 @@ pub fn Checkbox(
             r#type: "checkbox",
             class: r#"accent-primary-500 rounded border border-primary-500 w-5 h-5"#,
             name: name,
+            "aria-label": label,
             value: value,
             disabled: disabled,
             oninput: oninput,
