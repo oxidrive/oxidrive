@@ -3,10 +3,12 @@ import { testAccessibility } from "./fixtures";
 
 test.describe("uploading a file", () => {
 	test("should succeed", async ({ page }) => {
+		const name = `hello${Math.random().toString().substring(2)}.txt`;
+
 		await page.goto("/files");
 		await expect(page).toHaveURL("/files");
 
-		await expect(page.getByText("No files in here")).toBeVisible();
+		await expect(page.getByText(name)).not.toBeVisible();
 
 		const responsePromise = page.waitForResponse("/api/files");
 		const filechooserPromise = page.waitForEvent("filechooser");
@@ -15,7 +17,7 @@ test.describe("uploading a file", () => {
 
 		const filechooser = await filechooserPromise;
 		await filechooser.setFiles({
-			name: "hello.txt",
+			name,
 			mimeType: "text/plain",
 			buffer: Buffer.from("hello world!"),
 		});
@@ -35,6 +37,12 @@ test.describe("uploading a file", () => {
 		const toast = page.getByTestId("toast-0");
 		await expect(toast).toBeVisible();
 		await expect(toast).toHaveAttribute("data-toast-level", "success");
+		await expect(toast).toContainText(name);
+
+		await page.reload();
+
+		await expect(page.getByText("No files in here")).not.toBeVisible();
+		await expect(page.getByText(name)).toBeVisible();
 	});
 
 	test(
