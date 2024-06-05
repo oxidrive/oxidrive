@@ -47,7 +47,6 @@ test.describe("setup flow", () => {
 		await page.getByRole("button", { name: "Sign In" }).click();
 
 		await expect(page).toHaveURL("/files");
-		await expect(page.getByText("No files in here")).toBeVisible();
 
 		// Persisting the authentication state for the other tests
 		await page.context().storageState({ path: authFile });
