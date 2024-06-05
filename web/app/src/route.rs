@@ -27,4 +27,14 @@ impl Route {
             Self::Setup {} | Self::Login { .. } | Self::NotFound { .. }
         )
     }
+
+    pub fn files(path: impl ToString) -> Self {
+        let path = path
+            .to_string()
+            .trim_start_matches('/')
+            .split('/')
+            .map(str::to_string)
+            .collect();
+        Self::Files { path }
+    }
 }

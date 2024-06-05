@@ -5,12 +5,13 @@ use crate::{
     component::*,
     i18n::use_localizer,
     loc_args,
+    route::Route,
     toast::{self, ToastLevel},
 };
 use dioxus::prelude::*;
-use dioxus_free_icons::{icons::fa_solid_icons::*, Icon};
+use dioxus_free_icons::{icons::fa_solid_icons::*, Icon, IconShape};
 use oxidrive_api::{
-    files::{File, FileUpload, ListFilesParams},
+    files::{File, FileKind, FileUpload, ListFilesParams},
     ApiError, List,
 };
 use web_sys::{Document, HtmlInputElement};
@@ -31,19 +32,15 @@ pub fn Files(path: Vec<String>) -> Element {
 
     let document = web_sys::window()?.document()?;
 
-    let future = use_resource(move || {
-        let prefix = prefix.clone();
-
-        async move {
-            api()
-                .files()
-                .list(ListFilesParams {
-                    prefix: Some(prefix),
-                    ..Default::default()
-                })
-                .await
-        }
-    });
+    let future = use_resource(use_reactive((&prefix,), move |(prefix,)| async move {
+        api()
+            .files()
+            .list(ListFilesParams {
+                prefix: Some(prefix),
+                ..Default::default()
+            })
+            .await
+    }));
 
     let files = match future.read().as_ref() {
         Some(Ok(files)) => files.clone(),
@@ -198,6 +195,7 @@ fn FilesGrid(files: List<File>, mut selected: Signal<HashSet<String>>) -> Elemen
             class: "p-4 grid gap-6 grid-cols-[repeat(auto-fill,minmax(160px,1fr))]",
             for file in files.items {
                 FileBox {
+                    key: "{file.id}",
                     file: file.clone(),
                     selected: selected().contains(&file.path),
                     onselected: move |is_selected| {
@@ -228,14 +226,34 @@ fn FileBox(file: File, selected: bool, onselected: EventHandler<bool>) -> Elemen
                     oninput: move |ev: Event<FormData>| onselected.call(ev.data().parsed::<bool>().throw().unwrap_or_default()),
                 }
             },
-            Icon { class: "m-2", height: 80, width: 80, icon: FaFile },
+            FileLink {
+                kind: file.kind,
+                to: &file.path,
+                match file.kind {
+                    FileKind::File => file_icon(FaFile, "", 80, 80),
+                    FileKind::Folder => file_icon(FaFolder, "fill-primary-500", 80, 80),
+                },
+            }
             div {
                 class: "flex flex-row justify-between items-center gap-4 p-2 w-full",
-                p { class: "text-primary-500 truncate", "{file.name}" }
+                FileLink {
+                    kind: file.kind,
+                    to: file.path,
+                    p { class: "text-primary-500 truncate", "{file.name}" }
+                }
                 Icon { class: "fill-primary-500 grow-0 shrink-0", height: 15, width: 15, icon: FaEllipsis },
             }
         }
     }
+}
+
+fn file_icon<I: IconShape + Clone + PartialEq + 'static>(
+    icon: I,
+    class: &'static str,
+    height: u32,
+    width: u32,
+) -> Element {
+    rsx! { Icon { class: format!("m-2 {class}"), height: height, width: width, icon: icon } }
 }
 
 fn FilesList(files: List<File>, mut selected: Signal<HashSet<String>>) -> Element {
@@ -244,6 +262,7 @@ fn FilesList(files: List<File>, mut selected: Signal<HashSet<String>>) -> Elemen
             class: "p-4 flex flex-col",
             for file in files.items {
                 FileRow {
+                    key: "{file.id}",
                     file: file.clone(),
                     selected: selected().contains(&file.path),
                     onselected: move |is_selected| {
@@ -274,13 +293,37 @@ fn FileRow(file: File, selected: bool, onselected: EventHandler<bool>) -> Elemen
                         value: selected,
                         oninput: move |ev: Event<FormData>| onselected.call(ev.data().parsed::<bool>().throw().unwrap_or_default()),
                     }
-                    Icon { class: "m-2", height: 40, width: 40, icon: FaFile },
-                    p { "{file.name}" }
+                    FileLink {
+                        kind: file.kind,
+                        to: &file.path,
+                        match file.kind {
+                            FileKind::File => file_icon(FaFile, "", 40, 40),
+                            FileKind::Folder => file_icon(FaFolder, "fill-primary-500", 40, 40),
+                        }
+                    }
+                    FileLink {
+                        kind: file.kind,
+                        to: file.path,
+                        p { "{file.name}" }
+                    }
                 }
                 Icon { class: "fill-primary-500 grow-0 shrink-0", height: 15, width: 15, icon: FaEllipsis },
             }
             hr { class: "w-full h-[1px] bg-primary-300" }
         }
+    }
+}
+
+#[component]
+fn FileLink(kind: FileKind, to: String, children: Element) -> Element {
+    match kind {
+        FileKind::File => children,
+        FileKind::Folder => rsx! {
+            Link {
+                to: Route::files(to),
+                {children}
+            }
+        },
     }
 }
 
