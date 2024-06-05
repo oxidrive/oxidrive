@@ -35,13 +35,29 @@ pub struct ListFilesParams {
     pub prefix: Option<String>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize, Display)]
+#[serde(rename_all = "camelCase")]
+#[strum(serialize_all = "snake_case")]
+pub enum FileKind {
+    File,
+    Folder,
+}
+
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct File {
     pub id: String,
+    #[serde(rename = "type")]
+    pub kind: FileKind,
     pub path: String,
     pub name: String,
     pub size: usize,
+}
+
+impl File {
+    pub fn is_folder(&self) -> bool {
+        matches!(self.kind, FileKind::Folder)
+    }
 }
 
 pub struct FileService {
@@ -141,6 +157,7 @@ mod tests {
             next: Some("next".into()),
             items: vec![File {
                 id: "some-file".into(),
+                kind: FileKind::File,
                 path: "/path/to/file.txt".into(),
                 name: "file.txt".into(),
                 size: 42,
@@ -185,6 +202,7 @@ mod tests {
             next: Some("next".into()),
             items: vec![File {
                 id: "some-file".into(),
+                kind: FileKind::File,
                 path: "/path/to/file.txt".into(),
                 name: "file.txt".into(),
                 size: 42,
