@@ -20,6 +20,8 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/web"
 )
 
+const timeout time.Duration = 5 * time.Second
+
 func setup(ctx context.Context, t *testing.T) (*app.Application, http.Handler) {
 	t.Helper()
 

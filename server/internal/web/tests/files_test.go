@@ -25,7 +25,7 @@ func TestApi_Files_List(t *testing.T) {
 	t.Run("returns all uploaded files", func(t *testing.T) {
 		t.Parallel()
 
-		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
 		ctx, done := testutil.IntegrationTest(ctx, t, testutil.WithTempDir(), testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
