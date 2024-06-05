@@ -48,8 +48,14 @@ jobs:
         with:
           cache-all-crates: "true"
           save-if: ${{ github.ref == 'refs/heads/main' }}
+      - uses: cargo-bins/cargo-binstall@v1.6.4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: cargo binstall -y --force cargo-nextest
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: davidB/rust-cargo-make@v1
-      - run: cargo test --all --all-features --all-targets
+      - run: cargo nextest run --all --all-features --all-targets
 
   fmt:
     if: github.event.pull_request.draft == false
