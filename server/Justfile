@@ -6,16 +6,11 @@ build: generate
 run *args: generate
     go run ./cmd/oxidrive {{ args }}
 
-test path="./...":
-    @if command -v gotestsum &> /dev/null; then \
-      gotestsum --format gotestdox {{ path }}; \
-    fi
-    @if ! command -v gotestsum &> /dev/null; then \
-      gotestdox {{ path }}; \
-    fi
+test path="./...": generate
+    gotestdox {{ path }}
 
-test-mutations:
-    cd .. && INTEGRATION_TEST=1 gremlins run ./server/internal --test-cpu=2 --workers=2
+test-mutations: generate
+    cd .. && INTEGRATION_TEST=1 gremlins run ./server/internal --test-cpu=4 --workers=4
 
 test-integration *args:
     INTEGRATION_TEST=1 just test {{ args }}

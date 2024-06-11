@@ -22,16 +22,24 @@ watch-styles: setup
     npx tailwindcss -i ./app/input.css -o ./app/assets/styles.css --watch
 
 test:
-    cargo nextest run
+    cargo nextest run --all --all-features --all-targets
 
 setup:
     [ -d ../node_modules ] || npm install
 
-lint:
-    cargo clippy --workspace -- -D warnings
+lint: check clippy fmt-check
+
+clippy:
+    cargo clippy --workspace --tests --all-features --all-targets -- -D warnings
 
 fmt:
     dx fmt
     cargo fmt --all
     cargo clippy --allow-dirty --allow-staged --workspace --fix -- -D warnings
+
+fmt-check:
+    cargo fmt --all -- --check
+
+check:
+    cargo check --all --tests --all-features --all-targets
 

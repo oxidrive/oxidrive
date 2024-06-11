@@ -21,10 +21,10 @@ rebuild: stop
 record url="http://localhost:8080": _install
     npx playwright codegen {{ url }}
 
-fmt:
+fmt: _install
     npx biome format --write .
 
-lint:
+lint: _install
     npx biome ci .
 
 [linux]

@@ -30,12 +30,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: DeterminateSystems/magic-nix-cache-action@v7
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: cargo check --all --tests --all-features --all-targets
+      - name: Run cargo check
+        run: nix develop --command just web/check
 
   test:
     if: github.event.pull_request.draft == false
@@ -43,19 +47,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: DeterminateSystems/magic-nix-cache-action@v7
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - uses: cargo-bins/cargo-binstall@v1.6.4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: cargo binstall -y --force cargo-nextest
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - uses: davidB/rust-cargo-make@v1
-      - run: cargo nextest run --all --all-features --all-targets
+      - name: Run tests
+        run: nix develop --command just web/test
 
   fmt:
     if: github.event.pull_request.draft == false
@@ -63,22 +64,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: cachix/install-nix-action@v27
         with:
-          components: rustfmt            
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: DeterminateSystems/magic-nix-cache-action@v7
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - uses: cargo-bins/cargo-binstall@v1.6.4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: cargo binstall -y --force dioxus-cli@0.5.4
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: cargo fmt --all -- --check
-      # dx fmt and cargo fmt are in conflict with one another, uncomment once we can get them to behave
-      # - run: dx fmt --check
+      - name: Check formatting
+        run: nix develop --command just web/fmt-check
 
   clippy:
     if: github.event.pull_request.draft == false
@@ -86,11 +81,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: cachix/install-nix-action@v27
         with:
-          components: rustfmt, clippy
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: DeterminateSystems/magic-nix-cache-action@v7
       - uses: Swatinem/rust-cache@v2
         with:
           cache-all-crates: "true"
           save-if: ${{ github.ref == 'refs/heads/main' }}
-      - run: cargo clippy --workspace --tests --all-features --all-targets -- -D warnings
+      - name: Run clippy
+        run: nix develop --command just web/clippy
