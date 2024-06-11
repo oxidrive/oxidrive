@@ -16,6 +16,13 @@ fmt:
     @just web/fmt
     @just server/fmt
     @just docs/fmt
+    @just e2e/fmt
+
+lint:
+    @just web/lint
+    @just server/lint
+    @just docs/lint
+    @just e2e/lint
 
 act *args:
     act -s GITHUB_TOKEN=$(gh auth token) {{ args }}

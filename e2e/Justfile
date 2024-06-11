@@ -1,9 +1,9 @@
-test *args:
+test *args: _install
     npx playwright test {{ args }}
 
 chromium: (test "--project=chromium")
 
-ui:
+ui: _install
     npx playwright test --ui
 
 stop:
@@ -18,13 +18,18 @@ rebuild: stop
     docker compose build
     docker compose up -d
 
-record url="http://localhost:8080":
+record url="http://localhost:8080": _install
     npx playwright codegen {{ url }}
 
+fmt:
+    npx biome format --write .
+
+lint:
+    npx biome ci .
+
 [linux]
-setup:
+setup: _install
     #!/usr/bin/env sh
-    npm install
     if grep -q ID=nixos /etc/os-release; then
       echo ""
       echo "====== WARNING ======="
@@ -34,12 +39,14 @@ setup:
       echo ""
       echo "https://github.com/NixOS/nixpkgs/pull/298944"
     else
-      npx playwright install
+      PLAYWRIGHT_BROWSERS_PATH="" npx playwright install
     fi
     mkdir -p playwright/.auth
 
 [macos, windows]
-setup:
-    npm install
+setup: _install
     npx playwright install
     mkdir -p playwright/.auth
+
+_install:
+    [ -d ../node_modules ] || npm install

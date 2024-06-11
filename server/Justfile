@@ -34,6 +34,9 @@ fmt:
     goimports -local github.com/oxidrive/oxidrive -w .
     go fmt ./...
 
+lint: generate
+    go vet ./...
+
 psql:
     @PGPASSWORD=${POSTGRES_PASSWORD:-oxidrive} psql -h ${POSTGRES_HOST:-localhost} -p ${POSTGRES_PORT:-5432} -U ${POSTGRES_USER:-oxidrive} ${POSTGRES_DB:-oxidrive}
 
