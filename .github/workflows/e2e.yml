@@ -23,17 +23,15 @@ jobs:
     if: github.event.pull_request.draft == false
     timeout-minutes: 60
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: e2e
     strategy:
       matrix:
         project: ['chromium', 'firefox', 'webkit', 'Mobile Chrome', 'Mobile Safari']
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - uses: cachix/install-nix-action@v27
       with:
-        node-version: lts/*
+        github_access_token: ${{ secrets.GITHUB_TOKEN }}
+    - uses: DeterminateSystems/magic-nix-cache-action@v7
     - uses: docker/setup-buildx-action@v3
     - name: Extract metadata (tags, labels) for Docker
       id: meta
@@ -50,12 +48,8 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         working-directory: .
-    - name: Install dependencies
-      run: npm ci && mkdir -p playwright/.auth
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
     - name: Run Playwright tests
-      run: npx playwright test --project "${{ matrix.project }}"
+      run: nix develop --command just e2e/test --project "${{ matrix.project }}"
     - uses: actions/upload-artifact@v4
       if: always()
       with:

@@ -4,15 +4,15 @@ build: setup
 watch: setup
     npx astro dev
 
-astro *args:
+astro *args: setup
     npx astro {{ args }}
 
 setup:
     [ -d ../node_modules ] || npm install
 
-fmt:
+fmt: setup
     npx biome format --write .
 
-lint:
+lint: setup
     npx biome ci .
 
