@@ -16,6 +16,7 @@
           gotestdox
           gotools
           gremlins
+          golangci-lint
         ];
       };
 
