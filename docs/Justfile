@@ -1,12 +1,18 @@
 build: setup
-    npm run build
+    npx astro check && npx astro build
 
 watch: setup
-    npm start
+    npx astro dev
+
+astro *args:
+    npx astro {{ args }}
 
 setup:
-    [ -d node_modules ] || npm install
+    [ -d ../node_modules ] || npm install
 
 fmt:
-    npm run format
+    npx biome format --write .
+
+lint:
+    npx biome ci .
 

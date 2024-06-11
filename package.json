@@ -1,0 +1,19 @@
+{
+	"name": "oxidrive",
+	"private": true,
+	"devDependencies": {
+		"@astrojs/check": "^0.5.10",
+		"@astrojs/starlight": "^0.21.5",
+		"@axe-core/playwright": "^4.9.0",
+		"@biomejs/biome": "1.7.1",
+		"@playwright/test": "1.40.0",
+		"@redocly/cli": "^1.15.0",
+		"@types/node": "^20.12.7",
+		"astro": "^4.3.5",
+		"caniuse-lite": "^1.0.30001614",
+		"concurrently": "^8.2.2",
+		"sharp": "^0.32.5",
+		"tailwindcss": "^3.4.3",
+		"typescript": "^5.4.5"
+	}
+}

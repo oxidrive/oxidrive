@@ -3,9 +3,6 @@
 	"organizeImports": {
 		"enabled": true
 	},
-	"files": {
-		"ignore": ["dist/*", ".astro/*"]
-	},
 	"vcs": {
 		"useIgnoreFile": true
 	},

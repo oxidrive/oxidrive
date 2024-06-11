@@ -19,16 +19,13 @@ watch-app: setup
 
 watch-styles: setup
     #!/usr/bin/env sh
-    cd app
-    npx tailwindcss -i ./input.css -o ./assets/styles.css --watch
+    npx tailwindcss -i ./app/input.css -o ./app/assets/styles.css --watch
 
 test:
     cargo nextest run
 
 setup:
-    #!/usr/bin/env sh
-    cd app
-    [ -d node_modules ] || npm install
+    [ -d ../node_modules ] || npm install
 
 lint:
     cargo clippy --workspace -- -D warnings
