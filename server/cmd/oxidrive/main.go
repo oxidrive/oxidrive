@@ -32,10 +32,14 @@ func main() {
 		die(logger, err, "failed to run database migrations")
 	}
 
+	logger.Debug().Msg("successfully applied database migrations")
+
 	db, err := infrastructure.InitDB(cfg.DatabaseConfig)
 	if err != nil {
 		die(logger, err, "failed to open database connection")
 	}
+
+	logger.Debug().Str("database", db.DriverName()).Msg("database pool initialized")
 
 	deps := infrastructure.Setup(cfg, db, logger)
 	app := app.NewApplication(cfg, deps)
@@ -47,6 +51,8 @@ func main() {
 	if err != nil {
 		die(logger, err, "background worker failed to start")
 	}
+
+	logger.Debug().Msg("job scheduler started")
 
 	err = web.Run(web.Config{
 		Address:            cfg.ListenAddress(),

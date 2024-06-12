@@ -31,3 +31,12 @@ test e2e="test":
     @just server/test-integration
     @just web/test
     @just e2e/rebuild && just e2e/{{ e2e }}
+
+release:
+    rm -rf release && mkdir -p release/staging
+    @just web/build
+    @just server/build
+    cp ./server/bin/oxidrive release/staging/
+    cp -r ./web/app/dist release/staging/assets
+    tar -cvzf release/oxidrive.tar.gz -C ./release/staging .
+    rm -rf release/staging

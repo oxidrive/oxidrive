@@ -1,22 +1,18 @@
+set dotenv-filename := "../server/.env"
+
 test *args: _install
-    npx playwright test {{ args }}
+    set positional-arguments
+    bash -c 'npx playwright test "$@"'
 
 chromium: (test "--project=chromium")
 
 ui: _install
     npx playwright test --ui
 
-stop:
-    docker compose down -v
-
 start:
-    docker compose up -d
-
-restart: stop start
-
-rebuild: stop
-    docker compose build
-    docker compose up -d
+    #!/usr/bin/env sh
+    bin="${OXIDRIVE_BIN:-$PWD/../server/bin/oxidrive}"
+    $bin --public-url=http://localhost:4000
 
 record url="http://localhost:8080": _install
     npx playwright codegen {{ url }}
@@ -35,17 +31,18 @@ setup: _install
       echo "====== WARNING ======="
       echo "Playwright is not able to install browser on NixOS."
       echo "They should be automatically installed by the project's flake.nix, but until this PR is merged only Chromium will be available."
+      echo "To use them, set the following environment variable: PLAYWRIGHT_BROWSERS_PATH=$NIX_PLAYWRIGHT_BROWSERS_PATH"
       echo "Please run tests with just e2e/chromium to avoid failures due to missing browsers"
       echo ""
       echo "https://github.com/NixOS/nixpkgs/pull/298944"
     else
-      PLAYWRIGHT_BROWSERS_PATH="" npx playwright install
+      npx playwright install --with-deps
     fi
     mkdir -p playwright/.auth
 
 [macos, windows]
 setup: _install
-    npx playwright install
+    npx playwright install --with-deps
     mkdir -p playwright/.auth
 
 _install:

@@ -65,7 +65,7 @@ pub fn Files(path: Vec<String>) -> Element {
                     view_mode: view_mode,
                     selected: selected,
                     selected_label: i18n.localize("files-selected"),
-                    empty_message: i18n.localize("files-empty"),
+                    empty_message: i18n.localize("files-empty")
                 }
                 Fab {
                     label: "Upload",
@@ -179,8 +179,8 @@ fn FilesView(
     if files.items.is_empty() {
         return rsx! {
             div { class: "w-full h-96 flex flex-col justify-center items-center",
-                  Icon { class: "fill-primary-200", height: 80, width: 80, icon: FaFolder }
-                  p { {empty_message} }
+                Icon { class: "fill-primary-200", height: 80, width: 80, icon: FaFolder }
+                p { {empty_message} }
             }
         };
     }
@@ -197,11 +197,9 @@ fn FilesGrid(
     selected_label: String,
 ) -> Element {
     rsx! {
-        div {
-            class: "p-4 grid gap-6 grid-cols-[repeat(auto-fill,minmax(160px,1fr))]",
+        div { class: "p-4 grid gap-6 grid-cols-[repeat(auto-fill,minmax(160px,1fr))]",
             for file in files.items {
                 FileBox {
-                    key: "{file.id}",
                     file: file.clone(),
                     selected: selected().contains(&file.path),
                     selected_label: &selected_label,
@@ -212,7 +210,7 @@ fn FilesGrid(
                         } else {
                             selected.remove(&file.path);
                         }
-                    },
+                    }
                 }
             }
         }
@@ -230,31 +228,30 @@ fn FileBox(
         div {
             title: "{file.name}",
             class: "flex flex-col items-center w-full h-full hover:bg-primary-50 p-2",
-            div {
-                class: "flex flex-row justify-between items-center w-full",
+            div { class: "flex flex-row justify-between items-center w-full",
                 Checkbox {
                     label: selected_label,
                     name: "selected",
                     value: selected,
-                    oninput: move |ev: Event<FormData>| onselected.call(ev.data().parsed::<bool>().throw().unwrap_or_default()),
+                    oninput: move |ev: Event<FormData>| {
+                        onselected.call(ev.data().parsed::<bool>().throw().unwrap_or_default())
+                    }
                 }
-            },
-            FileLink {
-                kind: file.kind,
-                to: &file.path,
+            }
+            FileLink { kind: file.kind, to: &file.path,
                 match file.kind {
                     FileKind::File => file_icon(FaFile, "", 80, 80),
                     FileKind::Folder => file_icon(FaFolder, "fill-primary-500", 80, 80),
-                },
-            }
-            div {
-                class: "flex flex-row justify-between items-center gap-4 p-2 w-full",
-                FileLink {
-                    kind: file.kind,
-                    to: file.path,
-                    p { class: "text-primary-500 truncate", "{file.name}" }
                 }
-                Icon { class: "fill-primary-500 grow-0 shrink-0", height: 15, width: 15, icon: FaEllipsis },
+            }
+            div { class: "flex flex-row justify-between items-center gap-4 p-2 w-full",
+                FileLink { kind: file.kind, to: file.path, p { class: "text-primary-500 truncate", "{file.name}" } }
+                Icon {
+                    class: "fill-primary-500 grow-0 shrink-0",
+                    height: 15,
+                    width: 15,
+                    icon: FaEllipsis
+                }
             }
         }
     }
@@ -275,11 +272,9 @@ fn FilesList(
     selected_label: String,
 ) -> Element {
     rsx! {
-        div {
-            class: "p-4 flex flex-col",
+        div { class: "p-4 flex flex-col",
             for file in files.items {
                 FileRow {
-                    key: "{file.id}",
                     file: file.clone(),
                     selected: selected().contains(&file.path),
                     selected_label: &selected_label,
@@ -290,7 +285,7 @@ fn FilesList(
                         } else {
                             selected.remove(&file.path);
                         }
-                    },
+                    }
                 }
             }
         }
@@ -305,33 +300,31 @@ fn FileRow(
     onselected: EventHandler<bool>,
 ) -> Element {
     rsx! {
-        div {
-            class: "flex flex-col gap-2 items-center",
-            div {
-                class: "flex flex-row flex-nowrap items-center justify-between w-full",
-                span {
-                    class: "flex flex-row flex-nowrap items-center justify-start",
+        div { class: "flex flex-col gap-2 items-center",
+            div { class: "flex flex-row flex-nowrap items-center justify-between w-full",
+                span { class: "flex flex-row flex-nowrap items-center justify-start",
                     Checkbox {
                         label: selected_label,
                         name: "selected",
                         value: selected,
-                        oninput: move |ev: Event<FormData>| onselected.call(ev.data().parsed::<bool>().throw().unwrap_or_default()),
+                        oninput: move |ev: Event<FormData>| {
+                            onselected.call(ev.data().parsed::<bool>().throw().unwrap_or_default())
+                        }
                     }
-                    FileLink {
-                        kind: file.kind,
-                        to: &file.path,
+                    FileLink { kind: file.kind, to: &file.path,
                         match file.kind {
                             FileKind::File => file_icon(FaFile, "", 40, 40),
                             FileKind::Folder => file_icon(FaFolder, "fill-primary-500", 40, 40),
                         }
                     }
-                    FileLink {
-                        kind: file.kind,
-                        to: file.path,
-                        p { "{file.name}" }
-                    }
+                    FileLink { kind: file.kind, to: file.path, p { "{file.name}" } }
                 }
-                Icon { class: "fill-primary-500 grow-0 shrink-0", height: 15, width: 15, icon: FaEllipsis },
+                Icon {
+                    class: "fill-primary-500 grow-0 shrink-0",
+                    height: 15,
+                    width: 15,
+                    icon: FaEllipsis
+                }
             }
             hr { class: "w-full h-[1px] bg-primary-300" }
         }
@@ -343,10 +336,7 @@ fn FileLink(kind: FileKind, to: String, children: Element) -> Element {
     match kind {
         FileKind::File => children,
         FileKind::Folder => rsx! {
-            Link {
-                to: Route::files(to),
-                {children}
-            }
+            Link { to: Route::files(to), {children} }
         },
     }
 }
