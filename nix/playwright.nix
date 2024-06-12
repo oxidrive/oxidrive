@@ -3,7 +3,7 @@
   perSystem = { config, pkgs, ... }:
     {
       devshells.default = {
-        env = [{ name = "PLAYWRIGHT_BROWSERS_PATH"; value = pkgs.playwright-driver.browsers; }];
+        env = [{ name = "NIX_PLAYWRIGHT_BROWSERS_PATH"; value = pkgs.playwright-driver.browsers; }];
 
         packages = with pkgs; [
           nodejs_20

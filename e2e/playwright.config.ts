@@ -1,6 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const authFile = "playwright/.auth/user.json";
+const baseURL = "http://localhost:4000";
+
+function minutes(min: number): number {
+	return min * 60 * 1000;
+}
 
 /**
  * Read environment variables from file.
@@ -19,7 +24,7 @@ export default defineConfig({
 	workers: process.env.CI ? 1 : undefined,
 	reporter: [["list"], ["html", { open: "never" }]],
 	use: {
-		baseURL: "http://127.0.0.1:5000",
+		baseURL,
 		trace: "retain-on-failure",
 	},
 
@@ -68,8 +73,11 @@ export default defineConfig({
 	],
 
 	webServer: {
-		command: "docker compose up",
-		url: "http://127.0.0.1:5000",
+		command: "just start",
+		url: baseURL,
 		reuseExistingServer: !process.env.CI,
+		timeout: minutes(5),
+		stdout: "pipe",
+		stderr: "pipe",
 	},
 });

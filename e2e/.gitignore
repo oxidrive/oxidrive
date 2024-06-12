@@ -2,3 +2,4 @@
 /playwright-report/
 /test-results/
 playwright/.auth
+/data/

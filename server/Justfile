@@ -21,7 +21,7 @@ watch:
 generate: openapi
     go generate ./...
 
-openapi:
+openapi: _install
     rm -f -- openapi/out.yml
     npx @redocly/cli@latest join -o openapi/out.yml openapi/openapi.yaml ./openapi/*.yaml
 
@@ -41,3 +41,9 @@ migration-create name:
     @for db in "postgres" "sqlite"; do \
       migrate create -dir "./migrations/$db" -ext sql {{ name }}; \
     done
+
+setup: _install
+    cp .env.example .env
+
+_install:
+    [ -d ../node_modules ] || npm install

@@ -32,7 +32,7 @@ func (s *Scheduler) Shutdown() {
 }
 
 func (s *Scheduler) Start() {
-	s.logger.Info().Int("jobs", len(s.sched.Jobs())).Msg("starting job scheduler")
+	s.logger.Debug().Int("jobs", len(s.sched.Jobs())).Msg("starting job scheduler")
 	s.sched.Start()
 }
 

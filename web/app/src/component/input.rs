@@ -97,7 +97,7 @@ pub fn Checkbox(
             "aria-label": label,
             value: value,
             disabled: disabled,
-            oninput: oninput,
+            oninput: oninput
         }
     }
 }
