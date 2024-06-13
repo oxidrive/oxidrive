@@ -26,17 +26,18 @@ func TestService_Upload(t *testing.T) {
 
 		ctx := context.Background()
 		content := strings.NewReader("")
+		ct := ContentType("text/plain")
 		filepath := Path("/filepath")
 		size := Size(10)
 		owner := user.ID(testutil.Must(uuid.NewV7()))
-		file := testutil.Must(Create(content, filepath, size, owner))
+		file := testutil.Must(Create(content, ct, filepath, size, owner))
 
 		filesMock.On("ByOwnerByPath", owner, filepath).Return((*File)(nil), nil).Once()
 		contentsMock.On("Store", mock.MatchedBy(func(f File) bool { return f.ID != file.ID && f.Path == filepath })).Return(nil).Once()
 		filesMock.On("Save", mock.MatchedBy(func(f File) bool { return f.ID != file.ID && f.Path == filepath })).Return(file, nil).Once()
 		defer contentsMock.AssertExpectations(t)
 		defer filesMock.AssertExpectations(t)
-		toUpload := FileUpload{Content: content, Path: filepath, Size: size}
+		toUpload := FileUpload{Content: content, ContentType: ct, Path: filepath, Size: size}
 
 		id, err := service.Upload(ctx, toUpload, owner)
 
@@ -136,11 +137,12 @@ func TestService_Upload(t *testing.T) {
 
 		ctx := context.Background()
 		content := strings.NewReader("")
+		ct := ContentType("text/plain")
 		filepath := Path("/filepath")
 		size := 10
 		owner := user.ID(testutil.Must(uuid.NewV7()))
 
-		file, err := Create(content, "original", Size(size), owner)
+		file, err := Create(content, ct, "original", Size(size), owner)
 		require.NoError(t, err)
 
 		filesMock.On("ByOwnerByPath", owner, filepath).Return((*File)(file), nil).Once()
@@ -148,7 +150,7 @@ func TestService_Upload(t *testing.T) {
 		filesMock.On("Save", mock.MatchedBy(func(f File) bool { return f.ID == file.ID && f.Path == filepath })).Return(file, nil).Once()
 		defer contentsMock.AssertExpectations(t)
 		defer filesMock.AssertExpectations(t)
-		toUpload := FileUpload{Content: content, Path: Path(filepath), Size: Size(size)}
+		toUpload := FileUpload{Content: content, ContentType: ct, Path: Path(filepath), Size: Size(size)}
 
 		id, err := service.Upload(ctx, toUpload, owner)
 

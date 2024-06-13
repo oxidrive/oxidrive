@@ -9,9 +9,10 @@ import (
 )
 
 type FileUpload struct {
-	Content Content
-	Path    Path
-	Size    Size
+	Content     Content
+	ContentType ContentType
+	Path        Path
+	Size        Size
 }
 
 type Service struct {
@@ -41,9 +42,9 @@ func (s *Service) Upload(ctx context.Context, upload FileUpload, owner user.ID) 
 	}
 
 	if f == nil {
-		f, err = Create(upload.Content, upload.Path, upload.Size, owner)
+		f, err = Create(upload.Content, upload.ContentType, upload.Path, upload.Size, owner)
 	} else {
-		err = f.Update(upload.Content, upload.Path, upload.Size)
+		err = f.Update(upload.Content, upload.ContentType, upload.Path, upload.Size)
 	}
 
 	if err != nil {

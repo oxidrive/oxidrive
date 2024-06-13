@@ -32,7 +32,7 @@ func Test_Create(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			file, err := Create(nil, Path(testCase.filename), 5, user.ID(testutil.Must(uuid.NewV7())))
+			file, err := Create(nil, "text/plain", Path(testCase.filename), 5, user.ID(testutil.Must(uuid.NewV7())))
 
 			if testCase.expectedFilepath != nil {
 				require.NotNil(t, file)
@@ -67,10 +67,10 @@ func Test_Update(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			file, err := Create(nil, originalPath, 5, user.ID(testutil.Must(uuid.NewV7())))
+			file, err := Create(nil, "text/plain", originalPath, 5, user.ID(testutil.Must(uuid.NewV7())))
 			require.NoError(t, err)
 
-			err = file.Update(nil, Path(testCase.filename), 5)
+			err = file.Update(nil, "text/plain", Path(testCase.filename), 5)
 
 			if testCase.expectedFilepath != nil {
 				assert.Equal(t, *testCase.expectedFilepath, string(file.Path))
@@ -98,7 +98,7 @@ func Test_Folder(t *testing.T) {
 		t.Run(testCase.testName, func(t *testing.T) {
 			t.Parallel()
 
-			file, err := Create(nil, Path(testCase.filename), 5, user.ID(testutil.Must(uuid.NewV7())))
+			file, err := Create(nil, "text/plain", Path(testCase.filename), 5, user.ID(testutil.Must(uuid.NewV7())))
 			require.NoError(t, err)
 
 			folder := file.Folder()

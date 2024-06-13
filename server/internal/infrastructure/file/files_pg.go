@@ -117,6 +117,7 @@ func (p *PgFiles) Save(ctx context.Context, f file.File) (*file.File, error) {
 	_, err = tx.ExecContext(ctx, `insert into files (
         id,
         type,
+        content_type,
         name,
         path,
         size,
@@ -127,15 +128,17 @@ func (p *PgFiles) Save(ctx context.Context, f file.File) (*file.File, error) {
         $3,
         $4,
         $5,
-        $6
+        $6,
+        $7
     )
     on conflict (id)
     do update set
       type = excluded.type,
+      content_type = excluded.content_type,
       name = excluded.name,
       path = excluded.path,
       size = excluded.size
-    ;`, f.ID.String(), f.Type, f.Name, f.Path, f.Size, f.OwnerID.String())
+    ;`, f.ID.String(), f.Type, f.ContentType, f.Name, f.Path, f.Size, f.OwnerID.String())
 
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
@@ -161,6 +164,7 @@ func (p *PgFiles) saveFolder(ctx context.Context, tx *sqlx.Tx, f *file.File) err
 	_, err := tx.ExecContext(ctx, `insert into files (
         id,
         type,
+        content_type,
         name,
         path,
         size,
@@ -171,20 +175,21 @@ func (p *PgFiles) saveFolder(ctx context.Context, tx *sqlx.Tx, f *file.File) err
         $3,
         $4,
         $5,
-        $6
+        $6,
+        $7
     )
     on conflict (path)
     do update set
       type = excluded.type,
       size = files.size + excluded.size
-    ;`, file.NewID(), file.TypeFolder, d.Name, d.Path, f.Size, f.OwnerID)
+    ;`, file.NewID(), file.TypeFolder, file.ContentTypeFolder, d.Name, d.Path, f.Size, f.OwnerID)
 
 	return err
 }
 
 func (p *PgFiles) ByID(ctx context.Context, id file.ID) (*file.File, error) {
 	var f pgFile
-	err := p.db.GetContext(ctx, &f, "select id, type, name, path, size, user_id from files where id = $1", id.String())
+	err := p.db.GetContext(ctx, &f, "select id, type, content_type, name, path, size, user_id from files where id = $1", id.String())
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -198,7 +203,7 @@ func (p *PgFiles) ByID(ctx context.Context, id file.ID) (*file.File, error) {
 
 func (p *PgFiles) ByOwnerByPath(ctx context.Context, owner user.ID, path file.Path) (*file.File, error) {
 	var f pgFile
-	err := p.db.GetContext(ctx, &f, "select id, type, name, path, size, user_id from files where user_id = $1 and path = $2", owner.String(), path)
+	err := p.db.GetContext(ctx, &f, "select id, type, content_type, name, path, size, user_id from files where user_id = $1 and path = $2", owner.String(), path)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -211,23 +216,25 @@ func (p *PgFiles) ByOwnerByPath(ctx context.Context, owner user.ID, path file.Pa
 }
 
 type pgFile struct {
-	Cursor uint64    `db:"cursor"`
-	ID     uuid.UUID `db:"id"`
-	Type   string    `db:"type"`
-	Name   string    `db:"name"`
-	Path   string    `db:"path"`
-	Size   int       `db:"size"`
-	UserID uuid.UUID `db:"user_id"`
+	Cursor      uint64    `db:"cursor"`
+	ID          uuid.UUID `db:"id"`
+	Type        string    `db:"type"`
+	ContentType string    `db:"content_type"`
+	Name        string    `db:"name"`
+	Path        string    `db:"path"`
+	Size        int       `db:"size"`
+	UserID      uuid.UUID `db:"user_id"`
 }
 
-func (sf pgFile) into() *file.File {
+func (pf pgFile) into() *file.File {
 	return &file.File{
-		ID:      file.ID(sf.ID),
-		Type:    file.Type(sf.Type),
-		Content: nil,
-		Name:    file.Name(sf.Name),
-		Path:    file.Path(sf.Path),
-		Size:    file.Size(sf.Size),
-		OwnerID: user.ID(sf.UserID),
+		ID:          file.ID(pf.ID),
+		Type:        file.Type(pf.Type),
+		Content:     nil,
+		ContentType: file.ContentType(pf.ContentType),
+		Name:        file.Name(pf.Name),
+		Path:        file.Path(pf.Path),
+		Size:        file.Size(pf.Size),
+		OwnerID:     user.ID(pf.UserID),
 	}
 }

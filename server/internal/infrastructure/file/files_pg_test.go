@@ -17,6 +17,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+const ct file.ContentType = file.ContentType("text/plain")
+
 func TestPgFiles_List(t *testing.T) {
 	t.Run("returns all files", func(t *testing.T) {
 		t.Parallel()
@@ -31,8 +33,8 @@ func TestPgFiles_List(t *testing.T) {
 
 		readerMock := strings.NewReader("")
 
-		f1 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "filepath1", 10, u.ID))))
-		f2 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "filepath2", 10, u.ID))))
+		f1 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, ct, "filepath1", 10, u.ID))))
+		f2 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, ct, "filepath2", 10, u.ID))))
 
 		ff, err := files.List(ctx, nil, list.DefaultParams)
 		require.NoError(t, err)
@@ -43,13 +45,17 @@ func TestPgFiles_List(t *testing.T) {
 		require.Equal(t, 2, len(ff.Items))
 
 		assert.Equal(t, f1.ID, ff.Items[0].ID)
+		assert.Equal(t, file.TypeFile, ff.Items[0].Type)
 		assert.Equal(t, f1.Path, ff.Items[0].Path)
 		assert.Equal(t, f1.Size, ff.Items[0].Size)
+		assert.Equal(t, f1.ContentType, ff.Items[0].ContentType)
 		assert.Equal(t, f1.OwnerID, ff.Items[0].OwnerID)
 
 		assert.Equal(t, f2.ID, ff.Items[1].ID)
+		assert.Equal(t, file.TypeFile, ff.Items[1].Type)
 		assert.Equal(t, f2.Path, ff.Items[1].Path)
 		assert.Equal(t, f2.Size, ff.Items[1].Size)
+		assert.Equal(t, f2.ContentType, ff.Items[1].ContentType)
 		assert.Equal(t, f2.OwnerID, ff.Items[1].OwnerID)
 	})
 
@@ -66,8 +72,8 @@ func TestPgFiles_List(t *testing.T) {
 
 		readerMock := strings.NewReader("")
 
-		f1 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "/filepath1", 10, u.ID))))
-		f2 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "/hello/filepath2", 10, u.ID))))
+		f1 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, ct, "/filepath1", 10, u.ID))))
+		f2 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, ct, "/hello/filepath2", 10, u.ID))))
 		d := f2.Folder()
 
 		ff, err := files.List(ctx, nil, list.Params{
@@ -90,6 +96,7 @@ func TestPgFiles_List(t *testing.T) {
 		assert.Equal(t, f1.ID, ff.Items[1].ID)
 		assert.Equal(t, f1.Name, ff.Items[1].Name)
 		assert.Equal(t, f1.Path, ff.Items[1].Path)
+		assert.Equal(t, f1.ContentType, ff.Items[1].ContentType)
 		assert.Equal(t, f1.Size, ff.Items[1].Size)
 		assert.Equal(t, f1.OwnerID, ff.Items[1].OwnerID)
 
@@ -107,6 +114,7 @@ func TestPgFiles_List(t *testing.T) {
 		assert.Equal(t, f2.ID, ff.Items[0].ID)
 		assert.Equal(t, file.TypeFile, ff.Items[0].Type)
 		assert.Equal(t, f2.Name, ff.Items[0].Name)
+		assert.Equal(t, f2.ContentType, ff.Items[0].ContentType)
 		assert.Equal(t, f2.Path, ff.Items[0].Path)
 		assert.Equal(t, f2.Size, ff.Items[0].Size)
 		assert.Equal(t, f2.OwnerID, ff.Items[0].OwnerID)
@@ -144,8 +152,8 @@ func TestPgFiles_List(t *testing.T) {
 
 		readerMock := strings.NewReader("")
 
-		f1 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "one/file", 10, u.ID))))
-		f2 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, "one/two/file", 10, u.ID))))
+		f1 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, ct, "one/file", 10, u.ID))))
+		f2 := testutil.Must(files.Save(ctx, *testutil.Must(file.Create(readerMock, ct, "one/two/file", 10, u.ID))))
 
 		d := f2.Folder()
 
@@ -162,11 +170,14 @@ func TestPgFiles_List(t *testing.T) {
 		require.Equal(t, 2, len(ff.Items))
 
 		assert.Equal(t, d.Path, ff.Items[0].Path)
+		assert.Equal(t, file.TypeFolder, ff.Items[0].Type)
 		assert.Equal(t, f2.Size, ff.Items[0].Size)
 		assert.Equal(t, f2.OwnerID, ff.Items[0].OwnerID)
 
 		assert.Equal(t, f1.ID, ff.Items[1].ID)
+		assert.Equal(t, file.TypeFile, ff.Items[1].Type)
 		assert.Equal(t, f1.Path, ff.Items[1].Path)
+		assert.Equal(t, f1.ContentType, ff.Items[1].ContentType)
 		assert.Equal(t, f1.Size, ff.Items[1].Size)
 		assert.Equal(t, f1.OwnerID, ff.Items[1].OwnerID)
 	})
@@ -184,7 +195,7 @@ func TestPgFiles_Save(t *testing.T) {
 
 		files := NewPgFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, err := file.Create(readerMock, "filepath", 10, u.ID)
+		fileToSave, err := file.Create(readerMock, ct, "filepath", 10, u.ID)
 		require.NoError(t, err)
 
 		saved, err := files.Save(ctx, *fileToSave)
@@ -193,6 +204,7 @@ func TestPgFiles_Save(t *testing.T) {
 		assert.Equal(t, file.TypeFile, saved.Type)
 		assert.Equal(t, fileToSave.Name, saved.Name)
 		assert.Equal(t, fileToSave.Path, saved.Path)
+		assert.Equal(t, fileToSave.ContentType, saved.ContentType)
 		assert.Equal(t, fileToSave.Size, saved.Size)
 	})
 
@@ -207,7 +219,7 @@ func TestPgFiles_Save(t *testing.T) {
 
 		files := NewPgFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, err := file.Create(readerMock, "/hello/world.txt", 10, u.ID)
+		fileToSave, err := file.Create(readerMock, ct, "/hello/world.txt", 10, u.ID)
 		require.NoError(t, err)
 
 		saved, err := files.Save(ctx, *fileToSave)
@@ -218,6 +230,7 @@ func TestPgFiles_Save(t *testing.T) {
 		assert.Equal(t, file.TypeFile, saved.Type)
 		assert.Equal(t, fileToSave.Name, saved.Name)
 		assert.Equal(t, fileToSave.Path, saved.Path)
+		assert.Equal(t, fileToSave.ContentType, saved.ContentType)
 		assert.Equal(t, fileToSave.Size, saved.Size)
 
 		ff, err := files.List(ctx, nil, list.DefaultParams)
@@ -235,8 +248,10 @@ func TestPgFiles_Save(t *testing.T) {
 		f := ff.Items[1]
 		assert.Equal(t, saved.ID, f.ID)
 		assert.Equal(t, saved.Type, f.Type)
+		assert.Equal(t, file.TypeFile, f.Type)
 		assert.Equal(t, saved.Name, f.Name)
 		assert.Equal(t, saved.Path, f.Path)
+		assert.Equal(t, saved.ContentType, f.ContentType)
 		assert.Equal(t, saved.Size, f.Size)
 	})
 
@@ -251,13 +266,13 @@ func TestPgFiles_Save(t *testing.T) {
 
 		files := NewPgFiles(db)
 		readerMock := strings.NewReader("")
-		file1, err := file.Create(readerMock, "/hello/one.txt", 10, u.ID)
+		file1, err := file.Create(readerMock, ct, "/hello/one.txt", 10, u.ID)
 		require.NoError(t, err)
 
 		saved1, err := files.Save(ctx, *file1)
 		require.NoError(t, err)
 
-		file2, err := file.Create(readerMock, "/hello/world.txt", 32, u.ID)
+		file2, err := file.Create(readerMock, ct, "/hello/world.txt", 32, u.ID)
 		require.NoError(t, err)
 
 		saved2, err := files.Save(ctx, *file2)
@@ -281,16 +296,18 @@ func TestPgFiles_Save(t *testing.T) {
 
 		f1 := ff.Items[1]
 		assert.Equal(t, saved1.ID, f1.ID)
-		assert.Equal(t, saved1.Type, f1.Type)
+		assert.Equal(t, file.TypeFile, f1.Type)
 		assert.Equal(t, saved1.Name, f1.Name)
 		assert.Equal(t, saved1.Path, f1.Path)
+		assert.Equal(t, saved1.ContentType, f1.ContentType)
 		assert.Equal(t, saved1.Size, f1.Size)
 
 		f2 := ff.Items[2]
 		assert.Equal(t, saved2.ID, f2.ID)
-		assert.Equal(t, saved2.Type, f2.Type)
+		assert.Equal(t, file.TypeFile, f2.Type)
 		assert.Equal(t, saved2.Name, f2.Name)
 		assert.Equal(t, saved2.Path, f2.Path)
+		assert.Equal(t, saved2.ContentType, f2.ContentType)
 		assert.Equal(t, saved2.Size, f2.Size)
 	})
 
@@ -305,25 +322,31 @@ func TestPgFiles_Save(t *testing.T) {
 
 		files := NewPgFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, err := file.Create(readerMock, "filepath", 10, u.ID)
+		fileToSave, err := file.Create(readerMock, ct, "filepath", 10, u.ID)
 		require.NoError(t, err)
 
 		saved, err := files.Save(ctx, *fileToSave)
 
 		assert.NoError(t, err)
 		assert.Equal(t, fileToSave.Name, saved.Name)
+		assert.Equal(t, file.TypeFile, saved.Type)
 		assert.Equal(t, fileToSave.Path, saved.Path)
+		assert.Equal(t, fileToSave.ContentType, saved.ContentType)
 		assert.Equal(t, fileToSave.Size, saved.Size)
 
 		fileToSave.Name = "changed"
 		fileToSave.Path = "changed"
+		fileToSave.ContentType = "image/png"
 		fileToSave.Size = 20
 
 		saved, err = files.Save(ctx, *fileToSave)
 
 		assert.NoError(t, err)
 		assert.Equal(t, fileToSave.Name, saved.Name)
+		assert.Equal(t, file.TypeFile, saved.Type)
 		assert.Equal(t, fileToSave.Path, saved.Path)
+		assert.Equal(t, fileToSave.Path, saved.Path)
+		assert.Equal(t, fileToSave.ContentType, saved.ContentType)
 		assert.Equal(t, fileToSave.Size, saved.Size)
 	})
 
@@ -339,7 +362,7 @@ func TestPgFiles_Save(t *testing.T) {
 
 		files := NewPgFiles(db)
 		readerMock := strings.NewReader("")
-		fileToSave, err := file.Create(readerMock, "filepath", 10, u.ID)
+		fileToSave, err := file.Create(readerMock, ct, "filepath", 10, u.ID)
 		require.NoError(t, err)
 
 		saved, err := files.Save(ctx, *fileToSave)
@@ -362,19 +385,21 @@ func TestPgFiles_ByID(t *testing.T) {
 		files := NewPgFiles(db)
 
 		readerMock := strings.NewReader("")
-		file, err := file.Create(readerMock, "filepath", 10, u.ID)
+		f, err := file.Create(readerMock, ct, "filepath", 10, u.ID)
 		require.NoError(t, err)
 
-		file, err = files.Save(ctx, *file)
+		f, err = files.Save(ctx, *f)
 		require.NoError(t, err)
 
-		found, err := files.ByID(ctx, file.ID)
+		found, err := files.ByID(ctx, f.ID)
 		assert.NoError(t, err)
-		assert.Equal(t, file.ID, found.ID)
-		assert.Equal(t, file.Name, found.Name)
-		assert.Equal(t, file.Path, found.Path)
-		assert.Equal(t, file.Size, found.Size)
-		assert.Equal(t, file.OwnerID, found.OwnerID)
+		assert.Equal(t, f.ID, found.ID)
+		assert.Equal(t, file.TypeFile, found.Type)
+		assert.Equal(t, f.Name, found.Name)
+		assert.Equal(t, f.Path, found.Path)
+		assert.Equal(t, f.ContentType, found.ContentType)
+		assert.Equal(t, f.Size, found.Size)
+		assert.Equal(t, f.OwnerID, found.OwnerID)
 	})
 
 	t.Run("returns nil if the file doesn't exist", func(t *testing.T) {
@@ -406,19 +431,21 @@ func TestPgFiles_ByOwnerByPath(t *testing.T) {
 		files := NewPgFiles(db)
 
 		readerMock := strings.NewReader("")
-		file, err := file.Create(readerMock, "filepath", 10, u.ID)
+		f, err := file.Create(readerMock, ct, "filepath", 10, u.ID)
 		require.NoError(t, err)
 
-		file, err = files.Save(ctx, *file)
+		f, err = files.Save(ctx, *f)
 		require.NoError(t, err)
 
-		found, err := files.ByOwnerByPath(ctx, u.ID, file.Path)
+		found, err := files.ByOwnerByPath(ctx, u.ID, f.Path)
 		assert.NoError(t, err)
-		assert.Equal(t, file.ID, found.ID)
-		assert.Equal(t, file.Name, found.Name)
-		assert.Equal(t, file.Path, found.Path)
-		assert.Equal(t, file.Size, found.Size)
-		assert.Equal(t, file.OwnerID, found.OwnerID)
+		assert.Equal(t, f.ID, found.ID)
+		assert.Equal(t, file.TypeFile, found.Type)
+		assert.Equal(t, f.Name, found.Name)
+		assert.Equal(t, f.Path, found.Path)
+		assert.Equal(t, f.ContentType, found.ContentType)
+		assert.Equal(t, f.Size, found.Size)
+		assert.Equal(t, f.OwnerID, found.OwnerID)
 	})
 
 	t.Run("returns nil if the file doesn't exist", func(t *testing.T) {

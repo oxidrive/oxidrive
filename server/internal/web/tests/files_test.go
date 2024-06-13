@@ -43,15 +43,17 @@ func TestApi_Files_List(t *testing.T) {
 		size := len(body)
 
 		id1 := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
-			Content: file.Content(strings.NewReader(body)),
-			Path:    file.Path("/hello.txt"),
-			Size:    file.Size(size),
+			Content:     file.Content(strings.NewReader(body)),
+			ContentType: file.ContentType("text/plain"),
+			Path:        file.Path("/hello.txt"),
+			Size:        file.Size(size),
 		}, u.ID))
 
 		id2 := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
-			Content: file.Content(strings.NewReader(body)),
-			Path:    file.Path("/something/else.txt"),
-			Size:    file.Size(size),
+			Content:     file.Content(strings.NewReader(body)),
+			ContentType: file.ContentType("text/plain"),
+			Path:        file.Path("/something/else.txt"),
+			Size:        file.Size(size),
 		}, u.ID))
 
 		var resp api.FileList
@@ -72,22 +74,27 @@ func TestApi_Files_List(t *testing.T) {
 		require.Nil(t, resp.Next)
 		assert.Equal(t, len(resp.Items), resp.Count)
 
-		assert.Equal(t, "something", resp.Items[0].Name)
+		x := resp.Items[0]
+		assert.Equal(t, "something", x.Name)
 		assert.Equal(t, "/something", resp.Items[0].Path)
 		assert.Equal(t, api.FileTypeFolder, resp.Items[0].Type)
 		assert.Equal(t, size, resp.Items[0].Size)
 
-		assert.Equal(t, id1.AsUUID(), resp.Items[1].Id)
-		assert.Equal(t, api.FileTypeFile, resp.Items[1].Type)
-		assert.Equal(t, "hello.txt", resp.Items[1].Name)
-		assert.Equal(t, "/hello.txt", resp.Items[1].Path)
-		assert.Equal(t, size, resp.Items[1].Size)
+		f1 := resp.Items[1]
+		assert.Equal(t, id1.AsUUID(), f1.Id)
+		assert.Equal(t, api.FileTypeFile, f1.Type)
+		assert.Equal(t, "text/plain", f1.ContentType)
+		assert.Equal(t, "hello.txt", f1.Name)
+		assert.Equal(t, "/hello.txt", f1.Path)
+		assert.Equal(t, size, f1.Size)
 
-		assert.Equal(t, id2.AsUUID(), resp.Items[2].Id)
-		assert.Equal(t, api.FileTypeFile, resp.Items[2].Type)
-		assert.Equal(t, "else.txt", resp.Items[2].Name)
-		assert.Equal(t, "/something/else.txt", resp.Items[2].Path)
-		assert.Equal(t, size, resp.Items[2].Size)
+		f2 := resp.Items[2]
+		assert.Equal(t, id2.AsUUID(), f2.Id)
+		assert.Equal(t, api.FileTypeFile, f2.Type)
+		assert.Equal(t, "text/plain", f2.ContentType)
+		assert.Equal(t, "else.txt", f2.Name)
+		assert.Equal(t, "/something/else.txt", f2.Path)
+		assert.Equal(t, size, f2.Size)
 	})
 
 	t.Run("returns uploaded files with a specific prefix", func(t *testing.T) {
@@ -113,15 +120,17 @@ func TestApi_Files_List(t *testing.T) {
 		size := len(body)
 
 		id := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
-			Content: file.Content(strings.NewReader(body)),
-			Path:    file.Path(path),
-			Size:    file.Size(size),
+			Content:     file.Content(strings.NewReader(body)),
+			ContentType: file.ContentType("text/plain"),
+			Path:        file.Path(path),
+			Size:        file.Size(size),
 		}, u.ID))
 
 		_ = testutil.Must(app.Files().Upload(ctx, file.FileUpload{
-			Content: file.Content(strings.NewReader("")),
-			Path:    file.Path("/path/to/something/else.txt"),
-			Size:    file.Size(0),
+			Content:     file.Content(strings.NewReader("")),
+			ContentType: file.ContentType("text/plain"),
+			Path:        file.Path("/path/to/something/else.txt"),
+			Size:        file.Size(0),
 		}, u.ID))
 
 		var resp api.FileList
@@ -152,6 +161,7 @@ func TestApi_Files_List(t *testing.T) {
 		f := resp.Items[1]
 		assert.Equal(t, id.AsUUID(), f.Id)
 		assert.Equal(t, api.FileTypeFile, f.Type)
+		assert.Equal(t, "text/plain", f.ContentType)
 		assert.Equal(t, "hello.txt", f.Name)
 		assert.Equal(t, path, f.Path)
 		assert.Equal(t, size, f.Size)
@@ -180,15 +190,17 @@ func TestApi_Files_List(t *testing.T) {
 		size := len(body)
 
 		id := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
-			Content: file.Content(strings.NewReader(body)),
-			Path:    file.Path(path),
-			Size:    file.Size(size),
+			Content:     file.Content(strings.NewReader(body)),
+			ContentType: file.ContentType("text/plain"),
+			Path:        file.Path(path),
+			Size:        file.Size(size),
 		}, u.ID))
 
 		_ = testutil.Must(app.Files().Upload(ctx, file.FileUpload{
-			Content: file.Content(strings.NewReader("")),
-			Path:    file.Path("/path/to/something/else.txt"),
-			Size:    file.Size(0),
+			Content:     file.Content(strings.NewReader("")),
+			ContentType: file.ContentType("text/plain"),
+			Path:        file.Path("/path/to/something/else.txt"),
+			Size:        file.Size(0),
 		}, u.ID))
 
 		var resp api.FileList
@@ -213,6 +225,7 @@ func TestApi_Files_List(t *testing.T) {
 		f := resp.Items[0]
 		assert.Equal(t, id.AsUUID(), f.Id)
 		assert.Equal(t, api.FileTypeFile, f.Type)
+		assert.Equal(t, "text/plain", f.ContentType)
 		assert.Equal(t, "hello.txt", f.Name)
 		assert.Equal(t, path, f.Path)
 		assert.Equal(t, size, f.Size)
@@ -240,10 +253,12 @@ func TestApi_Files_Upload(t *testing.T) {
 		tkn, u, err := app.Auth().AuthenticateWithPassword(ctx, username, password)
 		require.NoError(t, err)
 
-		path := "/hello/test.txt"
+		path := "/test.txt"
+		content := []byte("hello world!")
+		size := len(content)
 		fpath := filepath.Join(dir, "test.txt")
 
-		require.NoError(t, os.WriteFile(fpath, []byte("hello world!"), 0700))
+		require.NoError(t, os.WriteFile(fpath, content, 0700))
 
 		var resp api.FileUploadResponse
 
@@ -268,5 +283,32 @@ func TestApi_Files_Upload(t *testing.T) {
 		assert.NotNil(t, fi)
 		assert.Equal(t, fi.Path, file.Path(path))
 		assert.Equal(t, fi.OwnerID, u.ID)
+
+		var list api.FileList
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Get("/api/files").
+			Query("prefix", "/").
+			WithContext(ctx).
+			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusOK).
+			End().
+			JSON(&list)
+
+		assert.Equal(t, 1, list.Count)
+		assert.Equal(t, 1, list.Total)
+		require.Nil(t, list.Next)
+		assert.Equal(t, len(list.Items), list.Count)
+
+		f := list.Items[0]
+		assert.Equal(t, api.FileTypeFile, f.Type)
+		assert.Equal(t, "text/plain; charset=utf-8", f.ContentType)
+		assert.Equal(t, "test.txt", f.Name)
+		assert.Equal(t, path, f.Path)
+		assert.Equal(t, size, f.Size)
+
 	})
 }

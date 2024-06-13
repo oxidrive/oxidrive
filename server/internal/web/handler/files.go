@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/rs/zerolog"
 
 	"github.com/oxidrive/oxidrive/server/internal/app"
@@ -49,11 +50,12 @@ func (f *Files) List(ctx context.Context, request api.FilesListRequestObject) (a
 		}
 
 		items[i] = api.File{
-			Id:   fi.ID.AsUUID(),
-			Type: typ,
-			Name: string(fi.Name),
-			Path: string(fi.Path),
-			Size: int(fi.Size),
+			Id:          fi.ID.AsUUID(),
+			Type:        typ,
+			ContentType: string(fi.ContentType),
+			Name:        string(fi.Name),
+			Path:        string(fi.Path),
+			Size:        int(fi.Size),
 		}
 	}
 
@@ -97,10 +99,16 @@ func (f *Files) Upload(ctx context.Context, request api.FilesUploadRequestObject
 		return nil, err
 	}
 
+	ct, err := mimetype.DetectReader(ff)
+	if err != nil {
+		return nil, err
+	}
+
 	upload := file.FileUpload{
-		Content: file.Content(ff),
-		Path:    file.Path(p),
-		Size:    file.Size(fh.Size),
+		Content:     file.Content(ff),
+		ContentType: file.ContentType(ct.String()),
+		Path:        file.Path(p),
+		Size:        file.Size(fh.Size),
 	}
 
 	id, err := f.App.Files().Upload(ctx, upload, owner.ID)

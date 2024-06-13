@@ -19,6 +19,7 @@ type Content io.Reader
 type Path string
 type Name string
 type Size int
+type ContentType string
 
 func EmptyID() ID {
 	return ID(uuid.UUID{})
@@ -56,6 +57,8 @@ type Type string
 const (
 	TypeFile   Type = "file"
 	TypeFolder Type = "folder"
+
+	ContentTypeFolder ContentType = "application/x-folder"
 )
 
 type Folder struct {
@@ -64,16 +67,17 @@ type Folder struct {
 }
 
 type File struct {
-	ID      ID
-	Type    Type
-	Content Content
-	Name    Name
-	Path    Path
-	Size    Size
-	OwnerID user.ID
+	ID          ID
+	Type        Type
+	ContentType ContentType
+	Content     Content
+	Name        Name
+	Path        Path
+	Size        Size
+	OwnerID     user.ID
 }
 
-func Create(content Content, p Path, size Size, ownerID user.ID) (*File, error) {
+func Create(content Content, ct ContentType, p Path, size Size, ownerID user.ID) (*File, error) {
 	p, err := ParsePath(string(p))
 	if err != nil {
 		return nil, err
@@ -82,17 +86,18 @@ func Create(content Content, p Path, size Size, ownerID user.ID) (*File, error) 
 	name := Name(path.Base(string(p)))
 
 	return &File{
-		ID:      NewID(),
-		Type:    TypeFile,
-		Content: content,
-		Name:    name,
-		Path:    p,
-		Size:    size,
-		OwnerID: ownerID,
+		ID:          NewID(),
+		Type:        TypeFile,
+		Content:     content,
+		ContentType: ct,
+		Name:        name,
+		Path:        p,
+		Size:        size,
+		OwnerID:     ownerID,
 	}, nil
 }
 
-func (f *File) Update(content Content, p Path, size Size) error {
+func (f *File) Update(content Content, ct ContentType, p Path, size Size) error {
 	if f.Type != TypeFile {
 		return ErrFolderUpdate
 	}
@@ -103,6 +108,7 @@ func (f *File) Update(content Content, p Path, size Size) error {
 	}
 
 	f.Content = content
+	f.ContentType = ct
 	f.Name = p.Name()
 	f.Path = p
 	f.Size = size
