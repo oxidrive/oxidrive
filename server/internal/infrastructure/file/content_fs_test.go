@@ -30,7 +30,7 @@ func TestContentFS_Store(t *testing.T) {
 
 		path := testutil.TempDirFromContext(ctx, t)
 		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
-		f, err := file.Create(fileContent, "this/dir/without_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
+		f, err := file.Create(fileContent, "text/plain", "this/dir/without_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
 		require.NoError(t, err)
 
 		err = content.Store(context.Background(), *f)
@@ -47,7 +47,7 @@ func TestContentFS_Store(t *testing.T) {
 
 		path := testutil.TempDirFromContext(ctx, t)
 		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
-		f, err := file.Create(fileContent, "this/dir/timeout_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
+		f, err := file.Create(fileContent, "text/plain", "this/dir/timeout_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
 		require.NoError(t, err)
 		ctx, cancel := context.WithTimeout(context.Background(), 0*time.Nanosecond)
 		defer cancel()
@@ -67,7 +67,7 @@ func TestContentFS_Store(t *testing.T) {
 
 		path := testutil.TempDirFromContext(ctx, t)
 		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
-		f, err := file.Create(fileContent, "this/dir/ctx_cancelled_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
+		f, err := file.Create(fileContent, "text/plain", "this/dir/ctx_cancelled_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
 		require.NoError(t, err)
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()

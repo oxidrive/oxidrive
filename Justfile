@@ -30,7 +30,7 @@ act *args:
 test e2e="test":
     @just server/test-integration
     @just web/test
-    @just e2e/rebuild && just e2e/{{ e2e }}
+    @just e2e/{{ e2e }}
 
 release:
     rm -rf release && mkdir -p release/staging

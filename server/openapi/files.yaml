@@ -66,6 +66,7 @@ components:
       required:
         - id
         - type
+        - contentType
         - path
         - name
         - size
@@ -76,6 +77,9 @@ components:
         type:
           type: string
           enum: [file, folder]
+        contentType:
+          type: string
+          example: "image/png"
         path:
           type: string
           format: path
