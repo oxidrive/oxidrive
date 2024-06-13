@@ -3,6 +3,7 @@
 !Cargo.toml
 !go.mod
 !go.sum
+!package*.json
 !rust-toolchain.toml
 
 !server/Justfile
@@ -19,5 +20,4 @@ server/openapi/out.yml
 !web/app/assets
 !web/app/index.html
 !web/app/input.css
-!web/app/package*.json
 !web/app/tailwind.config.js

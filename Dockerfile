@@ -1,10 +1,20 @@
-FROM ghcr.io/redocly/cli as openapi
+FROM node:20-alpine as npm-tools
+
+WORKDIR /app
+
+COPY package*.json .
+
+RUN npm ci
+
+# ========================================================================= #
+
+FROM npm-tools as openapi
 
 WORKDIR /app
 
 COPY server/openapi .
 
-RUN redocly join -o out.yml openapi.yaml ./*.yaml
+RUN npx redocly join -o out.yml openapi.yaml ./*.yaml
 
 # ========================================================================= #
 
@@ -24,13 +34,9 @@ RUN go build -o ./bin/oxidrive ./server/cmd/oxidrive
 
 # ========================================================================= #
 
-FROM node:20-alpine as css-build
+FROM npm-tools as css-build
 
 WORKDIR /app
-
-COPY web/app/package*.json .
-
-RUN npm ci
 
 COPY web/app .
 
