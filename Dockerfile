@@ -44,15 +44,7 @@ RUN npx tailwindcss -i ./input.css -o ./output.css
 
 # ========================================================================= #
 
-FROM rust:1-slim as web-build
-
-RUN apt-get update && apt-get install wget -y
-
-RUN wget -O /tmp/cargo-binstall.tgz https://github.com/cargo-bins/cargo-binstall/releases/download/v1.6.4/cargo-binstall-x86_64-unknown-linux-musl.tgz && \
-    tar -xzf /tmp/cargo-binstall.tgz -C /tmp && \
-    mv /tmp/cargo-binstall /usr/bin/cargo-binstall
-
-RUN cargo binstall -y --no-discover-github-token --disable-strategies=compile dioxus-cli@0.5.4
+FROM ghcr.io/oxidrive/ci/dioxus-cli:0.5.4 as web-build
 
 WORKDIR /app
 
