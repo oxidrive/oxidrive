@@ -42,3 +42,4 @@ tokio = "1"
 unic-langid = { version = "0.9.4", features = ["macros"] }
 wasm-bindgen = "0.2.92"
 web-sys = "0.3.68"
+uuid = { version = "1", features = ["js", "serde", "v4", "v7"] }

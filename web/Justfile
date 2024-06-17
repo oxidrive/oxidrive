@@ -19,7 +19,8 @@ watch-app: setup
 
 watch-styles: setup
     #!/usr/bin/env sh
-    npx tailwindcss -i ./app/input.css -o ./app/assets/styles.css --watch
+    cd app
+    npx tailwindcss -i ./input.css -o ./assets/styles.css --watch
 
 test:
     cargo nextest run --all --all-features --all-targets
@@ -43,3 +44,16 @@ fmt-check:
 check:
     cargo check --all --tests --all-features --all-targets
 
+generate-models:
+    docker run \
+      -u=$(id -u):$(id -g) \
+      --rm \
+      -v $PWD/..:/local \
+      openapitools/openapi-generator-cli \
+      generate \
+      -i /local/server/openapi/out.yml \
+      -g rust \
+      -o /local/web/api/ \
+      --global-property models,modelDocs=false \
+      --additional-properties=avoidBoxedModels=true,bestFitInt=true,preferUnsignedInt=true \
+      --skip-validate-spec

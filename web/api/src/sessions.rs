@@ -1,35 +1,7 @@
-use chrono::{DateTime, Utc};
-use serde::{Deserialize, Serialize};
-use strum::Display;
-
-use crate::{ApiErrorFromResponse, ApiResult, Client};
-
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Display)]
-#[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
-pub enum ErrorKind {
-    AuthenticationFailed,
-    #[serde(other)]
-    UnknownError,
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct SessionRequest {
-    pub credentials: Credentials,
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-#[serde(tag = "kind", rename_all = "snake_case")]
-pub enum Credentials {
-    Password { username: String, password: String },
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Session {
-    pub token: String,
-    pub expires_at: DateTime<Utc>,
-}
+use crate::{
+    models::{session_request::SessionRequest, Session},
+    ApiErrorFromResponse, ApiResult, Client,
+};
 
 pub struct SessionService {
     client: Client,
@@ -40,7 +12,7 @@ impl SessionService {
         Self { client }
     }
 
-    pub async fn create(&self, request: SessionRequest) -> ApiResult<Session, ErrorKind> {
+    pub async fn create(&self, request: SessionRequest) -> ApiResult<Session> {
         let response = self
             .client
             .post("/api/sessions")
@@ -59,16 +31,19 @@ impl SessionService {
 mod tests {
     use super::*;
     use crate::{
+        models::{credentials, Credentials, Error, Session},
         tests::{json, json_val},
-        ApiError, ErrorResponse, Oxidrive,
+        ApiError, Oxidrive,
     };
     use assert2::{check, let_assert};
+    use chrono::Utc;
     use mockito::Matcher;
 
     #[tokio::test]
     async fn it_creates_a_new_session_with_username_and_password() {
         let request = SessionRequest {
-            credentials: Credentials::Password {
+            credentials: Credentials {
+                kind: credentials::Kind::Password,
                 username: "test".into(),
                 password: "test".into(),
             },
@@ -76,7 +51,7 @@ mod tests {
 
         let expected = Session {
             token: "token".into(),
-            expires_at: Utc::now(),
+            expires_at: Utc::now().to_rfc3339(),
         };
 
         let mut server = mockito::Server::new_async().await;
@@ -100,14 +75,15 @@ mod tests {
     #[tokio::test]
     async fn it_handles_a_401_response() {
         let request = SessionRequest {
-            credentials: Credentials::Password {
+            credentials: Credentials {
+                kind: credentials::Kind::Password,
                 username: "test".into(),
                 password: "test".into(),
             },
         };
 
-        let expected = ErrorResponse {
-            error: ErrorKind::AuthenticationFailed,
+        let expected = Error {
+            error: "authentication_failed".into(),
             message: "authentication failed".into(),
         };
 

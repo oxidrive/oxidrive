@@ -11,8 +11,9 @@ use crate::{
 use dioxus::prelude::*;
 use dioxus_free_icons::{icons::fa_solid_icons::*, Icon, IconShape};
 use oxidrive_api::{
-    files::{File, FileKind, FileUpload, ListFilesParams},
-    ApiError, List,
+    files::{FileUpload, ListFilesParams},
+    models::{file, File, FileList},
+    ApiError,
 };
 use web_sys::{Document, HtmlInputElement};
 
@@ -52,7 +53,7 @@ pub fn Files(path: Vec<String>) -> Element {
         }
     };
 
-    let selected = use_signal(|| HashSet::with_capacity(files.count));
+    let selected = use_signal(|| HashSet::with_capacity(files.count as usize));
 
     rsx! {
         main { class: "bg-primary-500 w-full min-h-dvh",
@@ -115,11 +116,7 @@ pub fn Files(path: Vec<String>) -> Element {
                                                 )
                                             }
                                             Err(err) => {
-                                                Result::<
-                                                    (),
-                                                    ApiError<oxidrive_api::files::ErrorKind>,
-                                                >::Err(err)
-                                                    .throw();
+                                                Result::<(), ApiError>::Err(err).throw();
                                             }
                                         }
                                     }
@@ -170,7 +167,7 @@ fn ActionBar(mut view_mode: Signal<ViewMode>) -> Element {
 
 #[component]
 fn FilesView(
-    files: List<File>,
+    files: FileList,
     view_mode: Signal<ViewMode>,
     selected: Signal<HashSet<String>>,
     selected_label: String,
@@ -192,7 +189,7 @@ fn FilesView(
 }
 
 fn FilesGrid(
-    files: List<File>,
+    files: FileList,
     mut selected: Signal<HashSet<String>>,
     selected_label: String,
 ) -> Element {
@@ -238,14 +235,11 @@ fn FileBox(
                     }
                 }
             }
-            FileLink { kind: file.kind, to: &file.path,
-                match file.kind {
-                    FileKind::File => file_icon(FaFile, "", 80, 80),
-                    FileKind::Folder => file_icon(FaFolder, "fill-primary-500", 80, 80),
-                }
+            FileLink { kind: file.r#type, to: &file.path,
+                       {file_icon(&file, 80, 80)}
             }
             div { class: "flex flex-row justify-between items-center gap-4 p-2 w-full",
-                FileLink { kind: file.kind, to: file.path, p { class: "text-primary-500 truncate", "{file.name}" } }
+                FileLink { kind: file.r#type, to: file.path, p { class: "text-primary-500 truncate", "{file.name}" } }
                 Icon {
                     class: "fill-primary-500 grow-0 shrink-0",
                     height: 15,
@@ -257,7 +251,19 @@ fn FileBox(
     }
 }
 
-fn file_icon<I: IconShape + Clone + PartialEq + 'static>(
+fn file_icon(file: &File, height: u32, width: u32) -> Element {
+    match file.r#type {
+        file::Type::File => match file.content_type.as_str() {
+            ct if ct.starts_with("image/") => entry_icon(FaImage, "", height, width),
+            "application/pdf" => entry_icon(FaFilePdf, "", height, width),
+            "application/json" | "application/xml" => entry_icon(FaFileCode, "", height, width),
+            _ => entry_icon(FaFile, "", height, width),
+        },
+        file::Type::Folder => entry_icon(FaFolder, "fill-primary-500", height, width),
+    }
+}
+
+fn entry_icon<I: IconShape + Clone + PartialEq + 'static>(
     icon: I,
     class: &'static str,
     height: u32,
@@ -267,7 +273,7 @@ fn file_icon<I: IconShape + Clone + PartialEq + 'static>(
 }
 
 fn FilesList(
-    files: List<File>,
+    files: FileList,
     mut selected: Signal<HashSet<String>>,
     selected_label: String,
 ) -> Element {
@@ -311,13 +317,10 @@ fn FileRow(
                             onselected.call(ev.data().parsed::<bool>().throw().unwrap_or_default())
                         }
                     }
-                    FileLink { kind: file.kind, to: &file.path,
-                        match file.kind {
-                            FileKind::File => file_icon(FaFile, "", 40, 40),
-                            FileKind::Folder => file_icon(FaFolder, "fill-primary-500", 40, 40),
-                        }
+                    FileLink { kind: file.r#type, to: &file.path,
+                       {file_icon(&file, 40, 40)}
                     }
-                    FileLink { kind: file.kind, to: file.path, p { "{file.name}" } }
+                    FileLink { kind: file.r#type, to: file.path, p { "{file.name}" } }
                 }
                 Icon {
                     class: "fill-primary-500 grow-0 shrink-0",
@@ -332,10 +335,10 @@ fn FileRow(
 }
 
 #[component]
-fn FileLink(kind: FileKind, to: String, children: Element) -> Element {
+fn FileLink(kind: file::Type, to: String, children: Element) -> Element {
     match kind {
-        FileKind::File => children,
-        FileKind::Folder => rsx! {
+        file::Type::File => children,
+        file::Type::Folder => rsx! {
             Link { to: Route::files(to), {children} }
         },
     }

@@ -2,31 +2,11 @@ use std::borrow::Cow;
 
 use reqwest::multipart::{Form, Part};
 use serde::{Deserialize, Serialize};
-use strum::Display;
 
-use crate::{ApiErrorFromResponse, ApiResult, Client, List};
-
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Display)]
-#[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
-pub enum ErrorKind {
-    #[serde(other)]
-    UnknownError,
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FileUpload {
-    pub filename: String,
-    pub content: Vec<u8>,
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct UploadResponse {
-    pub ok: bool,
-    pub id: String,
-}
+use crate::{
+    models::{file_list::FileList, file_upload_response::FileUploadResponse},
+    ApiErrorFromResponse, ApiResult, Client,
+};
 
 #[derive(Clone, Debug, Default, Serialize)]
 pub struct ListFilesParams {
@@ -35,29 +15,11 @@ pub struct ListFilesParams {
     pub prefix: Option<String>,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Deserialize, Serialize, Display)]
-#[serde(rename_all = "camelCase")]
-#[strum(serialize_all = "snake_case")]
-pub enum FileKind {
-    File,
-    Folder,
-}
-
 #[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct File {
-    pub id: String,
-    #[serde(rename = "type")]
-    pub kind: FileKind,
-    pub path: String,
-    pub name: String,
-    pub size: usize,
-}
-
-impl File {
-    pub fn is_folder(&self) -> bool {
-        matches!(self.kind, FileKind::Folder)
-    }
+pub struct FileUpload {
+    pub filename: String,
+    pub content: Vec<u8>,
 }
 
 pub struct FileService {
@@ -69,7 +31,7 @@ impl FileService {
         Self { client }
     }
 
-    pub async fn list(&self, params: ListFilesParams) -> ApiResult<List<File>, ErrorKind> {
+    pub async fn list(&self, params: ListFilesParams) -> ApiResult<FileList> {
         let response = self
             .client
             .get("/api/files")
@@ -87,7 +49,7 @@ impl FileService {
         &self,
         path: impl Into<Cow<'static, str>>,
         file: FileUpload,
-    ) -> ApiResult<UploadResponse, ErrorKind> {
+    ) -> ApiResult<FileUploadResponse> {
         let file = Part::bytes(file.content).file_name(file.filename);
         let form = Form::new().text("path", path).part("file", file);
         let req = self.client.post("/api/files");
@@ -107,9 +69,14 @@ impl FileService {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{tests::json, Oxidrive};
+    use crate::{
+        models::file::{self, File},
+        tests::json,
+        Oxidrive,
+    };
     use assert2::check;
     use mockito::Matcher;
+    use uuid::Uuid;
 
     #[tokio::test]
     async fn it_uploads_a_file() {
@@ -119,7 +86,7 @@ mod tests {
         let content = b"hello!".to_vec();
         let filename = "hello.txt".to_string();
 
-        let expected = UploadResponse {
+        let expected = FileUploadResponse {
             ok: true,
             id: "test".into(),
         };
@@ -151,13 +118,14 @@ mod tests {
     async fn it_lists_all_files_with_a_prefix() {
         env_logger::init();
 
-        let expected = List {
+        let expected = FileList {
             count: 1,
             total: 42,
             next: Some("next".into()),
             items: vec![File {
-                id: "some-file".into(),
-                kind: FileKind::File,
+                id: Uuid::new_v4(),
+                content_type: "text/plain".into(),
+                r#type: file::Type::File,
                 path: "/path/to/file.txt".into(),
                 name: "file.txt".into(),
                 size: 42,
@@ -196,13 +164,14 @@ mod tests {
     async fn it_lists_all_files_using_default_params() {
         env_logger::init();
 
-        let expected = List {
+        let expected = FileList {
             count: 1,
             total: 42,
             next: Some("next".into()),
             items: vec![File {
-                id: "some-file".into(),
-                kind: FileKind::File,
+                id: Uuid::new_v4(),
+                content_type: "text/plain".into(),
+                r#type: file::Type::File,
                 path: "/path/to/file.txt".into(),
                 name: "file.txt".into(),
                 size: 42,

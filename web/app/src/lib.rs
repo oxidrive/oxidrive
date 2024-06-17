@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use std::fmt::{Debug, Display};
+use std::fmt::Debug;
 
 use crate::{route::Route, toast::Toasts};
 use dioxus::{dioxus_core::CapturedError, prelude::*};
@@ -36,11 +36,11 @@ pub struct GenericError {
     message: String,
 }
 
-impl<T: Display + Debug> From<ApiError<T>> for GenericError {
-    fn from(err: ApiError<T>) -> Self {
+impl From<ApiError> for GenericError {
+    fn from(err: ApiError) -> Self {
         match err {
             ApiError::Api(err) => Self {
-                error: err.error.to_string(),
+                error: err.error,
                 message: err.message,
             },
             ApiError::Network(err) => Self {

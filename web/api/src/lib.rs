@@ -2,19 +2,18 @@ use std::{fmt::Display, sync::Arc};
 
 use files::FileService;
 use instance::InstanceService;
+use models::error::Error;
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     RequestBuilder, Url,
 };
-use serde::{de::DeserializeOwned, Deserialize, Serialize};
 use sessions::SessionService;
+
+pub mod models;
 
 pub mod files;
 pub mod instance;
 pub mod sessions;
-
-mod list;
-pub use list::*;
 
 static USER_AGENT: &str = concat!("oxidrive-web", "/", env!("CARGO_PKG_VERSION"));
 
@@ -109,29 +108,22 @@ impl Client {
     }
 }
 
-#[derive(Clone, Debug, thiserror::Error, PartialEq, Deserialize, Serialize)]
-#[error("error ({error}): {message}")]
-pub struct ErrorResponse<E: Display> {
-    pub error: E,
-    pub message: String,
-}
-
 #[derive(Debug, thiserror::Error)]
-pub enum ApiError<E: Display> {
+pub enum ApiError {
     #[error(transparent)]
-    Api(#[from] ErrorResponse<E>),
+    Api(#[from] Error),
     #[error(transparent)]
     Network(#[from] reqwest::Error),
 }
 
-pub(crate) trait ApiErrorFromResponse<E: Display> {
-    async fn check_error_response(self) -> ApiResult<Self, E>
+pub(crate) trait ApiErrorFromResponse {
+    async fn check_error_response(self) -> ApiResult<Self>
     where
         Self: Sized;
 }
 
-impl<E: Display + DeserializeOwned> ApiErrorFromResponse<E> for reqwest::Response {
-    async fn check_error_response(self) -> ApiResult<Self, E>
+impl ApiErrorFromResponse for reqwest::Response {
+    async fn check_error_response(self) -> ApiResult<Self>
     where
         Self: Sized,
     {
@@ -140,12 +132,20 @@ impl<E: Display + DeserializeOwned> ApiErrorFromResponse<E> for reqwest::Respons
             return Ok(self);
         }
 
-        let error: ErrorResponse<E> = self.json().await?;
+        let error: Error = self.json().await?;
         Err(ApiError::Api(error))
     }
 }
 
-pub type ApiResult<T, E> = Result<T, ApiError<E>>;
+pub type ApiResult<T> = Result<T, ApiError>;
+
+impl Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}: {}", self.error, self.message)
+    }
+}
+
+impl std::error::Error for Error {}
 
 #[cfg(test)]
 pub(crate) mod tests {
