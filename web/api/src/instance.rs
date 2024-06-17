@@ -1,48 +1,10 @@
-use crate::{ApiErrorFromResponse, ApiResult, Client};
-use serde::{Deserialize, Serialize};
-use strum::Display;
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct StatusResponse {
-    pub status: Status,
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct SetupRequest {
-    pub admin: InitialAdminData,
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct InitialAdminData {
-    pub username: String,
-    pub password: String,
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Deserialize, Serialize)]
-pub struct SetupResponse {
-    pub ok: bool,
-}
-
-#[derive(Default, Clone, PartialEq, Debug, Deserialize, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Status {
-    pub database: String,
-    pub file_storage: String,
-    #[serde(rename = "publicURL")]
-    pub public_url: String,
-    pub setup_completed: bool,
-}
+use crate::{
+    models::{InstanceSetupRequest, InstanceSetupResponse, InstanceStatus},
+    ApiErrorFromResponse, ApiResult, Client,
+};
 
 pub struct InstanceService {
     client: Client,
-}
-
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Display)]
-#[serde(rename_all = "snake_case")]
-#[strum(serialize_all = "snake_case")]
-pub enum ErrorKind {
-    #[serde(other)]
-    UnknownError,
 }
 
 impl InstanceService {
@@ -50,7 +12,7 @@ impl InstanceService {
         Self { client }
     }
 
-    pub async fn status(&self) -> ApiResult<StatusResponse, ErrorKind> {
+    pub async fn status(&self) -> ApiResult<InstanceStatus> {
         let response = self
             .client
             .get("/api/instance")
@@ -63,7 +25,7 @@ impl InstanceService {
         Ok(response)
     }
 
-    pub async fn setup(&self, req: SetupRequest) -> ApiResult<SetupResponse, ErrorKind> {
+    pub async fn setup(&self, req: InstanceSetupRequest) -> ApiResult<InstanceSetupResponse> {
         let response = self
             .client
             .post("/api/instance/setup")
@@ -82,6 +44,7 @@ impl InstanceService {
 mod tests {
     use super::*;
     use crate::{
+        models::{Database, FileStorage, InstanceSetupRequestAdmin, InstanceStatusStatus},
         tests::{json, json_val},
         Oxidrive,
     };
@@ -90,10 +53,10 @@ mod tests {
 
     #[tokio::test]
     async fn it_fetches_the_instance_status() {
-        let expected = StatusResponse {
-            status: Status {
-                database: "sqlite".into(),
-                file_storage: "s3".into(),
+        let expected = InstanceStatus {
+            status: InstanceStatusStatus {
+                database: Database::Sqlite,
+                file_storage: FileStorage::S3,
                 public_url: "https://example.com".into(),
                 setup_completed: true,
             },
@@ -116,9 +79,9 @@ mod tests {
     }
     #[tokio::test]
     async fn it_sets_the_instance_up() {
-        let expected = SetupResponse { ok: true };
-        let request = SetupRequest {
-            admin: InitialAdminData {
+        let expected = InstanceSetupResponse { ok: true };
+        let request = InstanceSetupRequest {
+            admin: InstanceSetupRequestAdmin {
                 username: "test".into(),
                 password: "test".into(),
             },

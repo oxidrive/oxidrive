@@ -65,7 +65,7 @@ components:
               example: https://storage.example.com
             database:
               type: string
-              enum: [postgresql, sqlite]
+              enum: [postgres, sqlite]
             fileStorage:
               type: string
               enum: [filesystem, s3]

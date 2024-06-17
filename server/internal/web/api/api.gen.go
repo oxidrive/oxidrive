@@ -42,8 +42,8 @@ const (
 
 // Defines values for InstanceStatusStatusDatabase.
 const (
-	Postgresql InstanceStatusStatusDatabase = "postgresql"
-	Sqlite     InstanceStatusStatusDatabase = "sqlite"
+	Postgres InstanceStatusStatusDatabase = "postgres"
+	Sqlite   InstanceStatusStatusDatabase = "sqlite"
 )
 
 // Defines values for InstanceStatusStatusFileStorage.
@@ -915,7 +915,6 @@ func (sh *strictHandler) AuthCreateSession(w http.ResponseWriter, r *http.Reques
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
-
 	"H4sIAAAAAAAC/7xY227bOBN+FYL/fykfkmZbxHfZoFsEKNqi2V61ATKWxjYbilTIUWM38LsveJAsWZKd",
 	"3Ta5SkQOOTPfnD76kac6L7RCRZbPHnkBBnIkNP7rYkFo3D8Z2tSIgoRWfMYvS2O1YaTZAildMVohU7gm",
 	"ZqVIkemFX0m1lJj6IwkX7tx9iWbDE64gRz7j4G9PuE1XmINTQ5vCbVgyQi35dpvwv4TETwYXYt01I6x7",

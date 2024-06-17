@@ -1,6 +1,6 @@
-use chrono::Utc;
+use chrono::{DateTime, Utc};
 use dioxus::prelude::*;
-use oxidrive_api::sessions::Session;
+use oxidrive_api::models::Session;
 
 use crate::{
     api::use_oxidrive_api,
@@ -30,6 +30,9 @@ pub fn init() -> Signal<Option<CurrentUser>> {
 
         match token_storage.get() {
             Some(Session { token, expires_at }) => {
+                let expires_at = DateTime::parse_from_rfc3339(&expires_at)
+                    .expect("failed to parse session.expires_at to an RFC3339 timestamp");
+
                 if expires_at <= Utc::now() {
                     return Signal::new(None);
                 }

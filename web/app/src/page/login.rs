@@ -1,6 +1,6 @@
 use dioxus::prelude::*;
-use oxidrive_api::sessions::{self, Credentials, SessionRequest};
-use oxidrive_api::{ApiError, ErrorResponse, Oxidrive};
+use oxidrive_api::models::{self, credentials, Credentials, SessionRequest};
+use oxidrive_api::{ApiError, Oxidrive};
 use serde::Deserialize;
 
 use crate::auth::{store_token, use_session_storage, CurrentUser, SessionStorage};
@@ -108,18 +108,19 @@ async fn submit(
     let session = match api
         .sessions()
         .create(SessionRequest {
-            credentials: Credentials::Password { username, password },
+            credentials: Credentials {
+                kind: credentials::Kind::Password,
+                username,
+                password,
+            },
         })
         .await
     {
         Ok(session) => session,
-        Err(ApiError::Api(ErrorResponse { error, message })) => {
-            return match error {
-                sessions::ErrorKind::AuthenticationFailed => Ok(AuthResult::Failed),
-                sessions::ErrorKind::UnknownError => Err(GenericError {
-                    error: error.to_string(),
-                    message,
-                }),
+        Err(ApiError::Api(models::Error { error, message })) => {
+            return match error.as_str() {
+                "authentication_failed" => Ok(AuthResult::Failed),
+                _ => Err(GenericError { error, message }),
             };
         }
         Err(err) => Err(err)?,

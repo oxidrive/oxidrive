@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{
     api::use_oxidrive_api,
     component::{
@@ -9,7 +11,9 @@ use crate::{
 };
 use dioxus::prelude::*;
 use oxidrive_api::{
-    instance::{InitialAdminData, SetupRequest, Status, StatusResponse},
+    models::{
+        InstanceSetupRequest, InstanceSetupRequestAdmin, InstanceStatus, InstanceStatusStatus,
+    },
     Oxidrive,
 };
 use serde::Deserialize;
@@ -20,13 +24,13 @@ pub fn Setup() -> Element {
     let navigator = use_navigator();
 
     let future = use_resource(move || async move { api().instance().status().await });
-    let Status {
+    let InstanceStatusStatus {
         database,
         file_storage,
         public_url,
         setup_completed,
     } = match future.read().as_ref() {
-        Some(Ok(StatusResponse { status })) => status.clone(),
+        Some(Ok(InstanceStatus { status })) => status.clone(),
         Some(Err(err)) => {
             return Err(err.to_string()).throw();
         }
@@ -111,11 +115,11 @@ pub fn Setup() -> Element {
 }
 
 #[component]
-fn RecapEntry(name: String, #[props(into)] value: String) -> Element {
+fn RecapEntry<V: Display + PartialEq + 'static>(name: String, value: V) -> Element {
     rsx! {
         span { class: "flex flex-row flex-nowrap gap-4 content-space-evenly items-start justify-between text-primary-600",
             p { class: "whitespace-nowrap font-bold", "{name}:" }
-            p { class: "truncate", title: value, "{value}" }
+            p { class: "truncate", title: "{value}", "{value}" }
         }
     }
 }
@@ -145,8 +149,8 @@ async fn submit(
 
     api()
         .instance()
-        .setup(SetupRequest {
-            admin: InitialAdminData { username, password },
+        .setup(InstanceSetupRequest {
+            admin: InstanceSetupRequestAdmin { username, password },
         })
         .await
         .map_err(|err| err.to_string())?;
