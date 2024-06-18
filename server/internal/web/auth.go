@@ -13,13 +13,14 @@ import (
 
 	"github.com/oxidrive/oxidrive/server/internal/app"
 	"github.com/oxidrive/oxidrive/server/internal/auth"
+	"github.com/oxidrive/oxidrive/server/internal/web/api"
 )
 
 var (
 	ErrTokenAuthenticationFailed = errors.New("token authentication failed")
 )
 
-func authenticate(logger zerolog.Logger, app *app.Application) openapi3filter.AuthenticationFunc {
+func authenticateOpenAPI(logger zerolog.Logger, app *app.Application) openapi3filter.AuthenticationFunc {
 	return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
 		var auth authenticator
 		switch input.SecuritySchemeName {
@@ -32,12 +33,42 @@ func authenticate(logger zerolog.Logger, app *app.Application) openapi3filter.Au
 			return fmt.Errorf("unsupported authentication scheme: %s", input.SecuritySchemeName)
 		}
 
-		return auth.authenticate(ctx, input)
+		return auth.authenticate(ctx, input.RequestValidationInput.Request)
+	}
+}
+
+func authenticateHttp(logger zerolog.Logger, app *app.Application) api.MiddlewareFunc {
+	auth := tokenAuthenticator{
+		logger: logger.With().Str("authenticator", "token").Logger(),
+		app:    app,
+	}
+
+	inject := injectUserFromRequest(app)
+
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
+
+			if err := auth.authenticate(ctx, r); err != nil {
+				http.Error(w, err.Error(), http.StatusUnauthorized)
+				return
+			}
+
+			ctx, err := inject(ctx, r)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			r = r.WithContext(ctx)
+
+			h.ServeHTTP(w, r)
+		})
 	}
 }
 
 type authenticator interface {
-	authenticate(ctx context.Context, input *openapi3filter.AuthenticationInput) error
+	authenticate(ctx context.Context, req *http.Request) error
 }
 
 type tokenAuthenticator struct {
@@ -45,8 +76,8 @@ type tokenAuthenticator struct {
 	app    *app.Application
 }
 
-func (t tokenAuthenticator) authenticate(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
-	token := extractTokenFromRequest(input.RequestValidationInput.Request)
+func (t tokenAuthenticator) authenticate(ctx context.Context, req *http.Request) error {
+	token := extractTokenFromRequest(req)
 	if token == "" {
 		return ErrTokenAuthenticationFailed
 	}
@@ -56,7 +87,7 @@ func (t tokenAuthenticator) authenticate(ctx context.Context, input *openapi3fil
 		return ErrTokenAuthenticationFailed
 	}
 
-	t.logger.Debug().Msg("authentication successful")
+	t.logger.Trace().Msg("authentication successful")
 	return nil
 }
 

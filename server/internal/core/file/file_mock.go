@@ -28,6 +28,11 @@ func (c *ContentsMock) Store(_ context.Context, file File) error {
 	return args.Error(0)
 }
 
+func (c *ContentsMock) Load(_ context.Context, file File) (Content, error) {
+	args := c.Called(file)
+	return args.Get(0).(Content), args.Error(1)
+}
+
 var _ Files = (*FilesMock)(nil)
 
 type FilesMock struct {

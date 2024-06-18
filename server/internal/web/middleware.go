@@ -40,7 +40,7 @@ func validator(app *app.Application) MiddlewareFactory {
 
 		validator := middleware.OapiRequestValidatorWithOptions(spec, &middleware.Options{
 			Options: openapi3filter.Options{
-				AuthenticationFunc: authenticate(logger, app),
+				AuthenticationFunc: authenticateOpenAPI(logger, app),
 			},
 		})
 		return api.MiddlewareFunc(validator), nil
@@ -48,24 +48,36 @@ func validator(app *app.Application) MiddlewareFactory {
 }
 
 func userFromToken(app *app.Application) api.StrictMiddlewareFunc {
+	inject := injectUserFromRequest(app)
+
 	return api.StrictMiddlewareFunc(func(f nethttp.StrictHTTPHandlerFunc, operationID string) nethttp.StrictHTTPHandlerFunc {
 		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (response interface{}, err error) {
-			token := extractTokenFromRequest(r)
-			if token == "" {
-				return f(ctx, w, r, request)
-			}
-
-			u, err := app.Auth().UserForToken(ctx, auth.TokenID(token))
+			ctx, err = inject(ctx, r)
 			if err != nil {
 				return nil, err
 			}
 
-			if u == nil {
-				panic("current user from token was nil but this is impossible, as it should have been validated by the authentication middleware!")
-			}
-
-			ctx = auth.WithCurrentUser(ctx, u)
 			return f(ctx, w, r, request)
 		}
 	})
+}
+
+func injectUserFromRequest(app *app.Application) func(ctx context.Context, r *http.Request) (context.Context, error) {
+	return func(ctx context.Context, r *http.Request) (context.Context, error) {
+		token := extractTokenFromRequest(r)
+		if token == "" {
+			return ctx, nil
+		}
+
+		u, err := app.Auth().UserForToken(ctx, auth.TokenID(token))
+		if err != nil {
+			return nil, err
+		}
+
+		if u == nil {
+			panic("current user from token was nil but this is impossible, as it should have been validated by the authentication middleware!")
+		}
+
+		return auth.WithCurrentUser(ctx, u), nil
+	}
 }

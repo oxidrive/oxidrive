@@ -38,7 +38,7 @@ func NewContentFS(cfg config.StorageConfig, logger zerolog.Logger) *contentFS {
 }
 
 func (c *contentFS) Store(ctx context.Context, f file.File) (err error) {
-	fsPath := filepath.Join(c.dataDir, c.filesPrefix, f.OwnerID.String(), string(f.Path))
+	fsPath := c.pathFor(f)
 	if err := ensureDir(fsPath); err != nil {
 		return err
 	}
@@ -69,6 +69,21 @@ func (c *contentFS) Store(ctx context.Context, f file.File) (err error) {
 			return err
 		}
 	}
+}
+
+func (c *contentFS) Load(ctx context.Context, f file.File) (file.Content, error) {
+	fsPath := c.pathFor(f)
+
+	fsFile, err := os.Open(fsPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open file %s: %w", fsPath, err)
+	}
+
+	return fsFile, nil
+}
+
+func (c *contentFS) pathFor(f file.File) string {
+	return filepath.Join(c.dataDir, c.filesPrefix, f.OwnerID.String(), string(f.Path))
 }
 
 func ensureDir(path string) error {

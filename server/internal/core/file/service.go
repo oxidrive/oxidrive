@@ -35,6 +35,10 @@ func (s *Service) ByID(ctx context.Context, id ID) (*File, error) {
 	return s.files.ByID(ctx, id)
 }
 
+func (s *Service) ByOwnerByPath(ctx context.Context, owner user.ID, path Path) (*File, error) {
+	return s.files.ByOwnerByPath(ctx, owner, path)
+}
+
 func (s *Service) Upload(ctx context.Context, upload FileUpload, owner user.ID) (ID, error) {
 	f, err := s.files.ByOwnerByPath(ctx, owner, upload.Path)
 	if err != nil {
@@ -60,4 +64,8 @@ func (s *Service) Upload(ctx context.Context, upload FileUpload, owner user.ID) 
 	}
 
 	return f.ID, nil
+}
+
+func (s *Service) Download(ctx context.Context, f File) (Content, error) {
+	return s.contents.Load(ctx, f)
 }
