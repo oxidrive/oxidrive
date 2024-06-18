@@ -1,4 +1,5 @@
 #![allow(clippy::all)]
+#![allow(unused_imports)]
 // generated models are shit and make clippy sad :c
 
 pub mod credentials;
