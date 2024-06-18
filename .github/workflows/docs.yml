@@ -7,7 +7,6 @@ on:
     paths:
       - .github/workflows/**
       - docs/**
-
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches:
@@ -15,6 +14,8 @@ on:
     paths:
       - .github/workflows/**
       - docs/**
+  merge_group:
+    types: [checks_requested]
 
 permissions:
   contents: read
