@@ -23,7 +23,7 @@ generate: openapi
 
 openapi: _install
     rm -f -- openapi/out.yml
-    npx @redocly/cli@latest join -o openapi/out.yml openapi/openapi.yaml ./openapi/*.yaml
+    npx redocly join -o openapi/out.yml openapi/openapi.yaml ./openapi/*.yaml
 
 fmt:
     goimports -local github.com/oxidrive/oxidrive -w .
