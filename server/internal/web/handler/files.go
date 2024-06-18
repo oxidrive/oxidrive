@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"io"
 
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/rs/zerolog"
@@ -101,6 +102,12 @@ func (f *Files) Upload(ctx context.Context, request api.FilesUploadRequestObject
 
 	ct, err := mimetype.DetectReader(ff)
 	if err != nil {
+		return nil, err
+	}
+
+	// Rewind the file as mimetype.DetectReader consumes the first bytes
+	// to detect the content type
+	if _, err = ff.Seek(0, io.SeekStart); err != nil {
 		return nil, err
 	}
 

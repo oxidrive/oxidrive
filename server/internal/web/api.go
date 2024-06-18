@@ -42,6 +42,7 @@ func mountApi(router *http.ServeMux, cfg *Config) error {
 		BaseRouter:  router,
 		Middlewares: middlewares,
 	})
+
 	mountSwagger(router)
 
 	return nil

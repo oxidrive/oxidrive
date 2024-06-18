@@ -21,6 +21,15 @@ type Name string
 type Size int
 type ContentType string
 
+func Close(c Content) error {
+	cc, ok := c.(io.Closer)
+	if !ok {
+		return nil
+	}
+
+	return cc.Close()
+}
+
 func EmptyID() ID {
 	return ID(uuid.UUID{})
 }
@@ -156,6 +165,7 @@ func (p Path) String() string {
 
 type Contents interface {
 	Store(context.Context, File) error
+	Load(context.Context, File) (Content, error)
 }
 
 type Files interface {

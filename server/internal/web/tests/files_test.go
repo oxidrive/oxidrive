@@ -2,6 +2,7 @@ package web
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -310,5 +311,106 @@ func TestApi_Files_Upload(t *testing.T) {
 		assert.Equal(t, path, f.Path)
 		assert.Equal(t, size, f.Size)
 
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Getf("/blob%s", f.Path).
+			WithContext(ctx).
+			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusOK).
+			Header(headers.ContentLength, fmt.Sprintf("%d", size)).
+			Header(headers.ContentDisposition, "inline").
+			Body(string(content)).
+			End()
+	})
+}
+
+func TestApi_Files_Blob(t *testing.T) {
+	t.Run("downloads a file blob", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		ctx, done := testutil.IntegrationTest(ctx, t, testutil.WithTempDir(), testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		app, handler := setup(ctx, t)
+
+		username := "test"
+		password := "test"
+
+		testutil.Must(app.Users().Save(ctx, *testutil.Must(user.Create(username, password))))
+		tkn, u, err := app.Auth().AuthenticateWithPassword(ctx, username, password)
+		require.NoError(t, err)
+
+		body := "hello world!"
+		path := "/hello.txt"
+		size := len(body)
+
+		_ = testutil.Must(app.Files().Upload(ctx, file.FileUpload{
+			Content:     file.Content(strings.NewReader(body)),
+			ContentType: file.ContentType("text/plain"),
+			Path:        file.Path(path),
+			Size:        file.Size(size),
+		}, u.ID))
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Getf("/blob%s", path).
+			WithContext(ctx).
+			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusOK).
+			Header(headers.ContentLength, fmt.Sprintf("%d", size)).
+			Header(headers.ContentDisposition, "inline").
+			Body(body).
+			End()
+	})
+
+	t.Run("forces the attachment disposition on a blob", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		ctx, done := testutil.IntegrationTest(ctx, t, testutil.WithTempDir(), testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		app, handler := setup(ctx, t)
+
+		username := "test"
+		password := "test"
+
+		testutil.Must(app.Users().Save(ctx, *testutil.Must(user.Create(username, password))))
+		tkn, u, err := app.Auth().AuthenticateWithPassword(ctx, username, password)
+		require.NoError(t, err)
+
+		body := "hello world!"
+		name := "hello.txt"
+		size := len(body)
+
+		_ = testutil.Must(app.Files().Upload(ctx, file.FileUpload{
+			Content:     file.Content(strings.NewReader(body)),
+			ContentType: file.ContentType("text/plain"),
+			Path:        file.Path(name),
+			Size:        file.Size(size),
+		}, u.ID))
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Getf("/blob/%s", name).
+			Query("download", "true").
+			WithContext(ctx).
+			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusOK).
+			Header(headers.ContentLength, fmt.Sprintf("%d", size)).
+			Header(headers.ContentDisposition, "attachment; filename="+name).
+			Body(body).
+			End()
 	})
 }
