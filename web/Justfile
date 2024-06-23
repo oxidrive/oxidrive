@@ -1,59 +1,26 @@
-build: setup
-    #!/usr/bin/env sh
-    cd app
-    npx tailwindcss -i ./input.css -o ./assets/styles.css
-    dx build --release
+build: setup generate-api check
+    npx vite build
 
-clean:
-    rm -rf app/dist
+watch: setup generate-api check
+    npx vite dev
 
-watch: setup
-    #!/usr/bin/env sh
-    cd app
-    npx concurrently "just watch-app" "just watch-styles"
+check: setup
+    npx svelte-kit sync
+    npx svelte-check --tsconfig ./tsconfig.json
+    npx tsc --noEmit
 
-watch-app: setup
-    # https://github.com/DioxusLabs/dioxus/issues/2411
-    # dx serve --hot-reload --bin oxidrive
-    cargo watch -s 'dx build --bin oxidrive'
-
-watch-styles: setup
-    #!/usr/bin/env sh
-    cd app
-    npx tailwindcss -i ./input.css -o ./assets/styles.css --watch
-
-test:
-    cargo nextest run --all --all-features --all-targets
+test: setup
+    npx vitest run
 
 setup:
     [ -d ../node_modules ] || npm install
 
-lint: check clippy fmt-check
+fmt: setup
+    npx biome format --write .
 
-clippy:
-    cargo clippy --workspace --tests --all-features --all-targets -- -D warnings
+lint: setup
+    npx biome ci .
 
-fmt:
-    dx fmt
-    cargo fmt --all
-    cargo clippy --allow-dirty --allow-staged --workspace --fix -- -D warnings
+generate-api:
+    npx openapi-typescript ../server/openapi/out.yml -o ./src/lib/api/schema.d.ts
 
-fmt-check:
-    cargo fmt --all -- --check
-
-check:
-    cargo check --all --tests --all-features --all-targets
-
-generate-models:
-    docker run \
-      -u=$(id -u):$(id -g) \
-      --rm \
-      -v $PWD/..:/local \
-      openapitools/openapi-generator-cli \
-      generate \
-      -i /local/server/openapi/out.yml \
-      -g rust \
-      -o /local/web/api/ \
-      --global-property models,modelDocs=false \
-      --additional-properties=avoidBoxedModels=true,bestFitInt=true,preferUnsignedInt=true \
-      --skip-validate-spec

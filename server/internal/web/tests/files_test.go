@@ -19,6 +19,7 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 	"github.com/oxidrive/oxidrive/server/internal/testutil"
 	"github.com/oxidrive/oxidrive/server/internal/web/api"
+	h "github.com/oxidrive/oxidrive/server/internal/web/handler"
 )
 
 func TestApi_Files_List(t *testing.T) {
@@ -64,7 +65,7 @@ func TestApi_Files_List(t *testing.T) {
 			Handler(handler).
 			Get("/api/files").
 			WithContext(ctx).
-			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
 			Expect(t).
 			Status(http.StatusOK).
 			End().
@@ -142,7 +143,7 @@ func TestApi_Files_List(t *testing.T) {
 			Get("/api/files").
 			Query("prefix", "/path/to").
 			WithContext(ctx).
-			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
 			Expect(t).
 			Status(http.StatusOK).
 			End().
@@ -212,7 +213,7 @@ func TestApi_Files_List(t *testing.T) {
 			Get("/api/files").
 			Query("prefix", "/").
 			WithContext(ctx).
-			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
 			Expect(t).
 			Status(http.StatusOK).
 			End().
@@ -270,7 +271,7 @@ func TestApi_Files_Upload(t *testing.T) {
 			WithContext(ctx).
 			MultipartFormData("path", path).
 			MultipartFile("file", fpath).
-			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
 			Expect(t).
 			Status(http.StatusOK).
 			End().
@@ -293,7 +294,7 @@ func TestApi_Files_Upload(t *testing.T) {
 			Get("/api/files").
 			Query("prefix", "/").
 			WithContext(ctx).
-			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
 			Expect(t).
 			Status(http.StatusOK).
 			End().
@@ -316,7 +317,7 @@ func TestApi_Files_Upload(t *testing.T) {
 			Handler(handler).
 			Getf("/blob%s", f.Path).
 			WithContext(ctx).
-			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
 			Expect(t).
 			Status(http.StatusOK).
 			Header(headers.ContentLength, fmt.Sprintf("%d", size)).
@@ -361,7 +362,7 @@ func TestApi_Files_Blob(t *testing.T) {
 			Handler(handler).
 			Getf("/blob%s", path).
 			WithContext(ctx).
-			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
 			Expect(t).
 			Status(http.StatusOK).
 			Header(headers.ContentLength, fmt.Sprintf("%d", size)).
@@ -405,7 +406,7 @@ func TestApi_Files_Blob(t *testing.T) {
 			Getf("/blob/%s", name).
 			Query("download", "true").
 			WithContext(ctx).
-			Header(headers.Authorization, "Bearer "+tkn.Value.String()).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
 			Expect(t).
 			Status(http.StatusOK).
 			Header(headers.ContentLength, fmt.Sprintf("%d", size)).

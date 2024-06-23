@@ -40,7 +40,7 @@ test.describe("setup flow", () => {
 			await page.getByRole("button", { name: "Complete Setup" }).click();
 		}
 
-		await expect(page).toHaveURL("/login?redirect_to=/files");
+		await expect(page).toHaveURL("/login?redirect=/files");
 
 		await page.getByPlaceholder("Username").fill(username);
 		await page.getByPlaceholder("Password").fill(password);

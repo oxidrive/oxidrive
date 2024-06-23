@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"fmt"
 	"io"
 
 	"github.com/gabriel-vasile/mimetype"
@@ -73,7 +74,7 @@ func (f *Files) Upload(ctx context.Context, request api.FilesUploadRequestObject
 
 	form, err := request.Body.ReadForm(f.MultipartMaxMemory)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read form data from request body: %w", err)
 	}
 
 	paths := form.Value["path"]
@@ -111,10 +112,15 @@ func (f *Files) Upload(ctx context.Context, request api.FilesUploadRequestObject
 		return nil, err
 	}
 
+	path, err := file.ParsePath(p)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse uploaded file path %s: %w", p, err)
+	}
+
 	upload := file.FileUpload{
 		Content:     file.Content(ff),
 		ContentType: file.ContentType(ct.String()),
-		Path:        file.Path(p),
+		Path:        path,
 		Size:        file.Size(fh.Size),
 	}
 

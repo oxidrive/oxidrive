@@ -13,10 +13,10 @@ build:
     @just server/build
 
 fmt:
-    @just web/fmt
-    @just server/fmt
-    @just docs/fmt
-    @just e2e/fmt
+    just web/fmt
+    just server/fmt
+    just docs/fmt
+    just e2e/fmt
 
 lint:
     @just web/lint
@@ -34,9 +34,10 @@ test e2e="test":
 
 release:
     rm -rf release && mkdir -p release/staging
+    @just server/openapi
     @just web/build
     @just server/build
     cp ./server/bin/oxidrive release/staging/
-    cp -r ./web/app/dist release/staging/assets
+    cp -r ./web/build release/staging/assets
     tar -cvzf release/oxidrive.tar.gz -C ./release/staging .
     rm -rf release/staging

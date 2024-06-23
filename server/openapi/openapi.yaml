@@ -5,9 +5,10 @@ info:
 
 components:
   securitySchemes:
-    token:
-      type: http
-      scheme: bearer
+    session:
+      type: apiKey
+      in: cookie
+      name: oxidrive-session
 
   responses:
     Error:

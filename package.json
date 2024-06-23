@@ -1,19 +1,45 @@
 {
 	"name": "oxidrive",
 	"private": true,
+	"type": "module",
 	"devDependencies": {
 		"@astrojs/check": "^0.5.10",
 		"@astrojs/starlight": "^0.21.5",
 		"@axe-core/playwright": "^4.9.0",
 		"@biomejs/biome": "1.7.1",
+		"@melt-ui/pp": "^0.3.2",
+		"@melt-ui/svelte": "^0.81.0",
+		"@nubolab-ffwd/svelte-fluent": "^0.8.0",
 		"@playwright/test": "1.40.0",
 		"@redocly/cli": "^1.15.0",
+		"@sveltejs/adapter-static": "^3.0.2",
+		"@sveltejs/kit": "^2.0.0",
+		"@sveltejs/vite-plugin-svelte": "^3.0.0",
 		"@types/node": "^20.12.7",
 		"astro": "^4.3.5",
 		"caniuse-lite": "^1.0.30001614",
 		"concurrently": "^8.2.2",
+		"lightningcss": "^1.25.1",
+		"openapi-typescript": "^7.0.0",
+		"sass": "^1.77.6",
 		"sharp": "^0.32.5",
+		"svelte": "^4.2.7",
+		"svelte-check": "^3.6.0",
 		"tailwindcss": "^3.4.3",
-		"typescript": "^5.4.5"
+		"tslib": "^2.4.1",
+		"typescript": "^5.4.5",
+		"vite": "^5.0.3",
+		"vitest": "^1.2.0"
+	},
+	"dependencies": {
+		"@fluent/bundle": "^0.18.0",
+		"@fluent/langneg": "^0.7.0",
+		"@fortawesome/fontawesome-free": "^6.5.2",
+		"@fortawesome/fontawesome-svg-core": "^6.5.2",
+		"@fortawesome/free-brands-svg-icons": "^6.5.2",
+		"@fortawesome/free-solid-svg-icons": "^6.5.2",
+		"@fortawesome/svelte-fontawesome": "^0.2.2",
+		"minireset.css": "^0.0.7",
+		"openapi-fetch": "^0.10.1"
 	}
 }

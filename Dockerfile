@@ -1,4 +1,4 @@
-FROM node:20-alpine as npm-tools
+FROM node:20-alpine as node-base
 
 WORKDIR /app
 
@@ -8,7 +8,7 @@ RUN npm ci
 
 # ========================================================================= #
 
-FROM npm-tools as openapi
+FROM node-base as openapi
 
 WORKDIR /app
 
@@ -34,33 +34,22 @@ RUN go build -o ./bin/oxidrive ./server/cmd/oxidrive
 
 # ========================================================================= #
 
-FROM npm-tools as css-build
+FROM node-base as web-build
 
 WORKDIR /app
 
-COPY web/app .
-
-RUN npx tailwindcss -i ./input.css -o ./output.css
-
-# ========================================================================= #
-
-FROM ghcr.io/oxidrive/ci/dioxus-cli:0.5.4 as web-build
-
-WORKDIR /app
-
-COPY Cargo.* .
 COPY web ./web
-COPY --from=css-build /app/output.css ./web/app/assets/styles.css
 
-RUN cd web/app && dx build --release
+RUN cd web && npx svelte-kit sync && npx vite build
 
 # ========================================================================= #
 
 FROM gcr.io/distroless/static-debian11
 
 ENV OXIDRIVE_ASSETS_FOLDER=/assets
+ENV HOST=0.0.0.0
 
 COPY --from=server-build /app/bin/oxidrive /oxidrive
-COPY --from=web-build /app/web/app/dist $OXIDRIVE_ASSETS_FOLDER
+COPY --from=web-build /app/web/build $OXIDRIVE_ASSETS_FOLDER
 
-CMD ["/oxidrive"]
+ENTRYPOINT ["/oxidrive"]

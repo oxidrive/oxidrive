@@ -36,7 +36,7 @@ test.describe("uploading a file", () => {
 
 		const toast = page.getByTestId("toast-0");
 		await expect(toast).toBeVisible();
-		await expect(toast).toHaveAttribute("data-toast-level", "success");
+		await expect(toast).toHaveAttribute("data-toast-level", "info");
 		await expect(toast).toContainText(name);
 
 		await page.reload();

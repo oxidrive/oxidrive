@@ -10,7 +10,7 @@ paths:
       summary: List all available files
       tags: [files]
       security:
-        - token: []
+        - session: []
       parameters:
         - $ref: './openapi.yaml#/components/parameters/First'
         - $ref: './openapi.yaml#/components/parameters/After'
@@ -29,7 +29,7 @@ paths:
       summary: Upload a file to Oxidrive
       tags: [files]
       security:
-        - token: []
+        - session: []
       requestBody:
         required: true
         content:
