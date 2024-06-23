@@ -32,15 +32,25 @@ func defaultMiddlewares(logger zerolog.Logger, app *app.Application) ([]api.Midd
 }
 
 func validator(app *app.Application) MiddlewareFactory {
-	return func(logger zerolog.Logger) (api.MiddlewareFunc, error) {
+	return func(l zerolog.Logger) (api.MiddlewareFunc, error) {
 		spec, err := api.GetSwagger()
 		if err != nil {
 			return nil, err
 		}
 
 		validator := middleware.OapiRequestValidatorWithOptions(spec, &middleware.Options{
+			ErrorHandler: handleApiError(l.
+				With().
+				Str("lifecycle", "request").
+				Str("middleware", "openapi-validator").
+				Logger()),
 			Options: openapi3filter.Options{
-				AuthenticationFunc: authenticateOpenAPI(logger, app),
+				AuthenticationFunc: authenticateOpenAPI(l.
+					With().
+					Str("lifecycle", "request").
+					Str("middleware", "openapi-authenticator").
+					Logger(),
+					app),
 			},
 		})
 		return api.MiddlewareFunc(validator), nil
@@ -64,7 +74,7 @@ func userFromToken(app *app.Application) api.StrictMiddlewareFunc {
 
 func injectUserFromRequest(app *app.Application) func(ctx context.Context, r *http.Request) (context.Context, error) {
 	return func(ctx context.Context, r *http.Request) (context.Context, error) {
-		token := extractTokenFromRequest(r)
+		token := extractTokenFromCookie(r)
 		if token == "" {
 			return ctx, nil
 		}
@@ -75,7 +85,7 @@ func injectUserFromRequest(app *app.Application) func(ctx context.Context, r *ht
 		}
 
 		if u == nil {
-			panic("current user from token was nil but this is impossible, as it should have been validated by the authentication middleware!")
+			return ctx, nil
 		}
 
 		return auth.WithCurrentUser(ctx, u), nil

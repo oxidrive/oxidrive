@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	TokenScopes = "token.Scopes"
+	SessionScopes = "session.Scopes"
 )
 
 // Defines values for CredentialsKind.
@@ -169,12 +169,18 @@ type PasswordCredentialsKind string
 // Session defines model for Session.
 type Session struct {
 	ExpiresAt time.Time `json:"expiresAt"`
-	Token     string    `json:"token"`
+	User      User      `json:"user"`
 }
 
 // SessionRequest defines model for SessionRequest.
 type SessionRequest struct {
 	Credentials Credentials `json:"credentials"`
+}
+
+// User defines model for User.
+type User struct {
+	Id       openapi_types.UUID `json:"id"`
+	Username string             `json:"username"`
 }
 
 // After defines model for After.
@@ -294,6 +300,9 @@ type ServerInterface interface {
 	// Setup the instance and create the initial admin user
 	// (POST /api/instance/setup)
 	InstanceSetup(w http.ResponseWriter, r *http.Request)
+	// Return the user information related to the current session
+	// (GET /api/session)
+	AuthGetSession(w http.ResponseWriter, r *http.Request)
 	// Create a new session and generate the corresponding token
 	// (POST /api/sessions)
 	AuthCreateSession(w http.ResponseWriter, r *http.Request)
@@ -314,7 +323,7 @@ func (siw *ServerInterfaceWrapper) FilesList(w http.ResponseWriter, r *http.Requ
 
 	var err error
 
-	ctx = context.WithValue(ctx, TokenScopes, []string{})
+	ctx = context.WithValue(ctx, SessionScopes, []string{})
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params FilesListParams
@@ -358,7 +367,7 @@ func (siw *ServerInterfaceWrapper) FilesList(w http.ResponseWriter, r *http.Requ
 func (siw *ServerInterfaceWrapper) FilesUpload(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	ctx = context.WithValue(ctx, TokenScopes, []string{})
+	ctx = context.WithValue(ctx, SessionScopes, []string{})
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.FilesUpload(w, r)
@@ -392,6 +401,23 @@ func (siw *ServerInterfaceWrapper) InstanceSetup(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.InstanceSetup(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// AuthGetSession operation middleware
+func (siw *ServerInterfaceWrapper) AuthGetSession(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	ctx = context.WithValue(ctx, SessionScopes, []string{})
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.AuthGetSession(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -534,6 +560,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc("POST "+options.BaseURL+"/api/files", wrapper.FilesUpload)
 	m.HandleFunc("GET "+options.BaseURL+"/api/instance", wrapper.InstanceStatus)
 	m.HandleFunc("POST "+options.BaseURL+"/api/instance/setup", wrapper.InstanceSetup)
+	m.HandleFunc("GET "+options.BaseURL+"/api/session", wrapper.AuthGetSession)
 	m.HandleFunc("POST "+options.BaseURL+"/api/sessions", wrapper.AuthCreateSession)
 
 	return m
@@ -685,6 +712,22 @@ func (response InstanceSetupdefaultJSONResponse) VisitInstanceSetupResponse(w ht
 	return json.NewEncoder(w).Encode(response.Body)
 }
 
+type AuthGetSessionRequestObject struct {
+}
+
+type AuthGetSessionResponseObject interface {
+	VisitAuthGetSessionResponse(w http.ResponseWriter) error
+}
+
+type AuthGetSession200JSONResponse User
+
+func (response AuthGetSession200JSONResponse) VisitAuthGetSessionResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
 type AuthCreateSessionRequestObject struct {
 	Body *AuthCreateSessionJSONRequestBody
 }
@@ -693,13 +736,21 @@ type AuthCreateSessionResponseObject interface {
 	VisitAuthCreateSessionResponse(w http.ResponseWriter) error
 }
 
-type AuthCreateSession200JSONResponse Session
+type AuthCreateSession200ResponseHeaders struct {
+	SetCookie string
+}
+
+type AuthCreateSession200JSONResponse struct {
+	Body    Session
+	Headers AuthCreateSession200ResponseHeaders
+}
 
 func (response AuthCreateSession200JSONResponse) VisitAuthCreateSessionResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Set-Cookie", fmt.Sprint(response.Headers.SetCookie))
 	w.WriteHeader(200)
 
-	return json.NewEncoder(w).Encode(response)
+	return json.NewEncoder(w).Encode(response.Body)
 }
 
 type AuthCreateSession401JSONResponse struct{ ErrorJSONResponse }
@@ -737,6 +788,9 @@ type StrictServerInterface interface {
 	// Setup the instance and create the initial admin user
 	// (POST /api/instance/setup)
 	InstanceSetup(ctx context.Context, request InstanceSetupRequestObject) (InstanceSetupResponseObject, error)
+	// Return the user information related to the current session
+	// (GET /api/session)
+	AuthGetSession(ctx context.Context, request AuthGetSessionRequestObject) (AuthGetSessionResponseObject, error)
 	// Create a new session and generate the corresponding token
 	// (POST /api/sessions)
 	AuthCreateSession(ctx context.Context, request AuthCreateSessionRequestObject) (AuthCreateSessionResponseObject, error)
@@ -883,6 +937,30 @@ func (sh *strictHandler) InstanceSetup(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// AuthGetSession operation middleware
+func (sh *strictHandler) AuthGetSession(w http.ResponseWriter, r *http.Request) {
+	var request AuthGetSessionRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.AuthGetSession(ctx, request.(AuthGetSessionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "AuthGetSession")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(AuthGetSessionResponseObject); ok {
+		if err := validResponse.VisitAuthGetSessionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // AuthCreateSession operation middleware
 func (sh *strictHandler) AuthCreateSession(w http.ResponseWriter, r *http.Request) {
 	var request AuthCreateSessionRequestObject
@@ -916,34 +994,37 @@ func (sh *strictHandler) AuthCreateSession(w http.ResponseWriter, r *http.Reques
 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
-	"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",
+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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

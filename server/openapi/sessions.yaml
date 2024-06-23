@@ -4,6 +4,20 @@ info:
   version: 1.0.0
 
 paths:
+  /api/session:
+    get:
+      operationId: authGetSession
+      summary: Return the user information related to the current session
+      tags: [auth]
+      security:
+        - session: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
   /api/sessions:
     post:
       operationId: authCreateSession
@@ -21,6 +35,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Session'
+          headers: 
+            Set-Cookie:
+              schema: 
+                type: string
+                example: oxidrive-session=<session-id>; Path=/; HttpOnly
         '401':
           description: The supplied credentials are invalid
           $ref: './openapi.yaml#/components/responses/Error'
@@ -40,14 +59,26 @@ components:
     Session:
       type: object
       required:
-        - token
+        - user
         - expiresAt
       properties:
-        token:
-          type: string
+        user:
+          $ref: '#/components/schemas/User'
         expiresAt:
           type: string
           format: date-time
+
+    User:
+      type: object
+      required:
+        - id
+        - username
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
 
     Credentials:
       allOf:

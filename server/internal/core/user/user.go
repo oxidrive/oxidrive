@@ -27,8 +27,12 @@ func ParseID(s string) (ID, error) {
 	return ID(id), nil
 }
 
+func (i ID) AsUUID() uuid.UUID {
+	return uuid.UUID(i)
+}
+
 func (i ID) String() string {
-	return uuid.UUID(i).String()
+	return i.AsUUID().String()
 }
 
 type User struct {

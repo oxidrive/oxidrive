@@ -45,7 +45,7 @@ jobs:
 
   fmt:
     if: github.event.pull_request.draft == false
-    name: Gofmt
+    name: Fmt
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

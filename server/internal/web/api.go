@@ -17,7 +17,7 @@ type Api struct {
 }
 
 func mountApi(router *http.ServeMux, cfg *Config) error {
-	a := &Api{
+	apis := &Api{
 		auth: handler.Sessions{
 			Logger: cfg.Logger.With().Str("handler", "auth").Logger(),
 			App:    cfg.Application,
@@ -38,9 +38,19 @@ func mountApi(router *http.ServeMux, cfg *Config) error {
 		return err
 	}
 
-	api.HandlerWithOptions(api.NewStrictHandler(a, []api.StrictMiddlewareFunc{userFromToken(cfg.Application)}), api.StdHTTPServerOptions{
-		BaseRouter:  router,
-		Middlewares: middlewares,
+	handler := api.NewStrictHandlerWithOptions(
+		apis,
+		[]api.StrictMiddlewareFunc{userFromToken(cfg.Application)},
+		api.StrictHTTPServerOptions{
+			RequestErrorHandlerFunc:  handleApiRequestError(cfg.Logger),
+			ResponseErrorHandlerFunc: handleApiResponseError(cfg.Logger),
+		},
+	)
+
+	api.HandlerWithOptions(handler, api.StdHTTPServerOptions{
+		BaseRouter:       router,
+		Middlewares:      middlewares,
+		ErrorHandlerFunc: handleApiRequestError(cfg.Logger),
 	})
 
 	mountSwagger(router)
@@ -50,6 +60,10 @@ func mountApi(router *http.ServeMux, cfg *Config) error {
 
 func (api *Api) AuthCreateSession(ctx context.Context, request api.AuthCreateSessionRequestObject) (api.AuthCreateSessionResponseObject, error) {
 	return api.auth.CreateSession(ctx, request)
+}
+
+func (api *Api) AuthGetSession(ctx context.Context, request api.AuthGetSessionRequestObject) (api.AuthGetSessionResponseObject, error) {
+	return api.auth.GetSession(ctx, request)
 }
 
 func (api *Api) FilesList(ctx context.Context, request api.FilesListRequestObject) (api.FilesListResponseObject, error) {

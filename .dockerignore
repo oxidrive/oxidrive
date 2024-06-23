@@ -13,11 +13,11 @@
 !server/openapi/
 server/openapi/out.yml
 
-!web/*/Cargo.toml
-!web/*/src/
+!web/.npmrc
 !web/Justfile
-!web/app/Dioxus.toml
-!web/app/assets
-!web/app/index.html
-!web/app/input.css
-!web/app/tailwind.config.js
+!web/src/
+!web/static/
+!web/svelte.config.js
+!web/translations
+!web/tsconfig.json
+!web/vite.config.ts

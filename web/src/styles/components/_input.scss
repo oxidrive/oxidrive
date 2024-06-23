@@ -1,0 +1,25 @@
+.input {
+    padding: var(--oxi-size-3) var(--oxi-size-2);
+    border: 2px solid var(--oxi-color-primary-500);
+    border-radius: var(--oxi-rounded);
+    background-color: var(--oxi-color-primary-50);
+    width: 100%;
+
+    &::placeholder {
+        @extend .text-sm;
+        color: var(--oxi-color-primary-500);
+        opacity: 1;
+    }
+
+    &.error {
+        color: var(--oxi-color-danger-500);
+        border-color: var(--oxi-color-danger-500);
+        &::placeholder {
+            color: var(--oxi-color-danger-500);
+        }
+    }
+}
+
+.label {
+    @extend .sr-only;
+}
