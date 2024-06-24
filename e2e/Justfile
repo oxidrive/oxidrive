@@ -1,8 +1,7 @@
 set dotenv-filename := "../server/.env"
 
 test *args: _install
-    set positional-arguments
-    bash -c 'npx playwright test "$@"'
+    npx playwright test {{ args }}
 
 chromium: (test "--project=chromium")
 

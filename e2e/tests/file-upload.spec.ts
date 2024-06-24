@@ -10,10 +10,9 @@ test.describe("uploading a file", () => {
 
 		await expect(page.getByText(name)).not.toBeVisible();
 
-		const responsePromise = page.waitForResponse("/api/files");
 		const filechooserPromise = page.waitForEvent("filechooser");
 
-		await page.getByLabel("Upload").click();
+		await page.getByTitle("Upload").click();
 
 		const filechooser = await filechooserPromise;
 		await filechooser.setFiles({
@@ -22,27 +21,39 @@ test.describe("uploading a file", () => {
 			buffer: Buffer.from("hello world!"),
 		});
 
-		// TODO: replace with "check the uploaded file appears in the page" once we implement file listing (https://github.com/oxidrive/oxidrive/issues/4)
-		const response = await responsePromise;
-		expect(response.ok()).toBeTruthy();
+		await page.waitForLoadState("networkidle");
 
-		const { id, ok } = await response.json();
-		await expect(id).toEqual(
-			expect.stringMatching(
-				/^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/,
-			),
+		const toasts = await page.getByRole("alert").all();
+		for (const toast of toasts) {
+			await expect(toast).toBeVisible();
+			await expect(toast).toHaveAttribute("data-toast-level", "info");
+			await expect(toast).toContainText(name);
+		}
+
+		await Promise.allSettled(
+			toasts.map((toast) => toast.getByTitle("Close toast").click()),
 		);
-		expect(ok).toBeTruthy();
-
-		const toast = page.getByTestId("toast-0");
-		await expect(toast).toBeVisible();
-		await expect(toast).toHaveAttribute("data-toast-level", "info");
-		await expect(toast).toContainText(name);
-
-		await page.reload();
 
 		await expect(page.getByText("No files in here")).not.toBeVisible();
-		await expect(page.getByText(name)).toBeVisible();
+
+		const file = page.getByTitle(name, { exact: true });
+		await expect(file).toBeVisible();
+		await file.click();
+
+		await expect(
+			page.getByRole("heading", { name, exact: true }),
+		).toBeVisible();
+		await expect(
+			page.frameLocator('iframe[title="Preview"]').locator("body"),
+		).toBeVisible();
+		await page.getByTitle("Close preview").click();
+
+		await expect(
+			page.getByRole("heading", { name, exact: true }),
+		).not.toBeVisible();
+		await expect(
+			page.frameLocator('iframe[title="Preview"]').locator("body"),
+		).not.toBeVisible();
 	});
 
 	test(

@@ -47,6 +47,7 @@ func (a *Sessions) CreateSession(ctx context.Context, request api.AuthCreateSess
 			Expires:  t.ExpiresAt,
 			HttpOnly: true,
 			SameSite: http.SameSiteStrictMode,
+			Path:     "/",
 		}
 
 		return api.AuthCreateSession200JSONResponse{

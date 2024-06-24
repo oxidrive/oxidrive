@@ -23,3 +23,7 @@
 .label {
     @extend .sr-only;
 }
+
+.checkbox {
+    accent-color: var(--oxi-color-primary-500);
+}

@@ -109,7 +109,7 @@ jobs:
     - name: Install Playwright
       run: nix develop --command just e2e/setup
     - name: Run Playwright tests
-      run: nix develop --command just e2e/test --project '${{ matrix.project }}'
+      run: nix develop --command just e2e/test --project \"${{ matrix.project }}\"
       env:
         OXIDRIVE_BIN: ../release/oxidrive
         OXIDRIVE_ASSETS_FOLDER: ../release/assets

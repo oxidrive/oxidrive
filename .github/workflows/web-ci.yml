@@ -7,6 +7,7 @@ on:
     paths:
       - .github/workflows/**
       - web/**
+      - package*.json
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches:

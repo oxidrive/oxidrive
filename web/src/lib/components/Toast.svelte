@@ -41,15 +41,15 @@ export function reportError(
 
 <script lang="ts">
     import { createToaster, melt } from "@melt-ui/svelte";
+    import { Localized } from "@nubolab-ffwd/svelte-fluent";
     import { flip } from "svelte/animate";
     import { fly } from "svelte/transition";
 </script>
 
 <div class="toasts" use:portal>
-    {#each $toasts as { id, data }, i (id)}
+    {#each $toasts as { id, data } (id)}
         <div
-            data-testid="toast-{i}"
-            data-toast-level="{data.level}"
+            data-toast-level={data.level}
             class="toast {data.level}"
             use:melt={$content(id)}
             animate:flip={{ duration: 500 }}
@@ -60,9 +60,11 @@ export function reportError(
                 <h3 use:melt={$title(id)} class="text-lg text-bold">
                     {data.title}
                 </h3>
-                <button use:melt={$close(id)} aria-label="close toast">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+                <Localized id="toasts-close" let:text>
+                    <button use:melt={$close(id)} title={text}>
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </Localized>
             </span>
             <div use:melt={$description(id)}>
                 {data.message}

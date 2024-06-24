@@ -13,7 +13,7 @@ export let files: FileList;
             <div class="file">
                 <span class="header">
                     <Localized id="files-selected" let:text>
-                        <input type="checkbox" aria-label={text} />
+                        <input class="checkbox" type="checkbox" aria-label={text} />
                     </Localized>
 
                     <FileLink {file}>

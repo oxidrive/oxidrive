@@ -1,0 +1,1 @@
+toasts-close = Close toast

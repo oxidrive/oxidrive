@@ -22,8 +22,8 @@ export let file: File;
 export let height: `${number}px` = "40px";
 export let width: `${number}px` = "40px";
 
-let color: `primary-500` | "black" =
-	file.type === "folder" ? "primary-500" : "black";
+let color: "primary-500" | "primary-900" =
+	file.type === "folder" ? "primary-500" : "primary-900";
 
 /*
     This man-made horrors beyond human comprehension is necessary because FontAwesomeIcon is bugged

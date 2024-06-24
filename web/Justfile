@@ -17,6 +17,8 @@ setup:
 
 fmt: setup
     npx biome format --write .
+    npx biome check --apply .
+    npx biome lint --apply .
 
 lint: setup
     npx biome ci .
