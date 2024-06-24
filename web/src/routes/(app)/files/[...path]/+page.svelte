@@ -1,6 +1,7 @@
 <script lang="ts">
 import { goto, invalidate } from "$app/navigation";
-import type { ErrorResponse } from "$lib/api";
+import type { ErrorResponse, File } from "$lib/api";
+import ActionBar from "$lib/components/ActionBar.svelte";
 import Loading from "$lib/components/Loading.svelte";
 import PageTitle from "$lib/components/PageTitle.svelte";
 import { addToast, reportError } from "$lib/components/Toast.svelte";
@@ -99,6 +100,13 @@ async function upload(ev: Event) {
 	invalidate((url) => url.pathname === "/api/files");
 }
 
+async function download({ detail: file }: CustomEvent<File>) {
+	const link = document.createElement("a");
+	link.href = `/blob${file.path}`;
+	link.download = "";
+	link.click();
+}
+
 async function handleResponseError(error: ErrorResponse | Response) {
 	const data =
 		error instanceof Response
@@ -141,7 +149,7 @@ async function handleResponseError(error: ErrorResponse | Response) {
             <NoFiles {text} />
         </Localized>
     {:else}
-        <svelte:component this={viewComponent} {files} />
+        <svelte:component this={viewComponent} {files} on:download={download} />
         {@const fileToPreview = files.items.find(
             (f) => data.preview && f.name === data.preview,
         )}

@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { FileList } from "$lib/api";
 import { Localized } from "@nubolab-ffwd/svelte-fluent";
+import FileActions from "./FileActions.svelte";
 import FileIcon from "./FileIcon.svelte";
 import FileLink from "./FileLink.svelte";
 
@@ -24,7 +25,8 @@ export let files: FileList;
                 <FileLink {file} class="text-primary-500 truncate">
                     {file.name}
                 </FileLink>
-                <i class="fa-solid fa-ellipsis text-primary-500"></i>
+
+                <FileActions {file} on:rename on:download on:delete />
             </div>
         </div>
     {/each}

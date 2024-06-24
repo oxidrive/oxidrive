@@ -13,13 +13,11 @@ export { clazz as class };
         <a class={clazz} href={file.path} title={text}><slot /></a>
     </Localized>
 {:else}
-    <Localized id="files-link-open-preview" let:text args={{ file: file.name }}>
         <a
             class={clazz}
             href="{window.location.pathname}?preview={file.name}"
-            title={text}
+            title={file.name}
         >
             <slot />
         </a>
-    </Localized>
 {/if}

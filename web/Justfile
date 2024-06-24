@@ -25,4 +25,5 @@ lint: setup
 
 generate-api:
     npx openapi-typescript ../server/openapi/out.yml -o ./src/lib/api/schema.d.ts
+    just fmt
 

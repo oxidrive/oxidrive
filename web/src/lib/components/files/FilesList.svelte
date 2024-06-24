@@ -1,6 +1,7 @@
 <script lang="ts">
 import type { FileList } from "$lib/api";
 import { Localized } from "@nubolab-ffwd/svelte-fluent";
+import FileActions from "./FileActions.svelte";
 import FileIcon from "./FileIcon.svelte";
 import FileLink from "./FileLink.svelte";
 
@@ -13,21 +14,29 @@ export let files: FileList;
             <div class="file">
                 <span class="header">
                     <Localized id="files-selected" let:text>
-                        <input class="checkbox" type="checkbox" aria-label={text} />
+                        <input
+                            class="checkbox"
+                            type="checkbox"
+                            aria-label={text}
+                        />
                     </Localized>
 
                     <FileLink {file}>
                         <FileIcon {file} height="40px" width="40px" />
                     </FileLink>
 
-                    <FileLink {file}>
-                        <p class="text-primary-500 truncate">
-                            {file.name}
-                        </p>
+                    <FileLink {file} class="text-primary-500 truncate">
+                        {file.name}
                     </FileLink>
                 </span>
 
-                <i class="actions fa-solid fa-ellipsis text-primary-500"></i>
+                <FileActions
+                    class="actions"
+                    {file}
+                    on:rename
+                    on:download
+                    on:delete
+                />
             </div>
             <hr class="sep" />
         </div>
@@ -63,9 +72,10 @@ export let files: FileList;
                 justify-content: start;
                 align-items: center;
                 gap: var(--oxi-size-4);
+                max-width: 90%;
             }
 
-            .actions {
+            :global(.actions) {
                 flex-grow: 0;
                 flex-shrink: 0;
             }
@@ -75,6 +85,10 @@ export let files: FileList;
             width: 100%;
             height: 1px;
             background-color: var(--oxi-color-primary-300);
+
+            &:last-child {
+                display: none;
+            }
         }
     }
 </style>
