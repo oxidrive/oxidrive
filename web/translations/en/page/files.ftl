@@ -19,3 +19,13 @@ files-switch-view-mode = Switch view mode
 
 files-select = Select { $file }
 files-home-link = Back to root folder
+
+files-link-open-folder = Open folder { $file }
+files-link-open-preview = Preview file { $file }
+
+files-preview = Preview
+
+files-preview-cannot-be-previewed = { $file } cannot be previewed
+    .download = Download
+
+files-preview-close = Close preview

@@ -12,7 +12,7 @@ export let files: FileList;
         <div class="file-box" title={file.name}>
             <div class="header">
                 <Localized id="files-selected" let:text>
-                    <input type="checkbox" aria-label={text} />
+                    <input class="checkbox" type="checkbox" aria-label={text} />
                 </Localized>
             </div>
 
@@ -21,10 +21,8 @@ export let files: FileList;
             </FileLink>
 
             <div class="footer">
-                <FileLink {file}>
-                    <p class="text-primary-500 truncate">
-                        {file.name}
-                    </p>
+                <FileLink {file} class="text-primary-500 truncate">
+                    {file.name}
                 </FileLink>
                 <i class="fa-solid fa-ellipsis text-primary-500"></i>
             </div>

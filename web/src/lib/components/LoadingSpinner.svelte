@@ -1,4 +1,9 @@
-<div class="oxygen">
+<script lang="ts">
+let clazz = "";
+export { clazz as class };
+</script>
+
+<div class="oxygen {clazz}">
     <div class="orbit outer-orbit">
         <div class="electron one" />
         <div class="electron two" />

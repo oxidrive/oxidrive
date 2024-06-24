@@ -1,9 +1,10 @@
 <script lang="ts">
-import { invalidate } from "$app/navigation";
+import { goto, invalidate } from "$app/navigation";
 import type { ErrorResponse } from "$lib/api";
 import Loading from "$lib/components/Loading.svelte";
 import PageTitle from "$lib/components/PageTitle.svelte";
 import { addToast, reportError } from "$lib/components/Toast.svelte";
+import FilePreview from "$lib/components/files/FilePreview.svelte";
 import FilesGrid from "$lib/components/files/FilesGrid.svelte";
 import FilesList from "$lib/components/files/FilesList.svelte";
 import NoFiles from "$lib/components/files/NoFiles.svelte";
@@ -114,11 +115,13 @@ async function handleResponseError(error: ErrorResponse | Response) {
     </Localized>
 
     <Localized id="files-title" let:text>
-        <a href="/files" aria-label={text}><i class="fa-solid fa-house"></i></a>
+        <a href="/files" title={text}>
+            <i class="fa-solid fa-house text-primary-900"></i>
+        </a>
     </Localized>
 
     <Localized id="files-switch-view-mode" let:attrs>
-        <button on:click={switchMode} aria-label={attrs[viewMode]}>
+        <button on:click={switchMode} title={attrs[viewMode]}>
             <i
                 class="text-primary-900 fa-solid"
                 class:fa-list-ul={viewMode === "grid"}
@@ -130,20 +133,29 @@ async function handleResponseError(error: ErrorResponse | Response) {
 
 {#await data.response}
     <Loading />
-{:then { data, error, response }}
+{:then { data: files, error, response }}
     {#if error || !response.ok}
         {handleResponseError(error || response)}
-    {:else if data.count === 0}
+    {:else if files.count === 0}
         <Localized id="files-empty" let:text>
             <NoFiles {text} />
         </Localized>
     {:else}
-        <svelte:component this={viewComponent} files={data} />
+        <svelte:component this={viewComponent} {files} />
+        {@const fileToPreview = files.items.find(
+            (f) => data.preview && f.name === data.preview,
+        )}
+        {#if fileToPreview}
+            <FilePreview
+                file={fileToPreview}
+                on:close={() => goto(window.location.pathname)}
+            />
+        {/if}
     {/if}
 {/await}
 
 <Localized id="files-upload-cta" let:text>
-    <button class="fab primary" on:click={pickFile} aria-label={text}>
+    <button class="fab primary" on:click={pickFile} title={text}>
         <FontAwesomeIcon icon={faPlus} />
         <input
             data-testid="upload-files"
