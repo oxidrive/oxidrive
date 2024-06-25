@@ -86,11 +86,17 @@ func (s *Service) Delete(ctx context.Context, id ID) error {
 	}
 
 	if err := s.files.Delete(ctx, *f); err != nil {
-		return fmt.Errorf("failed to delete metadata for file %s: %w", id, err)
+		// if the metadata are missing then we don't really care. Our goal was to remove it after all
+		if errors.Is(err, ErrFileNotFound) {
+			return fmt.Errorf("failed to delete metadata for file %s: %w", id, err)
+		}
 	}
 
 	if err := s.contents.Delete(ctx, *f); err != nil {
-		return fmt.Errorf("failed to delete content of file %s: %w", id, err)
+		// if the content is missing then we don't really care. Our goal was to remove it after all
+		if !errors.Is(err, ErrFileNotFound) {
+			return fmt.Errorf("failed to delete content of file %s: %w", id, err)
+		}
 	}
 
 	return nil

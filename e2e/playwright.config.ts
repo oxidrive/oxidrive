@@ -7,6 +7,13 @@ function minutes(min: number): number {
 	return min * 60 * 1000;
 }
 
+const projects: { name: string; device: string }[] = [
+	{ name: "chromium", device: "Desktop Chrome" },
+	{ name: "firefox", device: "Desktop Firefox" },
+	{ name: "webkit", device: "Desktop Safari" },
+	{ name: "chromium-mobile", device: "Pixel 5" },
+	{ name: "webkit-mobile", device: "iPhone 12" },
+];
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
@@ -28,49 +35,18 @@ export default defineConfig({
 		trace: "retain-on-failure",
 	},
 
-	/* Configure projects for major browsers */
-	projects: [
-		{ name: "setup", testMatch: /.*\.setup\.ts/ },
+	projects: projects.flatMap(({ name, device }) => [
 		{
-			name: "chromium",
-			use: { ...devices["Desktop Chrome"], storageState: authFile },
-			dependencies: ["setup"],
-		},
-
-		{
-			name: "firefox",
-			use: { ...devices["Desktop Firefox"], storageState: authFile },
-			dependencies: ["setup"],
-		},
-
-		{
-			name: "webkit",
-			use: { ...devices["Desktop Safari"], storageState: authFile },
-			dependencies: ["setup"],
-		},
-
-		/* Test against mobile viewports. */
-		{
-			name: "Mobile Chrome",
-			use: { ...devices["Pixel 5"], storageState: authFile },
-			dependencies: ["setup"],
+			name: `setup-${name}`,
+			use: { ...devices[device] },
+			testMatch: /.*\.setup\.ts/,
 		},
 		{
-			name: "Mobile Safari",
-			use: { ...devices["iPhone 12"], storageState: authFile },
-			dependencies: ["setup"],
+			name,
+			use: { ...devices[device], storageState: authFile },
+			dependencies: [`setup-${name}`],
 		},
-
-		/* Test against branded browsers. */
-		// {
-		//   name: 'Microsoft Edge',
-		//   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-		// },
-		// {
-		//   name: 'Google Chrome',
-		//   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-		// },
-	],
+	]),
 
 	webServer: {
 		command: "just start",

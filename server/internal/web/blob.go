@@ -100,7 +100,7 @@ func contentDisposition(f *file.File, force bool) string {
 }
 
 func canBeInlined(f *file.File) bool {
-	for _, ct := range []string{"text/plain", "application/json", "application/xml", "application/pdf", "image/", "video/", "audio/"} {
+	for _, ct := range []string{"application/pdf", "image/", "video/", "audio/"} {
 		if strings.HasPrefix(string(f.ContentType), ct) {
 			return true
 		}

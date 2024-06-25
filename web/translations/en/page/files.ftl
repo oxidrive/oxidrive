@@ -33,3 +33,9 @@ files-actions = Files actions
     .rename = Rename
     .download = Download
     .delete = Delete
+    .select-all = Select all
+
+files-delete-confirm = Are you sure you want to delete { $file ->
+        [selected] all selected files
+        *[one] { $file }
+    }?

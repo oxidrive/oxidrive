@@ -1,6 +1,9 @@
 <script lang="ts">
 import type { File } from "$lib/api";
 import { Localized } from "@nubolab-ffwd/svelte-fluent";
+import { createEventDispatcher } from "svelte";
+
+const dispatch = createEventDispatcher<{ preview: File }>();
 
 export let file: File;
 
@@ -13,11 +16,11 @@ export { clazz as class };
         <a class={clazz} href={file.path} title={text}><slot /></a>
     </Localized>
 {:else}
-        <a
-            class={clazz}
-            href="{window.location.pathname}?preview={file.name}"
-            title={file.name}
-        >
-            <slot />
-        </a>
+    <button
+        class={clazz}
+        on:click={() => dispatch("preview", file)}
+        title={file.name}
+    >
+        <slot />
+    </button>
 {/if}

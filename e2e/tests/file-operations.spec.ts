@@ -1,4 +1,4 @@
-import { type Page, expect, test } from "@playwright/test";
+import { type Locator, type Page, expect, test } from "@playwright/test";
 import { testAccessibility } from "./fixtures";
 
 test(
@@ -7,19 +7,19 @@ test(
 );
 
 test("should upload, preview, and download a file", async ({ page }) => {
-	const name = `hello${Math.random().toString().substring(2)}.txt`;
-	const content = "hello world!";
+	const name = `hello${Math.random().toString().substring(2)}.json`;
+	const content = '{"hello":"world!"}';
 
 	await page.goto("/files");
 	await page.waitForLoadState("networkidle");
 	await expect(page).toHaveURL("/files");
 
-	await test.step("Upload file", upload({ page, name, content }));
-	await test.step("Preview file", preview({ page, name, content }));
-	await test.step("Download file", download({ page, name, content }));
+	const file = await test.step("Upload file", upload({ page, name, content }));
+	await test.step("Preview file", preview(file, { page, name, content }));
+	await test.step("Download file", download(file, { page, name, content }));
 });
 
-function upload({ page, name, content }: StepArgs): Step {
+function upload({ page, name, content }: StepArgs): Step<Locator> {
 	return async () => {
 		await expect(page.getByText(name)).not.toBeVisible();
 
@@ -30,7 +30,7 @@ function upload({ page, name, content }: StepArgs): Step {
 		const filechooser = await filechooserPromise;
 		await filechooser.setFiles({
 			name,
-			mimeType: "text/plain",
+			mimeType: "application/octet-stream",
 			buffer: Buffer.from(content),
 		});
 
@@ -49,37 +49,38 @@ function upload({ page, name, content }: StepArgs): Step {
 
 		await expect(page.getByText("No files in here")).not.toBeVisible();
 
-		const file = page.getByTitle(name, { exact: true });
+		const file = page.getByTitle(name, { exact: true }).first();
 		await expect(file).toBeVisible();
+		return file;
 	};
 }
 
-function preview({ page, name, content }: StepArgs): Step {
+function preview(file: Locator, { page, name, content }: StepArgs): Step {
 	return async () => {
-		await page.getByTitle(name, { exact: true }).click();
+		await file.click();
 
 		await expect(
 			page.getByRole("heading", { name, exact: true }),
 		).toBeVisible();
 
-		const preview = page.frameLocator('iframe[title="Preview"]');
-		await expect(preview.locator("body")).toBeVisible();
-		await expect(preview.getByText(content)).toBeVisible();
+		const preview = page.locator(".preview");
+		await expect(preview).toBeVisible();
+		await expect(preview.getByText("cannot be previewed")).toContainText(name);
+		const button = preview.getByRole("link", { name: "Download" });
+		await expect(button).toBeVisible();
 
 		await page.getByTitle("Close preview").click();
 
 		await expect(
 			page.getByRole("heading", { name, exact: true }),
 		).not.toBeVisible();
-		await expect(
-			page.frameLocator('iframe[title="Preview"]').locator("body"),
-		).not.toBeVisible();
+		await expect(preview).not.toBeVisible();
 	};
 }
 
-function download({ page, name }: StepArgs): Step {
+function download(file: Locator, { page, name }: StepArgs): Step {
 	return async () => {
-		const actions = page.getByTitle(name, { exact: true }).getByRole("button");
+		const actions = file.getByTestId("file-actions");
 
 		await expect(actions).toBeVisible();
 		await actions.click();
@@ -101,4 +102,4 @@ interface StepArgs {
 	content: string;
 }
 
-type Step = () => Promise<void>;
+type Step<T = void> = () => Promise<T>;
