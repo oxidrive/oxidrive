@@ -33,6 +33,11 @@ func (c *ContentsMock) Load(_ context.Context, file File) (Content, error) {
 	return args.Get(0).(Content), args.Error(1)
 }
 
+func (c *ContentsMock) Delete(_ context.Context, file File) error {
+	args := c.Called(file)
+	return args.Error(0)
+}
+
 var _ Files = (*FilesMock)(nil)
 
 type FilesMock struct {
@@ -64,4 +69,9 @@ func (f *FilesMock) ByID(_ context.Context, id ID) (*File, error) {
 func (f *FilesMock) ByOwnerByPath(_ context.Context, owner user.ID, path Path) (*File, error) {
 	args := f.Called(owner, path)
 	return args.Get(0).(*File), args.Error(1)
+}
+
+func (f *FilesMock) Delete(_ context.Context, file File) error {
+	args := f.Called(file)
+	return args.Error(0)
 }

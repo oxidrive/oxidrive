@@ -2,10 +2,15 @@ package file
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/list"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
+)
+
+var (
+	ErrFileNotFound error = errors.New("file does not exist")
 )
 
 type FileUpload struct {
@@ -68,4 +73,25 @@ func (s *Service) Upload(ctx context.Context, upload FileUpload, owner user.ID) 
 
 func (s *Service) Download(ctx context.Context, f File) (Content, error) {
 	return s.contents.Load(ctx, f)
+}
+
+func (s *Service) Delete(ctx context.Context, id ID) error {
+	f, err := s.files.ByID(ctx, id)
+	if err != nil {
+		return fmt.Errorf("failed to load file %s: %w", id, err)
+	}
+
+	if f == nil {
+		return ErrFileNotFound
+	}
+
+	if err := s.files.Delete(ctx, *f); err != nil {
+		return fmt.Errorf("failed to delete metadata for file %s: %w", id, err)
+	}
+
+	if err := s.contents.Delete(ctx, *f); err != nil {
+		return fmt.Errorf("failed to delete content of file %s: %w", id, err)
+	}
+
+	return nil
 }

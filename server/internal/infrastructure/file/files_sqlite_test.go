@@ -452,6 +452,53 @@ func TestSqliteFiles_ByOwnerByPath(t *testing.T) {
 	})
 }
 
+func TestSqliteFiles_Delete(t *testing.T) {
+	t.Run("deletes a file", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{DbParams: "_foreign_keys=on"}))
+		defer done()
+
+		db := testutil.SqliteDBFromContext(ctx, t)
+		u := insertSqliteUser(t, db, "username", "pwd")
+
+		files := NewSqliteFiles(db)
+
+		readerMock := strings.NewReader("")
+		f, err := file.Create(readerMock, ct, "filepath", 10, u.ID)
+		require.NoError(t, err)
+
+		f, err = files.Save(ctx, *f)
+		require.NoError(t, err)
+		require.NotNil(t, f)
+
+		err = files.Delete(ctx, *f)
+		require.NoError(t, err)
+
+		f, err = files.ByID(ctx, f.ID)
+		require.NoError(t, err)
+		require.Nil(t, f)
+	})
+
+	t.Run("returns an error if the file does not exist", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{DbParams: "_foreign_keys=on"}))
+		defer done()
+
+		db := testutil.SqliteDBFromContext(ctx, t)
+		u := insertSqliteUser(t, db, "username", "pwd")
+
+		files := NewSqliteFiles(db)
+
+		f, err := file.Create(strings.NewReader(""), ct, "filepath", 10, u.ID)
+		require.NoError(t, err)
+
+		err = files.Delete(ctx, *f)
+		assert.Equal(t, err, file.ErrFileNotFound)
+	})
+}
+
 func insertSqliteUser(t *testing.T, db *sqlx.DB, username string, password string) user.User {
 	t.Helper()
 

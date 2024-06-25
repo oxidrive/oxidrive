@@ -16,6 +16,11 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+    NotFound:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFoundError'
     InternalError:
       description: Unexpected Error
       content:
@@ -53,6 +58,19 @@ components:
         error:
           type: string
           description: machine-readable error tag
+        message:
+          type: string
+          description: human readable error message
+
+    NotFoundError:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          enum: [not_found]
         message:
           type: string
           description: human readable error message

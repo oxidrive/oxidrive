@@ -2,13 +2,13 @@ package file
 
 import (
 	"context"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 
@@ -18,9 +18,14 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/testutil"
 )
 
+var (
+	contentStr  string              = "This is a test!"
+	fileContent func() file.Content = func() file.Content { return strings.NewReader(contentStr) }
+	size        file.Size           = file.Size(len([]byte(contentStr)))
+)
+
 func TestContentFS_Store(t *testing.T) {
-	contentStr := "This is a test!"
-	fileContent := strings.NewReader(contentStr)
+	l := zerolog.New(zerolog.NewTestWriter(t))
 
 	t.Run("stores a file", func(t *testing.T) {
 		t.Parallel()
@@ -29,25 +34,45 @@ func TestContentFS_Store(t *testing.T) {
 		defer done()
 
 		path := testutil.TempDirFromContext(ctx, t)
-		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
-		f, err := file.Create(fileContent, "text/plain", "this/dir/without_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
+		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, l)
+		f, err := file.Create(fileContent(), "text/plain", "this/dir/without_error.txt", size, user.NewID())
+		require.NoError(t, err)
+
+		_, err = io.Copy(io.Discard, f.Content)
 		require.NoError(t, err)
 
 		err = content.Store(context.Background(), *f)
-
 		require.NoError(t, err)
-		testFileContet(t, filepath.Join(path, f.OwnerID.String(), string(f.Path)), contentStr)
+
+		testFileContent(t, filepath.Join(path, f.OwnerID.String(), string(f.Path)), contentStr)
 	})
 
-	t.Run("stores a file with timedouted context", func(t *testing.T) {
+	t.Run("stores a file rewinding the reader if necessary", func(t *testing.T) {
 		t.Parallel()
 
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir())
 		defer done()
 
 		path := testutil.TempDirFromContext(ctx, t)
-		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
-		f, err := file.Create(fileContent, "text/plain", "this/dir/timeout_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
+		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, l)
+		f, err := file.Create(fileContent(), "text/plain", "this/dir/without_error.txt", size, user.NewID())
+		require.NoError(t, err)
+
+		err = content.Store(context.Background(), *f)
+		require.NoError(t, err)
+
+		testFileContent(t, filepath.Join(path, f.OwnerID.String(), string(f.Path)), contentStr)
+	})
+
+	t.Run("doesn't store a file if the context times out", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir())
+		defer done()
+
+		path := testutil.TempDirFromContext(ctx, t)
+		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, l)
+		f, err := file.Create(fileContent(), "text/plain", "this/dir/timeout_error.txt", size, user.NewID())
 		require.NoError(t, err)
 		ctx, cancel := context.WithTimeout(context.Background(), 0*time.Nanosecond)
 		defer cancel()
@@ -59,15 +84,15 @@ func TestContentFS_Store(t *testing.T) {
 		require.ErrorIs(t, err, os.ErrNotExist)
 	})
 
-	t.Run("stores a file with cancelled context", func(t *testing.T) {
+	t.Run("doesn't store a file if the context is cancelled", func(t *testing.T) {
 		t.Parallel()
 
 		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir())
 		defer done()
 
 		path := testutil.TempDirFromContext(ctx, t)
-		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, zerolog.Nop())
-		f, err := file.Create(fileContent, "text/plain", "this/dir/ctx_cancelled_error.txt", file.Size(len([]byte(contentStr))), user.ID(testutil.Must(uuid.NewV7())))
+		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, l)
+		f, err := file.Create(fileContent(), "text/plain", "this/dir/ctx_cancelled_error.txt", size, user.NewID())
 		require.NoError(t, err)
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
@@ -80,7 +105,97 @@ func TestContentFS_Store(t *testing.T) {
 	})
 }
 
-func testFileContet(t *testing.T, filepath string, expected string) {
+func TestContentFS_Load(t *testing.T) {
+	l := zerolog.New(zerolog.NewTestWriter(t))
+
+	t.Run("deletes a file", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir())
+		defer done()
+
+		path := testutil.TempDirFromContext(ctx, t)
+		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, l)
+		f, err := file.Create(fileContent(), "text/plain", "this/dir/file.txt", size, user.NewID())
+		require.NoError(t, err)
+
+		err = content.Store(ctx, *f)
+		require.NoError(t, err)
+
+		c, err := content.Load(ctx, *f)
+		t.Logf("content %+v, err %s", c, err)
+		require.NoError(t, err)
+		require.NotNil(t, c)
+		defer file.Close(c)
+
+		b, err := io.ReadAll(c)
+		t.Logf("body: %s", string(b))
+		require.NoError(t, err)
+		require.Equal(t, []byte(contentStr), b)
+	})
+
+	t.Run("returns an error if the file does not exist", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir())
+		defer done()
+
+		path := testutil.TempDirFromContext(ctx, t)
+		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, l)
+		f, err := file.Create(fileContent(), "text/plain", "this/dir/missing.txt", size, user.NewID())
+		require.NoError(t, err)
+
+		c, err := content.Load(ctx, *f)
+		require.Equal(t, file.ErrFileNotFound, err)
+		require.Nil(t, c)
+	})
+
+}
+
+func TestContentFS_Delete(t *testing.T) {
+	l := zerolog.New(zerolog.NewTestWriter(t))
+
+	t.Run("deletes a file", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir())
+		defer done()
+
+		path := testutil.TempDirFromContext(ctx, t)
+		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, l)
+		f, err := file.Create(fileContent(), "text/plain", "this/dir/deleted.txt", size, user.NewID())
+		require.NoError(t, err)
+
+		err = content.Store(ctx, *f)
+		require.NoError(t, err)
+
+		testFileContent(t, filepath.Join(path, f.OwnerID.String(), string(f.Path)), contentStr)
+
+		err = content.Delete(ctx, *f)
+		require.NoError(t, err)
+
+		c, err := content.Load(ctx, *f)
+		require.Equal(t, file.ErrFileNotFound, err)
+		require.Nil(t, c)
+	})
+
+	t.Run("returns an error if the file does not exist", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir())
+		defer done()
+
+		path := testutil.TempDirFromContext(ctx, t)
+		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, l)
+		f, err := file.Create(fileContent(), "text/plain", "this/dir/missing.txt", size, user.NewID())
+		require.NoError(t, err)
+
+		err = content.Delete(ctx, *f)
+		require.ErrorIs(t, err, file.ErrFileNotFound)
+	})
+}
+
+func testFileContent(t *testing.T, filepath string, expected string) {
 	t.Helper()
 
 	f, err := os.Open(filepath)

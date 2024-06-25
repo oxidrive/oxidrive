@@ -42,23 +42,8 @@ func (f *Files) List(ctx context.Context, request api.FilesListRequestObject) (a
 
 	items := make([]api.File, count)
 	for i, fi := range ff.Items {
-		var typ api.FileType
 
-		switch fi.Type {
-		case file.TypeFile:
-			typ = api.FileTypeFile
-		case file.TypeFolder:
-			typ = api.FileTypeFolder
-		}
-
-		items[i] = api.File{
-			Id:          fi.ID.AsUUID(),
-			Type:        typ,
-			ContentType: string(fi.ContentType),
-			Name:        string(fi.Name),
-			Path:        string(fi.Path),
-			Size:        int(fi.Size),
-		}
+		items[i] = ToApiFile(fi)
 	}
 
 	return api.FilesList200JSONResponse(api.FileList{
@@ -133,4 +118,51 @@ func (f *Files) Upload(ctx context.Context, request api.FilesUploadRequestObject
 		Ok: true,
 		Id: id.String(),
 	}), nil
+}
+
+func (f *Files) Delete(ctx context.Context, request api.FileDeleteRequestObject) (api.FileDeleteResponseObject, error) {
+	cu := auth.GetCurrentUser(ctx)
+	id := file.ID(request.Id)
+
+	fi, err := f.App.Files().ByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load file %s: %w", id, err)
+	}
+
+	// TODO: the owner check will eventually be performed by the authorization engine
+	if fi == nil || fi.OwnerID != cu.ID {
+		return api.FileDelete404JSONResponse{
+			NotFoundJSONResponse: api.NotFoundJSONResponse{
+				Error:   api.NotFoundErrorErrorNotFound,
+				Message: fmt.Sprintf("file %s not found", id),
+			},
+		}, nil
+	}
+
+	if err = f.App.Files().Delete(ctx, fi.ID); err != nil {
+		return nil, fmt.Errorf("failed to delete file %s: %w", id, err)
+	}
+
+	return api.FileDelete200JSONResponse(ToApiFile(*fi)), nil
+}
+
+func ToApiFile(f file.File) api.File {
+	var typ api.FileType
+
+	switch f.Type {
+	case file.TypeFile:
+		typ = api.FileTypeFile
+	case file.TypeFolder:
+		typ = api.FileTypeFolder
+	}
+
+	return api.File{
+		Id:          f.ID.AsUUID(),
+		Type:        typ,
+		ContentType: string(f.ContentType),
+		Name:        string(f.Name),
+		Path:        string(f.Path),
+		Size:        int(f.Size),
+	}
+
 }

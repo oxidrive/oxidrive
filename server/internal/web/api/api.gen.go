@@ -52,6 +52,11 @@ const (
 	S3         InstanceStatusStatusFileStorage = "s3"
 )
 
+// Defines values for NotFoundErrorError.
+const (
+	NotFoundErrorErrorNotFound NotFoundErrorError = "not_found"
+)
+
 // Defines values for PasswordCredentialsKind.
 const (
 	PasswordCredentialsKindPassword PasswordCredentialsKind = "password"
@@ -156,6 +161,17 @@ type ListInfo struct {
 	Total int `json:"total"`
 }
 
+// NotFoundError defines model for NotFoundError.
+type NotFoundError struct {
+	Error NotFoundErrorError `json:"error"`
+
+	// Message human readable error message
+	Message string `json:"message"`
+}
+
+// NotFoundErrorError defines model for NotFoundError.Error.
+type NotFoundErrorError string
+
 // PasswordCredentials defines model for PasswordCredentials.
 type PasswordCredentials struct {
 	Kind     PasswordCredentialsKind `json:"kind"`
@@ -194,6 +210,9 @@ type First = int
 
 // InternalError defines model for InternalError.
 type InternalError = Error
+
+// NotFound defines model for NotFound.
+type NotFound = NotFoundError
 
 // FilesListParams defines parameters for FilesList.
 type FilesListParams struct {
@@ -294,6 +313,9 @@ type ServerInterface interface {
 	// Upload a file to Oxidrive
 	// (POST /api/files)
 	FilesUpload(w http.ResponseWriter, r *http.Request)
+
+	// (DELETE /api/files/{id})
+	FileDelete(w http.ResponseWriter, r *http.Request, id openapi_types.UUID)
 	// Get the instance status
 	// (GET /api/instance)
 	InstanceStatus(w http.ResponseWriter, r *http.Request)
@@ -371,6 +393,32 @@ func (siw *ServerInterfaceWrapper) FilesUpload(w http.ResponseWriter, r *http.Re
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.FilesUpload(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// FileDelete operation middleware
+func (siw *ServerInterfaceWrapper) FileDelete(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", r.PathValue("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FileDelete(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -558,6 +606,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 
 	m.HandleFunc("GET "+options.BaseURL+"/api/files", wrapper.FilesList)
 	m.HandleFunc("POST "+options.BaseURL+"/api/files", wrapper.FilesUpload)
+	m.HandleFunc("DELETE "+options.BaseURL+"/api/files/{id}", wrapper.FileDelete)
 	m.HandleFunc("GET "+options.BaseURL+"/api/instance", wrapper.InstanceStatus)
 	m.HandleFunc("POST "+options.BaseURL+"/api/instance/setup", wrapper.InstanceSetup)
 	m.HandleFunc("GET "+options.BaseURL+"/api/session", wrapper.AuthGetSession)
@@ -569,6 +618,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 type ErrorJSONResponse Error
 
 type InternalErrorJSONResponse Error
+
+type NotFoundJSONResponse NotFoundError
 
 type FilesListRequestObject struct {
 	Params FilesListParams
@@ -631,6 +682,44 @@ type FilesUploaddefaultJSONResponse struct {
 }
 
 func (response FilesUploaddefaultJSONResponse) VisitFilesUploadResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+
+	return json.NewEncoder(w).Encode(response.Body)
+}
+
+type FileDeleteRequestObject struct {
+	Id openapi_types.UUID `json:"id"`
+}
+
+type FileDeleteResponseObject interface {
+	VisitFileDeleteResponse(w http.ResponseWriter) error
+}
+
+type FileDelete200JSONResponse File
+
+func (response FileDelete200JSONResponse) VisitFileDeleteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type FileDelete404JSONResponse struct{ NotFoundJSONResponse }
+
+func (response FileDelete404JSONResponse) VisitFileDeleteResponse(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(404)
+
+	return json.NewEncoder(w).Encode(response)
+}
+
+type FileDeletedefaultJSONResponse struct {
+	Body       Error
+	StatusCode int
+}
+
+func (response FileDeletedefaultJSONResponse) VisitFileDeleteResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(response.StatusCode)
 
@@ -782,6 +871,9 @@ type StrictServerInterface interface {
 	// Upload a file to Oxidrive
 	// (POST /api/files)
 	FilesUpload(ctx context.Context, request FilesUploadRequestObject) (FilesUploadResponseObject, error)
+
+	// (DELETE /api/files/{id})
+	FileDelete(ctx context.Context, request FileDeleteRequestObject) (FileDeleteResponseObject, error)
 	// Get the instance status
 	// (GET /api/instance)
 	InstanceStatus(ctx context.Context, request InstanceStatusRequestObject) (InstanceStatusResponseObject, error)
@@ -875,6 +967,32 @@ func (sh *strictHandler) FilesUpload(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(FilesUploadResponseObject); ok {
 		if err := validResponse.VisitFilesUploadResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// FileDelete operation middleware
+func (sh *strictHandler) FileDelete(w http.ResponseWriter, r *http.Request, id openapi_types.UUID) {
+	var request FileDeleteRequestObject
+
+	request.Id = id
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.FileDelete(ctx, request.(FileDeleteRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "FileDelete")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(FileDeleteResponseObject); ok {
+		if err := validResponse.VisitFileDeleteResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -995,36 +1113,38 @@ func (sh *strictHandler) AuthCreateSession(w http.ResponseWriter, r *http.Reques
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file
