@@ -1,7 +1,7 @@
 <script lang="ts">
-import { goto, invalidate } from "$app/navigation";
-import type { ErrorResponse, File } from "$lib/api";
-import ActionBar from "$lib/components/ActionBar.svelte";
+import { invalidate, pushState } from "$app/navigation";
+import { page } from "$app/stores";
+import { type ErrorResponse, type File, type FileList, client } from "$lib/api";
 import Loading from "$lib/components/Loading.svelte";
 import PageTitle from "$lib/components/PageTitle.svelte";
 import { addToast, reportError } from "$lib/components/Toast.svelte";
@@ -12,14 +12,23 @@ import NoFiles from "$lib/components/files/NoFiles.svelte";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
 import { Localized, localize } from "@nubolab-ffwd/svelte-fluent";
+import { get, writable } from "svelte/store";
 import type { PageData } from "./$types";
 
 let viewMode: "list" | "grid" = "grid";
 let viewComponent = FilesGrid;
 
 export let data: PageData;
+let files: FileList | null = null;
+
+const selected = writable(new Set<File>());
 
 let uploadInput: HTMLInputElement;
+
+function setFiles(list: FileList | null): "" {
+	files = list;
+	return "";
+}
 
 function switchMode() {
 	switch (viewMode) {
@@ -45,6 +54,30 @@ function pickFile() {
 	uploadInput.click();
 }
 
+async function select({ detail: file }: CustomEvent<File>) {
+	selected.update((selected) => selected.add(file));
+}
+
+async function deselect({ detail: file }: CustomEvent<File>) {
+	selected.update((selected) => {
+		selected.delete(file);
+		return selected;
+	});
+}
+
+async function escapeJSONFile(file: globalThis.File): Promise<globalThis.File> {
+	const json = await new Promise<string>((resolve, reject) => {
+		const reader = new FileReader();
+		reader.readAsText(file, "UTF-8");
+		reader.addEventListener("load", () => {
+			resolve(reader.result as string);
+		});
+		reader.addEventListener("error", reject);
+	});
+
+	return new globalThis.File([json], file.name, { ...file });
+}
+
 async function upload(ev: Event) {
 	const input = ev.target as HTMLInputElement;
 	for (const file of input?.files || []) {
@@ -59,7 +92,12 @@ async function upload(ev: Event) {
 		});
 		const form = new FormData();
 		form.append("path", `${data.path}/${file.name}`);
-		form.append("file", file);
+
+		if (file.type === "application/json") {
+			form.append("file", await escapeJSONFile(file));
+		} else {
+			form.append("file", file);
+		}
 
 		// can't use openapi-fetch here because it doesn't handle
 		// file uploads / multipart form data very well
@@ -107,6 +145,56 @@ async function download({ detail: file }: CustomEvent<File>) {
 	link.click();
 }
 
+async function onDelete({ detail: file }: CustomEvent<File>) {
+	if (!confirm($localize("files-delete-confirm", { file: file.name }))) {
+		return;
+	}
+
+	return deleteFile(file);
+}
+
+async function deleteFile(file: File) {
+	const { error, response } = await client.DELETE("/api/files/{id}", {
+		params: { path: { id: file.id } },
+	});
+	if (error || !response.ok) {
+		handleResponseError(error || response);
+		return;
+	}
+
+	selected.update((selected) => {
+		selected.delete(file);
+		return selected;
+	});
+
+	if (!files) {
+		return;
+	}
+
+	files = {
+		...files,
+		items: files.items.filter((f) => f.id !== file.id),
+		count: files.count - 1,
+	};
+}
+
+async function deleteSelected() {
+	if (!confirm($localize("files-delete-confirm", { file: "selected" }))) {
+		return;
+	}
+
+	const deletes = [...get(selected)].map((f) => deleteFile(f));
+	await Promise.allSettled(deletes);
+}
+
+async function selectAll(ev: { currentTarget: HTMLInputElement }) {
+	if (ev.currentTarget.checked) {
+		selected.set(new Set(files?.items || []));
+	} else {
+		selected.set(new Set());
+	}
+}
+
 async function handleResponseError(error: ErrorResponse | Response) {
 	const data =
 		error instanceof Response
@@ -114,29 +202,54 @@ async function handleResponseError(error: ErrorResponse | Response) {
 			: error;
 	reportError(data);
 }
+
+function togglePreview(preview?: File) {
+	pushState("", { preview });
+}
 </script>
 
 <div class="action-bar">
-    <Localized id="files-title" let:text>
-        <PageTitle title={text} />
-        <h1 class="sr-only">{text}</h1>
-    </Localized>
+    <div class="action-bar-left">
+        <Localized id="files-title" let:text>
+            <PageTitle title={text} />
+            <h1 class="sr-only">{text}</h1>
+        </Localized>
 
-    <Localized id="files-title" let:text>
-        <a href="/files" title={text}>
-            <i class="fa-solid fa-house text-primary-900"></i>
-        </a>
-    </Localized>
+        <Localized id="files-title" let:text>
+            <a href="/files" title={text}>
+                <i class="fa-solid fa-house text-primary-900"></i>
+            </a>
+        </Localized>
 
-    <Localized id="files-switch-view-mode" let:attrs>
-        <button on:click={switchMode} title={attrs[viewMode]}>
-            <i
-                class="text-primary-900 fa-solid"
-                class:fa-list-ul={viewMode === "grid"}
-                class:fa-border-all={viewMode === "list"}
-            ></i>
-        </button>
-    </Localized>
+        <Localized id="files-actions" let:attrs>
+            <input
+                class="checkbox"
+                type="checkbox"
+                on:change={selectAll}
+                title={attrs["select-all"]}
+                aria-label={attrs["select-all"]}
+            />
+
+            {#if $selected.size > 0}
+                <button class="button filled" on:click={deleteSelected}>
+                    <i class="fa-solid fa-trash"></i>
+                    {attrs.delete}
+                </button>
+            {/if}
+        </Localized>
+    </div>
+
+    <div class="action-bar-right">
+        <Localized id="files-switch-view-mode" let:attrs>
+            <button on:click={switchMode} title={attrs[viewMode]}>
+                <i
+                    class="text-primary-900 fa-solid"
+                    class:fa-list-ul={viewMode === "grid"}
+                    class:fa-border-all={viewMode === "list"}
+                ></i>
+            </button>
+        </Localized>
+    </div>
 </div>
 
 {#await data.response}
@@ -144,23 +257,33 @@ async function handleResponseError(error: ErrorResponse | Response) {
 {:then { data: files, error, response }}
     {#if error || !response.ok}
         {handleResponseError(error || response)}
-    {:else if files.count === 0}
+    {:else}
+        {setFiles(files)}
+    {/if}
+{/await}
+
+{#if files}
+    {#if files.count === 0}
         <Localized id="files-empty" let:text>
             <NoFiles {text} />
         </Localized>
     {:else}
-        <svelte:component this={viewComponent} {files} on:download={download} />
-        {@const fileToPreview = files.items.find(
-            (f) => data.preview && f.name === data.preview,
-        )}
-        {#if fileToPreview}
-            <FilePreview
-                file={fileToPreview}
-                on:close={() => goto(window.location.pathname)}
-            />
-        {/if}
+        <svelte:component
+            this={viewComponent}
+            {files}
+            selected={$selected}
+            on:selected={select}
+            on:deselected={deselect}
+            on:download={download}
+            on:delete={onDelete}
+            on:preview={({ detail: file }) => togglePreview(file)}
+        />
     {/if}
-{/await}
+{/if}
+
+{#if $page.state.preview}
+    <FilePreview file={$page.state.preview} on:close={() => togglePreview()} />
+{/if}
 
 <Localized id="files-upload-cta" let:text>
     <button class="fab primary" on:click={pickFile} title={text}>
@@ -182,5 +305,13 @@ async function handleResponseError(error: ErrorResponse | Response) {
         justify-content: space-between;
         align-items: center;
         padding: var(--oxi-size-4);
+    }
+
+    .action-bar-left {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-evenly;
+        align-items: center;
+        gap: var(--oxi-size-4);
     }
 </style>

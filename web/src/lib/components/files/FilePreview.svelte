@@ -1,4 +1,5 @@
 <script lang="ts">
+import { browser } from "$app/environment";
 import type { File } from "$lib/api";
 import { Localized } from "@nubolab-ffwd/svelte-fluent";
 import { createEventDispatcher, onMount } from "svelte";
@@ -18,6 +19,8 @@ function close(ev: MouseEvent | KeyboardEvent) {
 }
 
 async function isPreviewable(): Promise<boolean> {
+	if (!browser) return false;
+
 	const response = await fetch(path, {
 		method: "HEAD",
 		cache: "force-cache",

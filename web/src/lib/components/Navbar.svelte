@@ -15,7 +15,7 @@ import logo from "$lib/assets/logo-white-with-name.svg";
 </nav>
 
 <style lang="scss">
-    :root {
+    :global(:root) {
         --oxi-navbar-height: 72px;
     }
 
@@ -29,13 +29,12 @@ import logo from "$lib/assets/logo-white-with-name.svg";
         .navbar-left {
             display: flex;
             justify-content: start;
-            flex-grow: 1;
         }
 
         .navbar-right {
             display: flex;
             justify-content: space-around;
-            flex-grow: 1;
+            gap: var(--oxi-size-10);
         }
 
         .logo {

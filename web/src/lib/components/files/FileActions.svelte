@@ -15,7 +15,7 @@ interface Action {
 const actions: Action[] = [
 	{ action: "rename", icon: "fa-solid fa-pencil", disabled: true },
 	{ action: "download", icon: "fa-solid fa-download" },
-	{ action: "delete", icon: "fa-solid fa-trash", disabled: true },
+	{ action: "delete", icon: "fa-solid fa-trash" },
 ];
 
 const dispatch = createEventDispatcher<Record<Actions, File>>();
@@ -31,7 +31,12 @@ const {
 </script>
 
 <Localized id="files-actions" let:text let:attrs>
-    <button use:melt={$trigger} title={text} class={clazz}>
+    <button
+        use:melt={$trigger}
+        title={text}
+        class={clazz}
+        data-testid="file-actions"
+    >
         <i class="fa-solid fa-ellipsis text-primary-500"></i>
     </button>
     <div use:melt={$menu} class="file-actions">

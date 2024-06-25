@@ -59,7 +59,7 @@ jobs:
     needs: [build]
     strategy:
       matrix:
-        project: ['chromium', 'firefox', 'webkit', 'Mobile Chrome', 'Mobile Safari']
+        project: ['chromium', 'firefox', 'webkit', 'chromium-mobile', 'webkit-mobile']
         database: ['sqlite', 'postgres']
         storage: ['filesystem']
     services:

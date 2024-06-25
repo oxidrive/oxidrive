@@ -22,6 +22,22 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	"/api/files/{id}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		post?: never;
+		delete: operations["fileDelete"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/api/instance": {
 		parameters: {
 			query?: never;
@@ -97,6 +113,12 @@ export interface components {
 		Error: {
 			/** @description machine-readable error tag */
 			error: string;
+			/** @description human readable error message */
+			message: string;
+		};
+		NotFoundError: {
+			/** @enum {string} */
+			error: "not_found";
 			/** @description human readable error message */
 			message: string;
 		};
@@ -205,6 +227,14 @@ export interface components {
 				"application/json": components["schemas"]["Error"];
 			};
 		};
+		NotFound: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/json": components["schemas"]["NotFoundError"];
+			};
+		};
 		/** @description Unexpected Error */
 		InternalError: {
 			headers: {
@@ -282,6 +312,31 @@ export interface operations {
 				};
 			};
 			400: components["responses"]["Error"];
+			default: components["responses"]["InternalError"];
+		};
+	};
+	fileDelete: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description Id of the file to delete */
+				id: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["File"];
+				};
+			};
+			/** @description The requested file does not exist or cannot be accessed */
+			404: components["responses"]["NotFound"];
 			default: components["responses"]["InternalError"];
 		};
 	};

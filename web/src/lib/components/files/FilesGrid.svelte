@@ -1,11 +1,32 @@
 <script lang="ts">
-import type { FileList } from "$lib/api";
+import type { File, FileList } from "$lib/api";
 import { Localized } from "@nubolab-ffwd/svelte-fluent";
+import { createEventDispatcher } from "svelte";
 import FileActions from "./FileActions.svelte";
 import FileIcon from "./FileIcon.svelte";
 import FileLink from "./FileLink.svelte";
 
+type EventHandler = (
+	ev: Event & { currentTarget: EventTarget & HTMLInputElement },
+) => void;
+
+const dispatch = createEventDispatcher<{
+	selected: File;
+	deselected: File;
+}>();
+
 export let files: FileList;
+export let selected: Set<File>;
+
+function select(file: File): EventHandler {
+	return (ev) => {
+		if (ev.currentTarget.checked) {
+			dispatch("selected", file);
+		} else {
+			dispatch("deselected", file);
+		}
+	};
+}
 </script>
 
 <div class="files-grid">
@@ -13,16 +34,22 @@ export let files: FileList;
         <div class="file-box" title={file.name}>
             <div class="header">
                 <Localized id="files-selected" let:text>
-                    <input class="checkbox" type="checkbox" aria-label={text} />
+                    <input
+                        class="checkbox"
+                        type="checkbox"
+                        aria-label={text}
+                        on:change={select(file)}
+                        checked={selected.has(file)}
+                    />
                 </Localized>
             </div>
 
-            <FileLink {file}>
+            <FileLink {file} on:preview>
                 <FileIcon {file} height="80px" width="80px" />
             </FileLink>
 
             <div class="footer">
-                <FileLink {file} class="text-primary-500 truncate">
+                <FileLink {file} class="text-primary-500 truncate" on:preview>
                     {file.name}
                 </FileLink>
 
