@@ -1,18 +1,24 @@
 name: Unstable Build
 
 on:
-  workflow_run:
-    workflows: ["E2E Tests"]
-    types: 
-      - completed
+  push:
+    branches:
+      - main
 
 env:
   REGISTRY: ghcr.io
   IMAGE: ${{ github.repository }}
   TAG: unstable
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  push:
+  e2e:
+    uses: ./.github/workflows/e2e.yml
+
+  build-and-push:
     timeout-minutes: 60
     runs-on: ubuntu-latest
     permissions:
