@@ -184,6 +184,24 @@ func (s *SqliteFiles) saveFolder(ctx context.Context, tx *sqlx.Tx, f *file.File)
 	return err
 }
 
+func (s *SqliteFiles) Delete(ctx context.Context, f file.File) error {
+	r, err := s.db.ExecContext(ctx, "delete from files where id = $1", f.ID.String())
+	if err != nil {
+		return err
+	}
+
+	n, err := r.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if n == 0 {
+		return file.ErrFileNotFound
+	}
+
+	return nil
+}
+
 func (s *SqliteFiles) ByID(ctx context.Context, id file.ID) (*file.File, error) {
 	var f sqliteFile
 	err := s.db.GetContext(ctx, &f, "select id, type, content_type, name, path, size, user_id from files where id = $1", id.String())

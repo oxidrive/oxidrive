@@ -415,3 +415,135 @@ func TestApi_Files_Blob(t *testing.T) {
 			End()
 	})
 }
+
+func TestApi_Files_Delete(t *testing.T) {
+	t.Run("deletes an existing file", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		ctx, done := testutil.IntegrationTest(ctx, t, testutil.WithTempDir(), testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		app, handler := setup(ctx, t)
+
+		username := "test"
+		password := "test"
+
+		testutil.Must(app.Users().Save(ctx, *testutil.Must(user.Create(username, password))))
+		tkn, u, err := app.Auth().AuthenticateWithPassword(ctx, username, password)
+		require.NoError(t, err)
+
+		body := "hello world!"
+		size := len(body)
+
+		id := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
+			Content:     file.Content(strings.NewReader(body)),
+			ContentType: file.ContentType("text/plain"),
+			Path:        file.Path("/hello.txt"),
+			Size:        file.Size(size),
+		}, u.ID))
+
+		var f api.File
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Deletef("/api/files/%s", id.String()).
+			WithContext(ctx).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusOK).
+			End().
+			JSON(&f)
+
+		assert.Equal(t, id.AsUUID(), f.Id)
+		assert.Equal(t, api.FileTypeFile, f.Type)
+		assert.Equal(t, "text/plain", f.ContentType)
+		assert.Equal(t, "hello.txt", f.Name)
+		assert.Equal(t, "/hello.txt", f.Path)
+		assert.Equal(t, size, f.Size)
+	})
+
+	t.Run("does not delete an existing file that belongs to another user", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		ctx, done := testutil.IntegrationTest(ctx, t, testutil.WithTempDir(), testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		app, handler := setup(ctx, t)
+
+		username := "test"
+		password := "test"
+
+		testutil.Must(app.Users().Save(ctx, *testutil.Must(user.Create(username, password))))
+		u := testutil.Must(app.Users().Save(ctx, *testutil.Must(user.Create("different", password))))
+		tkn, _, err := app.Auth().AuthenticateWithPassword(ctx, username, password)
+		require.NoError(t, err)
+
+		body := "hello world!"
+		size := len(body)
+
+		id := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
+			Content:     file.Content(strings.NewReader(body)),
+			ContentType: file.ContentType("text/plain"),
+			Path:        file.Path("/hello.txt"),
+			Size:        file.Size(size),
+		}, u.ID))
+
+		var e api.Error
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Deletef("/api/files/%s", id.String()).
+			WithContext(ctx).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusNotFound).
+			End().
+			JSON(&e)
+
+		assert.Equal(t, string(api.NotFoundErrorErrorNotFound), e.Error)
+	})
+
+	t.Run("does not delete a file that does not exist", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		ctx, done := testutil.IntegrationTest(ctx, t, testutil.WithTempDir(), testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		app, handler := setup(ctx, t)
+
+		username := "test"
+		password := "test"
+
+		testutil.Must(app.Users().Save(ctx, *testutil.Must(user.Create(username, password))))
+		tkn, _, err := app.Auth().AuthenticateWithPassword(ctx, username, password)
+		require.NoError(t, err)
+
+		id := file.NewID()
+
+		var e api.Error
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Deletef("/api/files/%s", id.String()).
+			WithContext(ctx).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusNotFound).
+			End().
+			JSON(&e)
+
+		assert.Equal(t, string(api.NotFoundErrorErrorNotFound), e.Error)
+	})
+}

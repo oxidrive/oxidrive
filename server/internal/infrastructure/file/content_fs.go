@@ -37,13 +37,26 @@ func NewContentFS(cfg config.StorageConfig, logger zerolog.Logger) *contentFS {
 	}
 }
 
-func (c *contentFS) Store(ctx context.Context, f file.File) (err error) {
+func (c *contentFS) Store(ctx context.Context, f file.File) error {
 	fsPath := c.pathFor(f)
 	if err := ensureDir(fsPath); err != nil {
 		return err
 	}
 
-	logger := c.logger.With().Str("path", string(f.Path)).Int("size", int(f.Size)).Logger()
+	s, ok := f.Content.(io.Seeker)
+	if ok {
+		if _, err := s.Seek(0, io.SeekStart); err != nil {
+			return fmt.Errorf("failed to rewind file %s to start of buffer: %w", fsPath, err)
+		}
+
+	}
+
+	logger := c.logger.With().
+		Str("path", string(f.Path)).
+		Str("owner_id", f.OwnerID.String()).
+		Str("id", f.ID.String()).
+		Int("size", int(f.Size)).
+		Logger()
 	fsFile, err := os.OpenFile(fsPath, os.O_RDWR|os.O_CREATE, filePermission)
 	if err != nil {
 		return err
@@ -54,6 +67,7 @@ func (c *contentFS) Store(ctx context.Context, f file.File) (err error) {
 		}
 	}()
 
+	var total int64
 	for {
 		if err = ctx.Err(); err != nil {
 			if reErr := os.Remove(string(fsPath)); reErr != nil {
@@ -62,12 +76,15 @@ func (c *contentFS) Store(ctx context.Context, f file.File) (err error) {
 			return fmt.Errorf("context invalidated while saving the file in blob fs: %w", err)
 		}
 
-		if _, err = io.CopyN(fsFile, f.Content, int64(c.throughput)); err != nil {
+		n, err := io.CopyN(fsFile, f.Content, int64(c.throughput))
+		if err != nil {
 			if errors.Is(err, io.EOF) {
+				logger.Debug().Int64("bytes_written", total+n).Msg("stored file in filesystem")
 				return nil
 			}
 			return err
 		}
+		total += n
 	}
 }
 
@@ -76,10 +93,40 @@ func (c *contentFS) Load(ctx context.Context, f file.File) (file.Content, error)
 
 	fsFile, err := os.Open(fsPath)
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, file.ErrFileNotFound
+		}
+
 		return nil, fmt.Errorf("failed to open file %s: %w", fsPath, err)
 	}
 
+	c.logger.Debug().
+		Str("path", string(f.Path)).
+		Str("owner_id", f.OwnerID.String()).
+		Str("id", f.ID.String()).
+		Msg("loaded file from filesystem")
+
 	return fsFile, nil
+}
+
+func (c *contentFS) Delete(ctx context.Context, f file.File) error {
+	fsPath := c.pathFor(f)
+
+	if err := os.Remove(fsPath); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return file.ErrFileNotFound
+		}
+
+		return fmt.Errorf("failed to delete file %s: %w", fsPath, err)
+	}
+
+	c.logger.Debug().
+		Str("path", string(f.Path)).
+		Str("owner_id", f.OwnerID.String()).
+		Str("id", f.ID.String()).
+		Msg("deleted file from filesystem")
+
+	return nil
 }
 
 func (c *contentFS) pathFor(f file.File) string {

@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -29,7 +28,7 @@ func TestService_Upload(t *testing.T) {
 		ct := ContentType("text/plain")
 		filepath := Path("/filepath")
 		size := Size(10)
-		owner := user.ID(testutil.Must(uuid.NewV7()))
+		owner := user.NewID()
 		file := testutil.Must(Create(content, ct, filepath, size, owner))
 
 		filesMock.On("ByOwnerByPath", owner, filepath).Return((*File)(nil), nil).Once()
@@ -57,7 +56,7 @@ func TestService_Upload(t *testing.T) {
 		content := strings.NewReader("")
 		filepath := Path("../invalid/filepath")
 		size := 10
-		owner := user.ID(testutil.Must(uuid.NewV7()))
+		owner := user.NewID()
 
 		filesMock.On("ByOwnerByPath", owner, filepath).Return((*File)(nil), nil).Once()
 		defer contentsMock.AssertExpectations(t)
@@ -84,7 +83,7 @@ func TestService_Upload(t *testing.T) {
 		filepath := Path("/filepath")
 		size := 10
 		genericError := errors.New("generic error")
-		owner := user.ID(testutil.Must(uuid.NewV7()))
+		owner := user.NewID()
 
 		filesMock.On("ByOwnerByPath", owner, filepath).Return((*File)(nil), nil).Once()
 		contentsMock.On("Store", mock.MatchedBy(func(f File) bool { return f.Path == filepath })).Return(genericError).Once()
@@ -111,7 +110,7 @@ func TestService_Upload(t *testing.T) {
 		filepath := Path("/filepath")
 		size := 10
 		genericError := errors.New("generic error")
-		owner := user.ID(testutil.Must(uuid.NewV7()))
+		owner := user.NewID()
 
 		filesMock.On("ByOwnerByPath", owner, filepath).Return((*File)(nil), nil).Once()
 		contentsMock.On("Store", mock.MatchedBy(func(f File) bool { return f.Path == filepath })).Return(nil).Once()
@@ -140,7 +139,7 @@ func TestService_Upload(t *testing.T) {
 		ct := ContentType("text/plain")
 		filepath := Path("/filepath")
 		size := 10
-		owner := user.ID(testutil.Must(uuid.NewV7()))
+		owner := user.NewID()
 
 		file, err := Create(content, ct, "original", Size(size), owner)
 		require.NoError(t, err)
@@ -156,5 +155,54 @@ func TestService_Upload(t *testing.T) {
 
 		require.NoError(t, err)
 		assert.Equal(t, file.ID, id)
+	})
+}
+
+func TestService_Delete(t *testing.T) {
+	t.Run("deletes an existing file", func(t *testing.T) {
+		t.Parallel()
+
+		contentsMock := NewContentsMock(t)
+		filesMock := NewFilesMock(t)
+
+		service := NewService(contentsMock, filesMock)
+
+		ctx := context.Background()
+
+		owner := user.NewID()
+		f, err := Create(strings.NewReader(""), "text/plain", "test.txt", 0, owner)
+		require.NoError(t, err)
+		require.NotNil(t, f)
+
+		filesMock.On("ByID", f.ID).Return(f, nil).Once()
+		filesMock.On("Delete", *f).Return(nil).Once()
+		contentsMock.On("Delete", *f).Return(nil).Once()
+
+		err = service.Delete(ctx, f.ID)
+		require.NoError(t, err)
+
+		defer contentsMock.AssertExpectations(t)
+		defer filesMock.AssertExpectations(t)
+	})
+
+	t.Run("returns an error if the file does not exist", func(t *testing.T) {
+		t.Parallel()
+
+		contentsMock := NewContentsMock(t)
+		filesMock := NewFilesMock(t)
+
+		service := NewService(contentsMock, filesMock)
+
+		ctx := context.Background()
+
+		id := NewID()
+
+		filesMock.On("ByID", id).Return((*File)(nil), nil).Once()
+
+		err := service.Delete(ctx, id)
+		assert.Equal(t, err, ErrFileNotFound)
+
+		defer contentsMock.AssertExpectations(t)
+		defer filesMock.AssertExpectations(t)
 	})
 }

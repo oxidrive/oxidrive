@@ -47,6 +47,29 @@ paths:
         default:
           $ref: './openapi.yaml#/components/responses/InternalError'
 
+  /api/files/{id}:
+    delete:
+      operationId: fileDelete
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Id of the file to delete
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        '404':
+          description: The requested file does not exist or cannot be accessed
+          $ref: './openapi.yaml#/components/responses/NotFound'
+        default:
+          $ref: './openapi.yaml#/components/responses/InternalError'
+
 components:
   parameters:
     FilePrefix:

@@ -8,8 +8,6 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/web/handler"
 )
 
-var _ api.StrictServerInterface = (*Api)(nil)
-
 type Api struct {
 	auth     handler.Sessions
 	files    handler.Files
@@ -58,6 +56,10 @@ func mountApi(router *http.ServeMux, cfg *Config) error {
 	return nil
 }
 
+var _ api.StrictServerInterface = (*Api)(nil)
+
+/* Auth */
+
 func (api *Api) AuthCreateSession(ctx context.Context, request api.AuthCreateSessionRequestObject) (api.AuthCreateSessionResponseObject, error) {
 	return api.auth.CreateSession(ctx, request)
 }
@@ -66,6 +68,8 @@ func (api *Api) AuthGetSession(ctx context.Context, request api.AuthGetSessionRe
 	return api.auth.GetSession(ctx, request)
 }
 
+/* Files */
+
 func (api *Api) FilesList(ctx context.Context, request api.FilesListRequestObject) (api.FilesListResponseObject, error) {
 	return api.files.List(ctx, request)
 }
@@ -73,6 +77,12 @@ func (api *Api) FilesList(ctx context.Context, request api.FilesListRequestObjec
 func (api *Api) FilesUpload(ctx context.Context, request api.FilesUploadRequestObject) (api.FilesUploadResponseObject, error) {
 	return api.files.Upload(ctx, request)
 }
+
+func (api *Api) FileDelete(ctx context.Context, request api.FileDeleteRequestObject) (api.FileDeleteResponseObject, error) {
+	return api.files.Delete(ctx, request)
+}
+
+/* Instance */
 
 func (api *Api) InstanceStatus(ctx context.Context, request api.InstanceStatusRequestObject) (api.InstanceStatusResponseObject, error) {
 	return api.instance.Status(ctx, request)
