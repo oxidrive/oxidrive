@@ -2,7 +2,7 @@ name: Unstable Build
 
 on:
   workflow_run:
-    workflows: ["Server CI", "Web CI", "E2E Tests"]
+    workflows: ["E2E Tests"]
     types: 
       - completed
 
@@ -36,6 +36,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE }}
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -48,7 +49,7 @@ jobs:
       - name: Sign image
         if: github.ref == 'refs/heads/main'
         run: |
-          cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${{ env.REGISTRY }}/${{ env.IMAGE }}:${{ env.TAG }}
+          cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${{ env.REGISTRY }}/${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
