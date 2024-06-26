@@ -14,7 +14,7 @@ export let text: string;
         {style}
         class="text-primary-200"
     />
-    <p class="text-primary-200">{text}</p>
+    <p class="text-primary-400 text-lg">{text}</p>
 </div>
 
 <style>
