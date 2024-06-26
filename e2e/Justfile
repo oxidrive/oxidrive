@@ -22,6 +22,13 @@ fmt: _install
 lint: _install
     npx biome ci .
 
+rebuild:
+    #!/usr/bin/env sh
+    cd ..
+    just server/generate
+    just web/build
+    just server/build
+
 [linux]
 setup: _install
     #!/usr/bin/env sh
