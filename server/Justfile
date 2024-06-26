@@ -46,4 +46,4 @@ setup: _install
     cp .env.example .env
 
 _install:
-    [ -d ../node_modules ] || npm install
+    [ -d ../node_modules ] || npm ci
