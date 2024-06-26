@@ -32,41 +32,20 @@
           (mkJustCmd "e2e/ui" { help = "Run the Playwright UI to interactively run tests"; category = "E2E"; })
           (mkJustCmd "e2e/chromium" { help = "Like just e2e/test, but only runs chromium-based tests"; category = "E2E"; })
 
-          { command = "pre-commit run --all-files"; name = "format"; help = "Reformat everything (Go, Rust, TypeScript, Nix...) in one go"; }
+          { command = "lefthook run pre-commit --all-files"; name = "format"; help = "Reformat everything (Go, TypeScript, Nix...) in one go"; }
           (mkJustCmd "act" { help = "Run the GitHub Actions workflows locally. Requires a running Docker engine and authenticated gh CLI"; category = "CI"; })
         ];
 
+        devshell.startup.lefthook.text = "lefthook install";
+
         packages = with pkgs; [
           act
+          cosign
           dotenv-linter
           gh
+          lefthook
+          config.formatter
         ];
-
-        devshell.startup.pre-commit-hooks.text = config.pre-commit.installationScript;
-      };
-
-      pre-commit = {
-        check.enable = false;
-        settings.hooks = {
-          nixpkgs-fmt.enable = true;
-
-          dotenv-linter = {
-            enable = true;
-            name = "dotenv-linter";
-            description = "Lint .env files";
-            files = "^.env";
-            entry =
-              let
-                script = pkgs.writeShellScript "precommit-dotenv-linter" ''
-                  set -e
-                  ${pkgs.dotenv-linter}/bin/dotenv-linter fix --no-backup --recursive
-                '';
-              in
-              builtins.toString script;
-            require_serial = true;
-            pass_filenames = false;
-          };
-        };
       };
     };
 }
