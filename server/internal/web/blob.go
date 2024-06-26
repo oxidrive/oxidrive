@@ -14,12 +14,6 @@ import (
 
 func serveBlob(app *app.Application) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		forceDwl, err := forceDownload(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
-
 		f, c, err := downloadBlob(app, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -36,7 +30,7 @@ func serveBlob(app *app.Application) http.HandlerFunc {
 		w.Header().Add("content-type", string(f.ContentType))
 		w.Header().Add("content-length", strconv.FormatInt(int64(f.Size), 10))
 		w.Header().Add("cache-control", "private")
-		w.Header().Add("content-disposition", contentDisposition(f, forceDwl))
+		w.Header().Add("content-disposition", contentDisposition(f))
 
 		if _, err = io.Copy(w, c); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -73,25 +67,7 @@ func downloadBlob(app *app.Application, r *http.Request) (*file.File, file.Conte
 	return f, c, nil
 }
 
-func forceDownload(r *http.Request) (bool, error) {
-	q := r.URL.Query()
-	if !q.Has("download") {
-		return false, nil
-	}
-
-	fd, err := strconv.ParseBool(q.Get("download"))
-	if err != nil {
-		return false, err
-	}
-
-	return fd, nil
-}
-
-func contentDisposition(f *file.File, force bool) string {
-	if force {
-		return attachment(f)
-	}
-
+func contentDisposition(f *file.File) string {
 	if canBeInlined(f) {
 		return "inline"
 	}

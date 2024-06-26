@@ -321,7 +321,7 @@ func TestApi_Files_Upload(t *testing.T) {
 			Expect(t).
 			Status(http.StatusOK).
 			Header(headers.ContentLength, fmt.Sprintf("%d", size)).
-			Header(headers.ContentDisposition, "inline").
+			Header(headers.ContentDisposition, "attachment; filename="+f.Name).
 			Body(string(content)).
 			End()
 	})
@@ -347,56 +347,13 @@ func TestApi_Files_Blob(t *testing.T) {
 		require.NoError(t, err)
 
 		body := "hello world!"
-		path := "/hello.txt"
-		size := len(body)
-
-		_ = testutil.Must(app.Files().Upload(ctx, file.FileUpload{
-			Content:     file.Content(strings.NewReader(body)),
-			ContentType: file.ContentType("text/plain"),
-			Path:        file.Path(path),
-			Size:        file.Size(size),
-		}, u.ID))
-
-		apitest.New().
-			Debug().
-			Handler(handler).
-			Getf("/blob%s", path).
-			WithContext(ctx).
-			Cookie(h.SessionCookieName, tkn.Value.String()).
-			Expect(t).
-			Status(http.StatusOK).
-			Header(headers.ContentLength, fmt.Sprintf("%d", size)).
-			Header(headers.ContentDisposition, "inline").
-			Body(body).
-			End()
-	})
-
-	t.Run("forces the attachment disposition on a blob", func(t *testing.T) {
-		t.Parallel()
-
-		ctx, cancel := context.WithTimeout(context.Background(), timeout)
-		defer cancel()
-
-		ctx, done := testutil.IntegrationTest(ctx, t, testutil.WithTempDir(), testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
-		defer done()
-
-		app, handler := setup(ctx, t)
-
-		username := "test"
-		password := "test"
-
-		testutil.Must(app.Users().Save(ctx, *testutil.Must(user.Create(username, password))))
-		tkn, u, err := app.Auth().AuthenticateWithPassword(ctx, username, password)
-		require.NoError(t, err)
-
-		body := "hello world!"
 		name := "hello.txt"
 		size := len(body)
 
 		_ = testutil.Must(app.Files().Upload(ctx, file.FileUpload{
 			Content:     file.Content(strings.NewReader(body)),
 			ContentType: file.ContentType("text/plain"),
-			Path:        file.Path(name),
+			Path:        file.Path("/" + name),
 			Size:        file.Size(size),
 		}, u.ID))
 
@@ -404,7 +361,6 @@ func TestApi_Files_Blob(t *testing.T) {
 			Debug().
 			Handler(handler).
 			Getf("/blob/%s", name).
-			Query("download", "true").
 			WithContext(ctx).
 			Cookie(h.SessionCookieName, tkn.Value.String()).
 			Expect(t).
