@@ -13,7 +13,7 @@ test: setup
     npx vitest run
 
 setup:
-    [ -d ../node_modules ] || npm install
+    [ -d ../node_modules ] || npm ci
 
 fmt: setup
     npx biome format --write .

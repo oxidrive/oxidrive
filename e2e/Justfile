@@ -45,4 +45,4 @@ setup: _install
     mkdir -p playwright/.auth
 
 _install:
-    [ -d ../node_modules ] || npm install
+    [ -d ../node_modules ] || npm ci
