@@ -1,18 +1,3 @@
 {
-	"$schema": "https://biomejs.dev/schemas/1.6.3/schema.json",
-	"organizeImports": {
-		"enabled": true
-	},
-	"files": {
-		"ignore": ["dist/*", ".astro/*"]
-	},
-	"vcs": {
-		"useIgnoreFile": true
-	},
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"recommended": true
-		}
-	}
+	"extends": ["../biome.jsonc"]
 }
