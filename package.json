@@ -41,5 +41,8 @@
 		"@fortawesome/svelte-fontawesome": "^0.2.2",
 		"minireset.css": "^0.0.7",
 		"openapi-fetch": "^0.10.1"
+	},
+	"engines": {
+		"node": ">=20 <21"
 	}
 }

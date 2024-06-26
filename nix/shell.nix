@@ -14,7 +14,7 @@
           (mkJustCmd "server/watch" { help = "Start the API server locally (with autoreload)"; category = "Server"; })
           (mkJustCmd "server/test" { help = "Run the API server unit tests"; category = "Server"; })
           (mkJustCmd "server/test-integration" { help = "Run the API server integration tests"; category = "Server"; })
-          (mkJustCmd "server/migration-reate <name>" { help = "Create a new SQL migration"; category = "Server"; })
+          (mkJustCmd "server/migration-create <name>" { help = "Create a new SQL migration"; category = "Server"; })
 
           (mkJustCmd "web/watch" { help = "Start the web frontend locally (with autoreload)"; category = "Web"; })
           (mkJustCmd "web/watch-app" { help = "Start only the web frontend locally without the stylesheets (with autoreload)"; category = "Web"; })
@@ -36,15 +36,17 @@
           (mkJustCmd "act" { help = "Run the GitHub Actions workflows locally. Requires a running Docker engine and authenticated gh CLI"; category = "CI"; })
         ];
 
-        devshell.startup.lefthook.text = "lefthook install";
+        devshell.startup.lefthook.text = "lefthook install --force";
 
         packages = with pkgs; [
           act
+          config.formatter
           cosign
           dotenv-linter
           gh
           lefthook
-          config.formatter
+          lychee
+          typos
         ];
       };
     };

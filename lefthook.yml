@@ -15,7 +15,7 @@ pre-commit:
       <<: *biome
 
     govet: &go
-      run: go vet
+      run: go vet ./...
       files: git ls-files -m
       glob: "*.go"
     gofmt:
@@ -35,3 +35,15 @@ pre-commit:
     nixpkgs-fmt:
       glob: "*.nix"
       run: nixpkgs-fmt {staged_files}
+
+    links:
+      glob: "*.md"
+      exclude: CHANGELOG.md
+      run: lychee --max-concurrency 3 {staged_files}
+
+    fix-typos:
+      exclude: '(^|/)((.*)\.pub|go.mod|go.sum|flake.lock|package-lock.json|(.*)\.gen\.go)$'
+      file_types:
+        - text
+        - not symlink
+      run: typos --write-changes {staged_files}

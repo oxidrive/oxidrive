@@ -2,7 +2,7 @@
 
 ## Required Tools
 
-Oxidrive is written in the [Go] and [Rust] programming languages, so you'll need their respective toolchains installed. You can find the required versions in the [go.mod](server/go.mod) file for the backend service, and in the [rust-toolchain.toml](web/rust-toolchain.toml) for the frontend application.
+Oxidrive is written in the [Go] and [TypeScript] programming languages, so you'll need their respective toolchains installed. You can find the required versions in the [go.mod](go.mod) file for the backend service, and in the [package.json](package.json) for the frontend application.
 
 As for ancillary tools, a complete and up-to-date list can be found [here](flake.nix#L25).
 
@@ -51,17 +51,17 @@ If you don't use Nix, install migrate with the package manager you normally use,
 Migrations are embedded in the binary and run every time the server is started.
 
 ## Pre-commit
-Each commit is run against a list of checks defined using [pre-commit](https://pre-commit.com/). Before contribuiting to this project, be sure to install them.
+Each commit is run against a list of checks defined using [lefthook](https://github.com/evilmartians/lefthook). Before contribuiting to this project, be sure to install them.
 
 ### Nix
-If you use Nix for everything you are ready to go, [git-hooks.nix](https://github.com/cachix/git-hooks.nix/tree/master) and [flake.parts](https://flake.parts/) take care of everything.
+If you use Nix for everything you are ready to go, `lefhook install` runs automatically when activating the devshell, with all required tools installed for you.
 
 ### Not nix
-Pre-commit directives are loaded from the `.pre-commit-config.json`, install them using `pre-commit install`.
+Pre-commit directives are loaded [lefthook.yml](lefthook.yml), install them using `lefthook install`.
 
 ## End-to-End Tests
 
-Oxidrive inclues a suite of UI tests that verify some of the core UX flows from the end-user's perspective. The test suite is implemented with [Playwright] and is located in the [e2e](e2e) folder. It requires [NodeJS] 20 and related NPM CLI installed.
+Oxidrive includes a suite of UI tests that verify some of the core UX flows from the end-user's perspective. The test suite is implemented with [Playwright] and is located in the [e2e](e2e) folder. It requires [NodeJS] 20 and related NPM CLI installed.
 
 To set Playwright up the first time, run `just e2e/setup`. This will install the required NPM packages and download the browsers that will execute the tests.
 
@@ -70,7 +70,7 @@ To set Playwright up the first time, run `just e2e/setup`. This will install the
 > Run `just e2e/chromium` instead of the regular command, or select only `chromium` if running `just e2e/ui`. `Mobile Chromium` is also supported.
 
 Running `just e2e/test` from the root of the repository will:
-- start a [Docker Compose](e2e/docker-compose.yml) stack with a release build of Oxidrive and a Postgres database
+- start the server binary from [server/bin/oxidrive](server/bin), which will load the frontend assets from [web/build](web/build).
 - run the test suite against [all supported browsers](e2e/playwright.config.ts#L37) (both desktop and mobile).
 
 A nice GUI is also provided by running `just e2e/ui`, which also allows inspecting the application as tests run.
@@ -79,7 +79,7 @@ A nice GUI is also provided by running `just e2e/ui`, which also allows inspecti
 > When run locally Playwright will attempt to reuse an existing running instance of Oxidrive to run tests against. This is good if you're working on tests, because it avoids rebuilding the app image for nothing. If you changed the source code, however, you need to trigger a rebuild to see the changes in action. This can be achieved by running `just e2e/rebuild && just e2e/test`.
 
 [Go]: https://go.dev
-[Rust]: https://rust-lang.org
+[Rust]: https://www.typescriptlang.org/
 [Nix]: https://nixos.org
 [PostgreSQL]: https://postgresql.org
 [Docker]: https://docker.com
