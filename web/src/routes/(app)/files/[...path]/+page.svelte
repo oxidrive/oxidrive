@@ -5,12 +5,12 @@ import { type ErrorResponse, type File, type FileList, client } from "$lib/api";
 import Loading from "$lib/components/Loading.svelte";
 import PageTitle from "$lib/components/PageTitle.svelte";
 import { addToast, reportError } from "$lib/components/Toast.svelte";
+import Fab from "$lib/components/buttons/Fab.svelte";
 import FilePreview from "$lib/components/files/FilePreview.svelte";
 import FilesGrid from "$lib/components/files/FilesGrid.svelte";
 import FilesList from "$lib/components/files/FilesList.svelte";
 import NoFiles from "$lib/components/files/NoFiles.svelte";
-import { faPlus } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
+import { faFile, faFolder, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { Localized, localize } from "@nubolab-ffwd/svelte-fluent";
 import { get, writable } from "svelte/store";
 import type { PageData } from "./$types";
@@ -206,6 +206,30 @@ async function handleResponseError(error: ErrorResponse | Response) {
 function togglePreview(preview?: File) {
 	pushState("", { preview });
 }
+
+function createFolder() {
+	const ff: FileList = files ?? {
+		items: [],
+		count: 0,
+		total: 0,
+		next: null,
+	};
+
+	const folder: File = {
+		id: crypto.randomUUID(),
+		type: "folder",
+		contentType: "application/x-folder",
+		path: "/new",
+		name: "New Folder",
+		size: 0,
+	};
+
+	files = {
+		...ff,
+		items: [folder, ...ff.items],
+		count: ff.count + 1,
+	};
+}
 </script>
 
 <div class="action-bar">
@@ -285,18 +309,30 @@ function togglePreview(preview?: File) {
     <FilePreview file={$page.state.preview} on:close={() => togglePreview()} />
 {/if}
 
-<Localized id="files-upload-cta" let:text>
-    <button class="fab primary" on:click={pickFile} title={text}>
-        <FontAwesomeIcon icon={faPlus} />
-        <input
-            data-testid="upload-files"
-            bind:this={uploadInput}
-            type="file"
-            multiple
-            on:change={upload}
-            hidden
+<Localized id="files-fab" let:text let:attrs>
+    <Fab title={text} icon={faPlus} color="primary" multiple>
+        <Fab
+            title={attrs.folder}
+            icon={faFolder}
+            color="secondary"
+            on:click={createFolder}
         />
-    </button>
+        <Fab
+            title={attrs.file}
+            icon={faFile}
+            color="secondary"
+            on:click={pickFile}
+        >
+            <input
+                data-testid="upload-files"
+                bind:this={uploadInput}
+                type="file"
+                multiple
+                on:change={upload}
+                hidden
+            />
+        </Fab>
+    </Fab>
 </Localized>
 
 <style>

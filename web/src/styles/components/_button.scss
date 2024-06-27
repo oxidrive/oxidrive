@@ -86,24 +86,63 @@
     }
 }
 
-.fab {
+@mixin fab-floating {
     position: fixed;
     z-index: 10;
-    padding: var(--oxi-size-2);
-    margin: var(--oxi-size-8);
     bottom: 0;
     right: 0;
-    border-radius: var(--oxi-rounded-full);
+    margin: var(--oxi-size-8);
     height: 50px;
     width: 50px;
+    aspect-ratio: 1/1;
+}
+
+.fab {
+    @include fab-floating;
+
+    padding: var(--oxi-size-3);
+    border-radius: var(--oxi-rounded-full);
 
     svg {
-        height: 30px;
-        width: 30px;
+        height: 100%;
+        width: 100%;
     }
 
     &.primary {
         background-color: var(--oxi-color-primary-500);
         color: var(--oxi-color-primary-50);
+    }
+
+    &.secondary {
+        background-color: var(--oxi-color-primary-300);
+        color: var(--oxi-color-primary-50);
+    }
+}
+
+.fab-multi {
+    @include fab-floating;
+
+    display: flex;
+    flex-direction: column-reverse;
+    align-content: center;
+    gap: var(--oxi-size-4);
+
+    .fab {
+        position: unset;
+        margin: 0;
+    }
+
+    .fab-children {
+        display: flex;
+        flex-direction: column;
+        align-content: center;
+        gap: var(--oxi-size-4);
+        position: unset !important; // overriding melt-ui
+
+        .fab {
+            height: 45px;
+            width: 45px;
+            align-self: center;
+        }
     }
 }

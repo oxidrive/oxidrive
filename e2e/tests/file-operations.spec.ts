@@ -25,7 +25,8 @@ function upload({ page, name, content }: StepArgs): Step<Locator> {
 
 		const filechooserPromise = page.waitForEvent("filechooser");
 
-		await page.getByTitle("Upload").click();
+		await page.getByRole("button", { name: "Create" }).click();
+		await page.getByRole("menuitem", { name: "Upload file" }).click();
 
 		const filechooser = await filechooserPromise;
 		await filechooser.setFiles({

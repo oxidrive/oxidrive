@@ -13,7 +13,7 @@ export { clazz as class };
 
 {#if file.type === "folder"}
     <Localized id="files-link-open-folder" let:text args={{ file: file.name }}>
-        <a class={clazz} href={file.path} title={text}><slot /></a>
+        <a class={clazz} href="/files{file.path}" title={text}><slot /></a>
     </Localized>
 {:else}
     <button
