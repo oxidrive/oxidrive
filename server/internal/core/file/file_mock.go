@@ -38,6 +38,11 @@ func (c *ContentsMock) Delete(_ context.Context, file File) error {
 	return args.Error(0)
 }
 
+func (c *ContentsMock) Copy(ctx context.Context, from File, to File) error {
+	args := c.Called(from, to)
+	return args.Error(0)
+}
+
 var _ Files = (*FilesMock)(nil)
 
 type FilesMock struct {

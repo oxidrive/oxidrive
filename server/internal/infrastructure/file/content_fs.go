@@ -129,6 +129,24 @@ func (c *contentFS) Delete(ctx context.Context, f file.File) error {
 	return nil
 }
 
+func (c *contentFS) Copy(ctx context.Context, from file.File, to file.File) error {
+	fromPath := c.pathFor(from)
+	toPath := c.pathFor(to)
+
+	if fromPath == toPath {
+		// noop
+		return nil
+	}
+
+	content, err := c.Load(ctx, from)
+	if err != nil {
+		return fmt.Errorf("failed to open source file for copy: %w", err)
+	}
+
+	to.Content = content
+	return c.Store(ctx, to)
+}
+
 func (c *contentFS) pathFor(f file.File) string {
 	return filepath.Join(c.dataDir, c.filesPrefix, f.OwnerID.String(), string(f.Path))
 }

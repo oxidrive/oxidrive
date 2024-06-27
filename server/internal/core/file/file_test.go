@@ -46,7 +46,7 @@ func Test_Create(t *testing.T) {
 
 }
 
-func Test_Update(t *testing.T) {
+func Test_ChangePath(t *testing.T) {
 	testCases := []struct {
 		testName         string
 		filename         string
@@ -70,7 +70,7 @@ func Test_Update(t *testing.T) {
 			file, err := Create(nil, "text/plain", originalPath, 5, user.ID(testutil.Must(uuid.NewV7())))
 			require.NoError(t, err)
 
-			err = file.Update(nil, "text/plain", Path(testCase.filename), 5)
+			err = file.ChangePath(Path(testCase.filename))
 
 			if testCase.expectedFilepath != nil {
 				assert.Equal(t, *testCase.expectedFilepath, string(file.Path))

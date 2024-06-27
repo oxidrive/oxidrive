@@ -123,13 +123,11 @@ func TestContentFS_Load(t *testing.T) {
 		require.NoError(t, err)
 
 		c, err := content.Load(ctx, *f)
-		t.Logf("content %+v, err %s", c, err)
 		require.NoError(t, err)
 		require.NotNil(t, c)
 		defer file.Close(c)
 
 		b, err := io.ReadAll(c)
-		t.Logf("body: %s", string(b))
 		require.NoError(t, err)
 		require.Equal(t, []byte(contentStr), b)
 	})
@@ -150,6 +148,75 @@ func TestContentFS_Load(t *testing.T) {
 		require.Nil(t, c)
 	})
 
+}
+
+func TestContentFS_Copy(t *testing.T) {
+	l := zerolog.New(zerolog.NewTestWriter(t))
+
+	t.Run("copies a file", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir())
+		defer done()
+
+		path := testutil.TempDirFromContext(ctx, t)
+		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, l)
+
+		from, err := file.Create(fileContent(), "text/plain", "/original.txt", size, user.NewID())
+		require.NoError(t, err)
+
+		to := from.Clone()
+		to.Path = "copied.txt"
+
+		err = content.Store(ctx, *from)
+		require.NoError(t, err)
+
+		testFileContent(t, filepath.Join(path, from.OwnerID.String(), string(from.Path)), contentStr)
+
+		err = content.Copy(ctx, *from, to)
+		require.NoError(t, err)
+
+		original, err := content.Load(ctx, *from)
+		require.NoError(t, err)
+		require.NotNil(t, original)
+		defer file.Close(original)
+
+		copied, err := content.Load(ctx, to)
+		require.NoError(t, err)
+		require.NotNil(t, copied)
+		defer file.Close(copied)
+
+		o, err := io.ReadAll(original)
+		require.NoError(t, err)
+		require.Equal(t, []byte(contentStr), o)
+
+		c, err := io.ReadAll(copied)
+		require.NoError(t, err)
+		require.Equal(t, []byte(contentStr), c)
+	})
+
+	t.Run("returns an error if the file does not exist", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir())
+		defer done()
+
+		path := testutil.TempDirFromContext(ctx, t)
+		content := NewContentFS(config.StorageConfig{StoragePrefix: path, ThroughputInByte: 32}, l)
+
+		from, err := file.Create(fileContent(), "text/plain", "this/dir/missing.txt", size, user.NewID())
+		require.NoError(t, err)
+
+		to := from.Clone()
+		to.Path = "copied.txt"
+
+		err = content.Copy(ctx, *from, to)
+		require.ErrorIs(t, err, file.ErrFileNotFound)
+
+		c, err := content.Load(ctx, to)
+		require.Equal(t, file.ErrFileNotFound, err)
+		require.Nil(t, c)
+	})
 }
 
 func TestContentFS_Delete(t *testing.T) {

@@ -98,46 +98,27 @@ select * from numbered_files where cursor >= $1 limit $3
 }
 
 func (s *SqliteFiles) Save(ctx context.Context, f file.File) (*file.File, error) {
-	if f.Type == file.TypeFolder {
-		return nil, file.ErrFolderSave
-	}
-
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open DB transaction: %w", err)
 	}
 
-	if err := s.saveFolder(ctx, tx, &f); err != nil {
+	if err := s.ensureParentFolder(ctx, tx, f); err != nil {
 		if err := tx.Rollback(); err != nil {
 			return nil, fmt.Errorf("failed to rollback DB transaction: %w", err)
 		}
 		return nil, fmt.Errorf("failed to save folder in DB: %w", err)
 	}
 
-	_, err = tx.ExecContext(ctx, `insert into files (
-        id,
-        type,
-        content_type,
-        name,
-        path,
-        size,
-        user_id
-    ) values (
-        $1,
-        $2,
-        $3,
-        $4,
-        $5,
-        $6,
-        $7
-    )
-    on conflict (id)
-    do update set
-      content_type = excluded.content_type,
-      name = excluded.name,
-      path = excluded.path,
-      size = excluded.size
-    ;`, f.ID.String(), f.Type, f.ContentType, f.Name, f.Path, f.Size, f.OwnerID.String())
+	switch f.Type {
+	case file.TypeFile:
+		err = s.upsertFile(ctx, tx, f)
+	case file.TypeFolder:
+		err = s.upsertFolder(ctx, tx, f)
+	default:
+		panic("unexpected file type " + f.Type)
+	}
+
 	if err != nil {
 		if err := tx.Rollback(); err != nil {
 			return nil, fmt.Errorf("failed to rollback DB transaction: %w", err)
@@ -149,10 +130,11 @@ func (s *SqliteFiles) Save(ctx context.Context, f file.File) (*file.File, error)
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("failed to commit DB transaction: %w", err)
 	}
+
 	return &f, nil
 }
 
-func (s *SqliteFiles) saveFolder(ctx context.Context, tx *sqlx.Tx, f *file.File) error {
+func (s *SqliteFiles) ensureParentFolder(ctx context.Context, tx *sqlx.Tx, f file.File) error {
 	d := f.Folder()
 	if d == nil {
 		return nil
@@ -176,11 +158,65 @@ func (s *SqliteFiles) saveFolder(ctx context.Context, tx *sqlx.Tx, f *file.File)
         $7
     )
     on conflict (path)
-    do update set
-      type = excluded.type,
-      size = files.size + excluded.size
+    do nothing
     ;`, file.NewID().String(), file.TypeFolder, file.ContentTypeFolder, d.Name, d.Path, f.Size, f.OwnerID.String())
 
+	return err
+}
+
+func (s *SqliteFiles) upsertFile(ctx context.Context, tx *sqlx.Tx, f file.File) error {
+	_, err := tx.ExecContext(ctx, `insert into files (
+        id,
+        type,
+        content_type,
+        name,
+        path,
+        size,
+        user_id
+    ) values (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7
+    )
+    on conflict (id)
+    do update set
+      content_type = excluded.content_type,
+      name = excluded.name,
+      path = excluded.path,
+      size = excluded.size
+    ;`, f.ID.String(), f.Type, f.ContentType, f.Name, f.Path, f.Size, f.OwnerID.String())
+	return err
+}
+func (s *SqliteFiles) upsertFolder(ctx context.Context, tx *sqlx.Tx, f file.File) error {
+	_, err := tx.ExecContext(ctx, `insert into files (
+        id,
+        type,
+        content_type,
+        name,
+        path,
+        size,
+        user_id
+    ) values (
+        $1,
+        $2,
+        $3,
+        $4,
+        $5,
+        $6,
+        $7
+    )
+    on conflict (id)
+    do update set
+      path = excluded.path,
+      content_type = excluded.content_type,
+      name = excluded.name,
+      path = excluded.path,
+      size = excluded.size
+    ;`, f.ID.String(), f.Type, f.ContentType, f.Name, f.Path, f.Size, f.OwnerID.String())
 	return err
 }
 

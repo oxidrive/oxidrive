@@ -372,6 +372,184 @@ func TestApi_Files_Blob(t *testing.T) {
 	})
 }
 
+func TestApi_Files_Patch(t *testing.T) {
+	t.Run("moves a file to a new path", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		ctx, done := testutil.IntegrationTest(ctx, t, testutil.WithTempDir(), testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		app, handler := setup(ctx, t)
+
+		username := "test"
+		password := "test"
+
+		testutil.Must(app.Users().Save(ctx, *testutil.Must(user.Create(username, password))))
+		tkn, u, err := app.Auth().AuthenticateWithPassword(ctx, username, password)
+		require.NoError(t, err)
+
+		body := "hello world!"
+		size := len(body)
+		oldPath := "/hello.txt"
+		newName := "changed.txt"
+		newPath := "/" + newName
+
+		id := testutil.Must(app.Files().Upload(ctx, file.FileUpload{
+			Content:     file.Content(strings.NewReader(body)),
+			ContentType: file.ContentType("text/plain"),
+			Path:        file.Path(oldPath),
+			Size:        file.Size(size),
+		}, u.ID))
+
+		var f api.File
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Patchf("/api/files/%s", id.String()).
+			JSON(api.FilePatch{
+				Path: &newPath,
+			}).
+			WithContext(ctx).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusOK).
+			End().
+			JSON(&f)
+
+		assert.Equal(t, id.AsUUID(), f.Id)
+		assert.Equal(t, api.FileTypeFile, f.Type)
+		assert.Equal(t, "text/plain", f.ContentType)
+		assert.Equal(t, newName, f.Name)
+		assert.Equal(t, newPath, f.Path)
+		assert.Equal(t, size, f.Size)
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Getf("/blob%s", newPath).
+			WithContext(ctx).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusOK).
+			Header(headers.ContentLength, fmt.Sprintf("%d", size)).
+			Header(headers.ContentDisposition, "attachment; filename="+newName).
+			Body(body).
+			End()
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Getf("/blob%s", oldPath).
+			WithContext(ctx).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusNotFound).
+			End()
+	})
+
+	t.Run("moves a directory to a new path", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+
+		ctx, done := testutil.IntegrationTest(ctx, t, testutil.WithTempDir(), testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		app, handler := setup(ctx, t)
+
+		username := "test"
+		password := "test"
+
+		testutil.Must(app.Users().Save(ctx, *testutil.Must(user.Create(username, password))))
+		tkn, u, err := app.Auth().AuthenticateWithPassword(ctx, username, password)
+		require.NoError(t, err)
+
+		body := "hello world!"
+		size := len(body)
+		oldPath := file.Path("/old-folder")
+		newName := "new-folder"
+		newPath := "/" + newName
+		fileName := "file.txt"
+
+		_ = testutil.Must(app.Files().Upload(ctx, file.FileUpload{
+			Content:     file.Content(strings.NewReader(body)),
+			ContentType: file.ContentType("text/plain"),
+			Path:        file.Path(string(oldPath) + "/" + fileName),
+			Size:        file.Size(size),
+		}, u.ID))
+
+		files := testutil.Must(app.Files().List(ctx, nil))
+
+		var dir file.File
+		var f file.File
+
+		for _, i := range files.Items {
+			if i.Type == file.TypeFolder && i.Path == oldPath {
+				dir = i
+			}
+
+			if i.Type == file.TypeFile && i.Name == file.Name(fileName) {
+				f = i
+			}
+		}
+		require.NotEmpty(t, dir)
+		require.NotEmpty(t, f)
+
+		var d api.File
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Patchf("/api/files/%s", dir.ID.String()).
+			JSON(api.FilePatch{
+				Path: &newPath,
+			}).
+			WithContext(ctx).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusOK).
+			End().
+			JSON(&d)
+
+		assert.Equal(t, dir.ID.AsUUID(), d.Id)
+		assert.Equal(t, api.FileTypeFolder, d.Type)
+		assert.Equal(t, string(file.ContentTypeFolder), d.ContentType)
+		assert.Equal(t, newName, d.Name)
+		assert.Equal(t, newPath, d.Path)
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Getf("/blob%s", newPath+"/"+fileName).
+			WithContext(ctx).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusOK).
+			Header(headers.ContentLength, fmt.Sprintf("%d", size)).
+			Header(headers.ContentDisposition, "attachment; filename="+fileName).
+			Body(body).
+			End()
+
+		apitest.New().
+			Debug().
+			Handler(handler).
+			Getf("/blob%s", string(oldPath)+"/"+fileName).
+			WithContext(ctx).
+			Cookie(h.SessionCookieName, tkn.Value.String()).
+			Expect(t).
+			Status(http.StatusNotFound).
+			End()
+	})
+
+	t.Run("returns 404 if the file does not exist", func(t *testing.T) {})
+	t.Run("returns 404 if the file belongs to another user", func(t *testing.T) {})
+}
+
 func TestApi_Files_Delete(t *testing.T) {
 	t.Run("deletes an existing file", func(t *testing.T) {
 		t.Parallel()

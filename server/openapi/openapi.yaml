@@ -75,6 +75,19 @@ components:
           type: string
           description: human readable error message
 
+    InvalidParamsError:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          enum: [invalid_params]
+        message:
+          type: string
+          description: human readable error message
+
     ListInfo:
       type: object
       required:

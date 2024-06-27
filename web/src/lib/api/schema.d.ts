@@ -32,10 +32,12 @@ export interface paths {
 		get?: never;
 		put?: never;
 		post?: never;
+		/** Delete a file */
 		delete: operations["fileDelete"];
 		options?: never;
 		head?: never;
-		patch?: never;
+		/** Change a file's metadata */
+		patch: operations["filePatch"];
 		trace?: never;
 	};
 	"/api/instance": {
@@ -122,6 +124,12 @@ export interface components {
 			/** @description human readable error message */
 			message: string;
 		};
+		InvalidParamsError: {
+			/** @enum {string} */
+			error: "invalid_params";
+			/** @description human readable error message */
+			message: string;
+		};
 		ListInfo: {
 			/**
 			 * @description number of items in the current slice of the collection
@@ -170,6 +178,26 @@ export interface components {
 		FileUploadResponse: {
 			ok: boolean;
 			id: string;
+		};
+		FilePatch: {
+			/**
+			 * Format: path
+			 * @description New path of the file.
+			 *     To simply rename it, set to the current path with the last segment changed.
+			 *     E.g.: path/to/file.txt -> path/to/renamed.txt
+			 *
+			 * @example path/to/file.txt
+			 */
+			path?: string;
+		};
+		InvalidFileParamsError: components["schemas"]["InvalidParamsError"] & {
+			errors: components["schemas"]["InvalidFileParamError"][];
+		};
+		InvalidFileParamError: {
+			/** @description The name of the invalid parameter */
+			param: string;
+			reason: string;
+			message: string;
 		};
 		InstanceStatus: {
 			status: {
@@ -244,12 +272,22 @@ export interface components {
 				"application/json": components["schemas"]["Error"];
 			};
 		};
+		InvalidParams: {
+			headers: {
+				[name: string]: unknown;
+			};
+			content: {
+				"application/json": components["schemas"]["InvalidFileParamsError"];
+			};
+		};
 	};
 	parameters: {
 		/** @description Cursor to fetch the next slice of the collection */
 		After: string;
 		/** @description Limit the number of items to return to only the first N */
 		First: number;
+		/** @description ID of the requested file */
+		FileID: string;
 		/** @description Prefix to filter files for. This is matched against the directory the files resides in, not as a generic prefix.
 		 *     E.g. a prefix `hello` will match `hello/world.txt` but not `hello/dear/world.txt`.
 		 *      */
@@ -320,8 +358,8 @@ export interface operations {
 			query?: never;
 			header?: never;
 			path: {
-				/** @description Id of the file to delete */
-				id: string;
+				/** @description ID of the requested file */
+				id: components["parameters"]["FileID"];
 			};
 			cookie?: never;
 		};
@@ -335,6 +373,37 @@ export interface operations {
 					"application/json": components["schemas"]["File"];
 				};
 			};
+			/** @description The requested file does not exist or cannot be accessed */
+			404: components["responses"]["NotFound"];
+			default: components["responses"]["InternalError"];
+		};
+	};
+	filePatch: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ID of the requested file */
+				id: components["parameters"]["FileID"];
+			};
+			cookie?: never;
+		};
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["FilePatch"];
+			};
+		};
+		responses: {
+			200: {
+				headers: {
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["File"];
+				};
+			};
+			/** @description One or more request param is invalid */
+			400: components["responses"]["InvalidParams"];
 			/** @description The requested file does not exist or cannot be accessed */
 			404: components["responses"]["NotFound"];
 			default: components["responses"]["InternalError"];

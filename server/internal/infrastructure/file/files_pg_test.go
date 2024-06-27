@@ -200,7 +200,7 @@ func TestPgFiles_Save(t *testing.T) {
 
 		saved, err := files.Save(ctx, *fileToSave)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, file.TypeFile, saved.Type)
 		assert.Equal(t, fileToSave.Name, saved.Name)
 		assert.Equal(t, fileToSave.Path, saved.Path)
@@ -327,7 +327,7 @@ func TestPgFiles_Save(t *testing.T) {
 
 		saved, err := files.Save(ctx, *fileToSave)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, fileToSave.Name, saved.Name)
 		assert.Equal(t, file.TypeFile, saved.Type)
 		assert.Equal(t, fileToSave.Path, saved.Path)
@@ -341,10 +341,9 @@ func TestPgFiles_Save(t *testing.T) {
 
 		saved, err = files.Save(ctx, *fileToSave)
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, fileToSave.Name, saved.Name)
 		assert.Equal(t, file.TypeFile, saved.Type)
-		assert.Equal(t, fileToSave.Path, saved.Path)
 		assert.Equal(t, fileToSave.Path, saved.Path)
 		assert.Equal(t, fileToSave.ContentType, saved.ContentType)
 		assert.Equal(t, fileToSave.Size, saved.Size)
@@ -370,6 +369,43 @@ func TestPgFiles_Save(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, saved)
 	})
+
+	t.Run("updates an existing folder", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithPgDB())
+		defer done()
+
+		db := testutil.PgDBFromContext(ctx, t)
+		u := insertPgUser(t, db, "username", "pwd")
+		owner := u.ID
+
+		oldPath := "/nested"
+		newPath := "/updated"
+
+		files := NewPgFiles(db)
+		readerMock := strings.NewReader("")
+		fileToSave, err := file.Create(readerMock, ct, file.Path(oldPath+"/file"), 10, owner)
+		require.NoError(t, err)
+
+		_, err = files.Save(ctx, *fileToSave)
+		require.NoError(t, err)
+
+		folder, err := files.ByOwnerByPath(ctx, owner, file.Path(oldPath))
+		require.NoError(t, err)
+		require.NotNil(t, folder)
+
+		folder.Path = file.Path(newPath)
+
+		updated, err := files.Save(ctx, *folder)
+		require.NoError(t, err)
+
+		assert.Equal(t, folder.Name, updated.Name)
+		assert.Equal(t, file.TypeFolder, updated.Type)
+		assert.Equal(t, folder.Path, updated.Path)
+		assert.Equal(t, folder.ContentType, updated.ContentType)
+		assert.Equal(t, folder.Size, updated.Size)
+	})
 }
 
 func TestPgFiles_ByID(t *testing.T) {
@@ -392,7 +428,7 @@ func TestPgFiles_ByID(t *testing.T) {
 		require.NoError(t, err)
 
 		found, err := files.ByID(ctx, f.ID)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, f.ID, found.ID)
 		assert.Equal(t, file.TypeFile, found.Type)
 		assert.Equal(t, f.Name, found.Name)
@@ -413,7 +449,7 @@ func TestPgFiles_ByID(t *testing.T) {
 		files := NewPgFiles(db)
 
 		found, err := files.ByID(ctx, file.NewID())
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Nil(t, found)
 	})
 }
@@ -438,7 +474,7 @@ func TestPgFiles_ByOwnerByPath(t *testing.T) {
 		require.NoError(t, err)
 
 		found, err := files.ByOwnerByPath(ctx, u.ID, f.Path)
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, f.ID, found.ID)
 		assert.Equal(t, file.TypeFile, found.Type)
 		assert.Equal(t, f.Name, found.Name)
@@ -460,7 +496,7 @@ func TestPgFiles_ByOwnerByPath(t *testing.T) {
 		files := NewPgFiles(db)
 
 		found, err := files.ByOwnerByPath(ctx, u.ID, "some/path")
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Nil(t, found)
 	})
 }
