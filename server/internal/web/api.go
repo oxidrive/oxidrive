@@ -78,6 +78,10 @@ func (api *Api) FilesUpload(ctx context.Context, request api.FilesUploadRequestO
 	return api.files.Upload(ctx, request)
 }
 
+func (api *Api) FilePatch(ctx context.Context, request api.FilePatchRequestObject) (api.FilePatchResponseObject, error) {
+	return api.files.Patch(ctx, request)
+}
+
 func (api *Api) FileDelete(ctx context.Context, request api.FileDeleteRequestObject) (api.FileDeleteResponseObject, error) {
 	return api.files.Delete(ctx, request)
 }

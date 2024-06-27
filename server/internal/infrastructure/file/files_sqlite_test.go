@@ -358,6 +358,42 @@ func TestSqliteFiles_Save(t *testing.T) {
 		assert.Nil(t, saved)
 	})
 
+	t.Run("updates an existing folder", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		defer done()
+
+		db := testutil.SqliteDBFromContext(ctx, t)
+		u := insertSqliteUser(t, db, "username", "pwd")
+		owner := u.ID
+
+		oldPath := "/nested"
+		newPath := "/updated"
+
+		files := NewSqliteFiles(db)
+		readerMock := strings.NewReader("")
+		fileToSave, err := file.Create(readerMock, ct, file.Path(oldPath+"/file"), 10, owner)
+		require.NoError(t, err)
+
+		_, err = files.Save(ctx, *fileToSave)
+		require.NoError(t, err)
+
+		folder, err := files.ByOwnerByPath(ctx, owner, file.Path(oldPath))
+		require.NoError(t, err)
+		require.NotNil(t, folder)
+
+		folder.Path = file.Path(newPath)
+
+		updated, err := files.Save(ctx, *folder)
+		require.NoError(t, err)
+
+		assert.Equal(t, folder.Name, updated.Name)
+		assert.Equal(t, file.TypeFolder, updated.Type)
+		assert.Equal(t, folder.Path, updated.Path)
+		assert.Equal(t, folder.ContentType, updated.ContentType)
+		assert.Equal(t, folder.Size, updated.Size)
+	})
 }
 
 func TestSqliteFiles_ByID(t *testing.T) {

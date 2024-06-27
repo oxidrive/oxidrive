@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/oxidrive/oxidrive/server/internal/core/list"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
@@ -53,7 +54,7 @@ func (s *Service) Upload(ctx context.Context, upload FileUpload, owner user.ID) 
 	if f == nil {
 		f, err = Create(upload.Content, upload.ContentType, upload.Path, upload.Size, owner)
 	} else {
-		err = f.Update(upload.Content, upload.ContentType, upload.Path, upload.Size)
+		err = f.UpdateContent(upload.Content, upload.ContentType, upload.Size)
 	}
 
 	if err != nil {
@@ -73,6 +74,77 @@ func (s *Service) Upload(ctx context.Context, upload FileUpload, owner user.ID) 
 
 func (s *Service) Download(ctx context.Context, f File) (Content, error) {
 	return s.contents.Load(ctx, f)
+}
+
+func (s *Service) Move(ctx context.Context, f File, newPath Path) (*File, error) {
+	old := f.Clone()
+
+	if err := f.ChangePath(newPath); err != nil {
+		return nil, fmt.Errorf("failed to change path of %s %s: %w", f.Type, f.ID, err)
+	}
+
+	if f.Type == TypeFolder {
+		return s.moveFolder(ctx, old, f)
+	}
+
+	return s.moveFile(ctx, old, f)
+}
+
+func (s *Service) moveFile(ctx context.Context, from File, to File) (*File, error) {
+	if err := s.contents.Copy(ctx, from, to); err != nil {
+		return nil, fmt.Errorf("failed to copy file %s content from %s to %s: %w", to.ID, from.Path, to.Path, err)
+	}
+
+	updated, err := s.files.Save(ctx, to)
+	if err != nil {
+		return nil, fmt.Errorf("failed to store file %s: %w", to.ID, err)
+	}
+
+	if err := s.contents.Delete(ctx, from); err != nil {
+		return nil, fmt.Errorf("failed to delete file %s content from %s: %w", to.ID, from.Path, err)
+	}
+
+	return updated, nil
+}
+
+type childError struct {
+	parent File
+	child  File
+	err    error
+}
+
+func (ce childError) Error() string {
+	return fmt.Errorf("failed to move child %s of %s: %w", ce.child.ID, ce.parent.ID, ce.err).Error()
+}
+
+func (s *Service) moveFolder(ctx context.Context, from File, to File) (*File, error) {
+	updated, err := s.files.Save(ctx, to)
+	if err != nil {
+		return nil, fmt.Errorf("failed to store folder %s: %w", to.ID, err)
+	}
+
+	children, err := s.List(ctx, &from.Path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list children of folder %s: %w", from.ID, err)
+	}
+
+	if children.Count > 0 {
+		var errs []error
+
+		for _, child := range children.Items {
+			newPath := Path(strings.Replace(string(child.Path), string(from.Path), string(to.Path), 1))
+			_, err := s.Move(ctx, child, newPath)
+			if err != nil {
+				errs = append(errs, childError{from, child, err})
+			}
+		}
+
+		if len(errs) > 0 {
+			return nil, errors.Join(errs...)
+		}
+	}
+
+	return updated, err
 }
 
 func (s *Service) Delete(ctx context.Context, id ID) error {

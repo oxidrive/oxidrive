@@ -120,17 +120,63 @@ func (f *Files) Upload(ctx context.Context, request api.FilesUploadRequestObject
 	}), nil
 }
 
-func (f *Files) Delete(ctx context.Context, request api.FileDeleteRequestObject) (api.FileDeleteResponseObject, error) {
-	cu := auth.GetCurrentUser(ctx)
+func (f *Files) Patch(ctx context.Context, request api.FilePatchRequestObject) (api.FilePatchResponseObject, error) {
 	id := file.ID(request.Id)
-
-	fi, err := f.App.Files().ByID(ctx, id)
+	fi, err := f.getOwnedFile(ctx, id)
 	if err != nil {
-		return nil, fmt.Errorf("failed to load file %s: %w", id, err)
+		return nil, err
 	}
 
-	// TODO: the owner check will eventually be performed by the authorization engine
-	if fi == nil || fi.OwnerID != cu.ID {
+	if fi == nil {
+		return api.FilePatch404JSONResponse{
+			NotFoundJSONResponse: api.NotFoundJSONResponse{
+				Error:   api.NotFoundErrorErrorNotFound,
+				Message: fmt.Sprintf("file %s not found", id),
+			},
+		}, nil
+	}
+
+	var validationErrors []api.InvalidFileParamError
+
+	if request.Body.Path != nil {
+		p, err := file.ParsePath(*request.Body.Path)
+		if err != nil {
+			validationErrors = append(validationErrors, api.InvalidFileParamError{
+				Param:   "path",
+				Reason:  "invalid_path",
+				Message: err.Error(),
+			})
+		} else {
+			moved, err := f.App.Files().Move(ctx, *fi, p)
+			if err != nil {
+				return nil, fmt.Errorf("failed to move %s %s from %s to %s: %w", fi.Type, id, fi.Path, p, err)
+			}
+			fi = moved
+		}
+	}
+
+	if len(validationErrors) > 0 {
+		return api.FilePatch400JSONResponse{
+			InvalidParamsJSONResponse: api.InvalidParamsJSONResponse{
+				Error:   api.InvalidFileParamsErrorErrorInvalidParams,
+				Errors:  validationErrors,
+				Message: "cannot update file: invalid parameters",
+			},
+		}, nil
+	}
+
+	return api.FilePatch200JSONResponse(ToApiFile(*fi)), nil
+
+}
+
+func (f *Files) Delete(ctx context.Context, request api.FileDeleteRequestObject) (api.FileDeleteResponseObject, error) {
+	id := file.ID(request.Id)
+	fi, err := f.getOwnedFile(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if fi == nil {
 		return api.FileDelete404JSONResponse{
 			NotFoundJSONResponse: api.NotFoundJSONResponse{
 				Error:   api.NotFoundErrorErrorNotFound,
@@ -165,4 +211,20 @@ func ToApiFile(f file.File) api.File {
 		Size:        int(f.Size),
 	}
 
+}
+
+func (f *Files) getOwnedFile(ctx context.Context, id file.ID) (*file.File, error) {
+	cu := auth.GetCurrentUser(ctx)
+
+	fi, err := f.App.Files().ByID(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load file %s: %w", id, err)
+	}
+
+	// TODO: the owner check will eventually be performed by the authorization engine
+	if fi == nil || fi.OwnerID != cu.ID {
+		return nil, nil
+	}
+
+	return fi, nil
 }

@@ -106,21 +106,25 @@ func Create(content Content, ct ContentType, p Path, size Size, ownerID user.ID)
 	}, nil
 }
 
-func (f *File) Update(content Content, ct ContentType, p Path, size Size) error {
+func (f *File) UpdateContent(content Content, ct ContentType, size Size) error {
 	if f.Type != TypeFile {
 		return ErrFolderUpdate
 	}
 
+	f.Content = content
+	f.ContentType = ct
+	f.Size = size
+	return nil
+}
+
+func (f *File) ChangePath(p Path) error {
 	p, err := ParsePath(string(p))
 	if err != nil {
 		return err
 	}
 
-	f.Content = content
-	f.ContentType = ct
 	f.Name = p.Name()
 	f.Path = p
-	f.Size = size
 	return nil
 }
 
@@ -134,6 +138,19 @@ func (f *File) Folder() *Folder {
 	return &Folder{
 		Name: Name(n),
 		Path: Path(p),
+	}
+}
+
+func (f *File) Clone() File {
+	return File{
+		ID:          f.ID,
+		Type:        f.Type,
+		ContentType: f.ContentType,
+		Content:     nil,
+		Name:        f.Name,
+		Path:        f.Path,
+		Size:        f.Size,
+		OwnerID:     f.OwnerID,
 	}
 }
 
@@ -167,6 +184,7 @@ type Contents interface {
 	Store(context.Context, File) error
 	Load(context.Context, File) (Content, error)
 	Delete(context.Context, File) error
+	Copy(ctx context.Context, from File, to File) error
 }
 
 type Files interface {

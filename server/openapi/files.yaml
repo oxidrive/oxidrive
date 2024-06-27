@@ -48,16 +48,44 @@ paths:
           $ref: './openapi.yaml#/components/responses/InternalError'
 
   /api/files/{id}:
+    patch:
+      operationId: filePatch
+      summary: Change a file's metadata
+      tags: [files]
+      security:
+        - session: []
+      parameters:
+        - $ref: '#/components/parameters/FileID'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FilePatch'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        '400':
+          description: One or more request param is invalid
+          $ref: '#/components/responses/InvalidParams'
+        '404':
+          description: The requested file does not exist or cannot be accessed
+          $ref: './openapi.yaml#/components/responses/NotFound'
+        default:
+          $ref: './openapi.yaml#/components/responses/InternalError'
+
+
     delete:
       operationId: fileDelete
+      summary: Delete a file
+      tags: [files]
+      security:
+        - session: []
       parameters:
-        - in: path
-          name: id
-          schema:
-            type: string
-            format: uuid
-          required: true
-          description: Id of the file to delete
+        - $ref: '#/components/parameters/FileID'
       responses:
         '200':
           content:
@@ -72,6 +100,15 @@ paths:
 
 components:
   parameters:
+    FileID:
+      in: path
+      name: id
+      schema:
+        type: string
+        format: uuid
+      required: true
+      description: ID of the requested file
+
     FilePrefix:
       name: prefix
       in: query
@@ -82,6 +119,13 @@ components:
       schema:
         type: string
         format: path
+
+  responses:
+    InvalidParams:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InvalidFileParamsError'
 
   schemas:
     File:
@@ -149,4 +193,43 @@ components:
         ok:
           type: boolean
         id:
+          type: string
+
+    FilePatch:
+      type: object
+      properties:
+        path:
+          type: string
+          format: path
+          description: |
+            New path of the file.
+            To simply rename it, set to the current path with the last segment changed.
+            E.g.: path/to/file.txt -> path/to/renamed.txt
+          example: "path/to/file.txt"
+
+    InvalidFileParamsError:
+      allOf:
+        - $ref: './openapi.yaml#/components/schemas/InvalidParamsError'
+        - type: object
+          required:
+            - errors
+          properties:
+            errors:
+              type: array
+              items:
+                $ref: '#/components/schemas/InvalidFileParamError'
+    
+    InvalidFileParamError:
+      type: object
+      required:
+        - param
+        - reason
+        - message
+      properties:
+        param:
+          type: string
+          description: The name of the invalid parameter
+        reason:
+          type: string
+        message:
           type: string
