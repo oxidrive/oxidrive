@@ -39,3 +39,7 @@ files-delete-confirm = Are you sure you want to delete { $file ->
         [selected] all selected files
         *[one] { $file }
     }?
+
+files-fab = Create
+    .file = Upload file
+    .folder = Create folder
