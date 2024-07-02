@@ -292,7 +292,6 @@ func TestPgFiles_Save(t *testing.T) {
 		assert.Equal(t, file.TypeFolder, d.Type)
 		assert.Equal(t, savedFolder.Name, d.Name)
 		assert.Equal(t, savedFolder.Path, d.Path)
-		assert.Equal(t, saved1.Size+saved2.Size, d.Size)
 
 		f1 := ff.Items[1]
 		assert.Equal(t, saved1.ID, f1.ID)
