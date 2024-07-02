@@ -10,10 +10,13 @@ import FilePreview from "$lib/components/files/FilePreview.svelte";
 import FilesGrid from "$lib/components/files/FilesGrid.svelte";
 import FilesList from "$lib/components/files/FilesList.svelte";
 import NoFiles from "$lib/components/files/NoFiles.svelte";
+import { rename as renamePath } from "$lib/paths";
 import { faFile, faFolder, faPlus } from "@fortawesome/free-solid-svg-icons";
 import { Localized, localize } from "@nubolab-ffwd/svelte-fluent";
 import { get, writable } from "svelte/store";
 import type { PageData } from "./$types";
+
+const NEW_FOLDER_ID = "00000000-0000-0000-0000-000000000000";
 
 let viewMode: "list" | "grid" = "grid";
 let viewComponent = FilesGrid;
@@ -216,7 +219,7 @@ function createFolder() {
 	};
 
 	const folder: File = {
-		id: crypto.randomUUID(),
+		id: NEW_FOLDER_ID,
 		type: "folder",
 		contentType: "application/x-folder",
 		path: "/new",
@@ -228,6 +231,40 @@ function createFolder() {
 		...ff,
 		items: [folder, ...ff.items],
 		count: ff.count + 1,
+	};
+}
+
+async function rename({ detail: file }: CustomEvent<File>) {
+	if (!files) return;
+
+	const idx = files.items.findIndex(({ path }) => file.path === path);
+
+	const path = renamePath(file.path, file.name);
+	let updated: File | null = null;
+	if (file.id !== NEW_FOLDER_ID) {
+		const { data, error, response } = await client.PATCH("/api/files/{id}", {
+			params: { path: { id: file.id } },
+			body: { path },
+		});
+
+		if (error || !response.ok) {
+			handleResponseError(error || response);
+			return;
+		}
+
+		updated = data;
+	} else {
+		updated = {
+			...file,
+			path,
+		};
+	}
+
+	const { items, ...ff } = files;
+	items[idx] = updated;
+	files = {
+		...ff,
+		items,
 	};
 }
 </script>
@@ -296,6 +333,7 @@ function createFolder() {
             this={viewComponent}
             {files}
             selected={$selected}
+            on:rename={rename}
             on:selected={select}
             on:deselected={deselect}
             on:download={download}

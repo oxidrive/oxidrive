@@ -1,5 +1,5 @@
 <script lang="ts">
-import type { File } from "$lib/api";
+import type { File, FileType } from "$lib/api";
 import { createDropdownMenu, melt } from "@melt-ui/svelte";
 import { Localized } from "@nubolab-ffwd/svelte-fluent";
 import { createEventDispatcher } from "svelte";
@@ -10,12 +10,13 @@ interface Action {
 	icon: `fa-${string} fa-${string}`;
 	action: Actions;
 	disabled?: true;
+	type: FileType | "all";
 }
 
 const actions: Action[] = [
-	{ action: "rename", icon: "fa-solid fa-pencil", disabled: true },
-	{ action: "download", icon: "fa-solid fa-download" },
-	{ action: "delete", icon: "fa-solid fa-trash" },
+	{ action: "rename", icon: "fa-solid fa-pencil", type: "all" },
+	{ action: "download", icon: "fa-solid fa-download", type: "file" },
+	{ action: "delete", icon: "fa-solid fa-trash", type: "file" },
 ];
 
 const dispatch = createEventDispatcher<Record<Actions, File>>();
@@ -40,7 +41,7 @@ const {
         <i class="fa-solid fa-ellipsis text-primary-500"></i>
     </button>
     <div use:melt={$menu} class="file-actions">
-        {#each actions as { icon, action, disabled }}
+        {#each actions.filter(({ type }) => type === 'all' || type === file.type) as { icon, action, disabled }}
             <button
                 use:melt={$item}
                 class="action"

@@ -18,6 +18,10 @@
             color: var(--oxi-color-danger-500);
         }
     }
+
+    &.thin {
+        padding: var(--oxi-size-1);
+    }
 }
 
 .label {
