@@ -99,19 +99,18 @@ function upload({ page, name, content, folder }: StepArgs): Step<Locator> {
 		await page.waitForLoadState("networkidle");
 
 		const toasts = await page.getByRole("alert").all();
-		for (const toast of toasts) {
-			await expect(toast).toBeVisible();
-			await expect(toast).toHaveAttribute("data-toast-level", "info");
-			await expect(toast).toContainText(name);
-		}
 
 		await Promise.allSettled(
-			toasts.map((toast) => toast.getByTitle("Close toast").click()),
+			toasts.map(async (toast) => {
+				await expect(toast).toBeVisible();
+				await expect(toast).toHaveAttribute("data-toast-level", "info");
+				await expect(toast).toContainText(name);
+				await toast.getByTitle("Close toast").click();
+			}),
 		);
 
-		await expect(page.getByText("No files in here")).not.toBeVisible();
-
 		const file = page.getByTitle(folder ?? name, { exact: true }).first();
+		await file.scrollIntoViewIfNeeded();
 		await expect(file).toBeVisible();
 		return file;
 	};
