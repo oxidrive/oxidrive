@@ -83,12 +83,14 @@ export function reportError(
         display: flex;
         flex-direction: column;
         gap: var(--oxi-size-2);
-        max-width: 100vw;
+        max-width: 90vw;
     }
 
     .toast {
         padding: var(--oxi-size-2);
         border-radius: var(--oxi-rounded-2xl);
+        word-break: break-word;
+        hyphens: auto;
 
         &.info {
             background-color: var(--oxi-color-primary-50);
