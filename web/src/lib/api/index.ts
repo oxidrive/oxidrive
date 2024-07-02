@@ -19,3 +19,4 @@ export class ApiError extends Error {
 export type ErrorResponse = components["schemas"]["Error"];
 export type FileList = components["schemas"]["FileList"];
 export type File = components["schemas"]["File"];
+export type FileType = File["type"];

@@ -6,11 +6,12 @@ import FileActions from "./FileActions.svelte";
 import FileIcon from "./FileIcon.svelte";
 import FileLink from "./FileLink.svelte";
 
-type EventHandler = (
+type InputEventHandler = (
 	ev: Event & { currentTarget: EventTarget & HTMLInputElement },
 ) => void;
 
 const dispatch = createEventDispatcher<{
+	rename: File;
 	selected: File;
 	deselected: File;
 }>();
@@ -18,7 +19,9 @@ const dispatch = createEventDispatcher<{
 export let files: FileList;
 export let selected: Set<File>;
 
-function select(file: File): EventHandler {
+let renaming: File | null;
+
+function select(file: File): InputEventHandler {
 	return (ev) => {
 		if (ev.currentTarget.checked) {
 			dispatch("selected", file);
@@ -26,6 +29,25 @@ function select(file: File): EventHandler {
 			dispatch("deselected", file);
 		}
 	};
+}
+
+function startRenaming({ detail: file }: CustomEvent<File>) {
+	if (renaming) {
+		renaming = null;
+	} else {
+		renaming = file;
+	}
+}
+
+function rename() {
+	if (!renaming) return;
+
+	dispatch("rename", renaming);
+	renaming = null;
+}
+
+function focus(input: HTMLInputElement) {
+	setTimeout(() => input.focus(), 100);
 }
 </script>
 
@@ -49,11 +71,16 @@ function select(file: File): EventHandler {
             </FileLink>
 
             <div class="footer">
-                <FileLink {file} class="text-primary-500 truncate" on:preview>
-                    {file.name}
-                </FileLink>
-
-                <FileActions {file} on:rename on:download on:delete />
+                {#if renaming === file}
+                    <form on:submit|preventDefault={rename}>
+                        <input class="input thin" type="text" bind:value={renaming.name} use:focus>
+                    </form>
+                {:else}
+                    <FileLink {file} class="text-primary-500 truncate" on:preview>
+                        {file.name}
+                    </FileLink>
+                {/if}
+                <FileActions {file} on:rename={startRenaming} on:download on:delete />
             </div>
         </div>
     {/each}
@@ -77,7 +104,7 @@ function select(file: File): EventHandler {
         .header {
             display: flex;
             flex-direction: row;
-            justify-content: justify-between;
+            justify-content: space-between;
             align-items: center;
             width: 100%;
         }
@@ -85,7 +112,7 @@ function select(file: File): EventHandler {
         .footer {
             display: flex;
             flex-direction: row;
-            justify-content: justify-between;
+            justify-content: space-between;
             align-items: center;
             width: 100%;
             gap: var(--oxi-size-4);

@@ -83,6 +83,7 @@ export function reportError(
         display: flex;
         flex-direction: column;
         gap: var(--oxi-size-2);
+        max-width: 100vw;
     }
 
     .toast {
