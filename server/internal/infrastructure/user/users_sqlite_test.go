@@ -9,22 +9,22 @@ import (
 )
 
 func sqliteInit(t *testing.T, ctx context.Context) user.Users {
-	db := testutil.PgDBFromContext(ctx, t)
-	return NewPgUsers(db)
+	db := testutil.SqliteDBFromContext(ctx, t)
+	return NewSqliteUsers(db)
 }
 
 func TestSqliteUsers_Count(t *testing.T) {
-	Count(t, testutil.WithPgDB(), sqliteInit)
+	Count(t, testutil.WithSqliteDB(), sqliteInit)
 }
 
 func TestSqliteUsers_Save(t *testing.T) {
-	Save(t, testutil.WithPgDB(), sqliteInit)
+	Save(t, testutil.WithSqliteDB(), sqliteInit)
 }
 
 func TestSqliteUsers_ByID(t *testing.T) {
-	ByID(t, testutil.WithPgDB(), sqliteInit)
+	ByID(t, testutil.WithSqliteDB(), sqliteInit)
 }
 
 func TestSqliteUsers_ByUsername(t *testing.T) {
-	ByUsername(t, testutil.WithPgDB(), sqliteInit)
+	ByUsername(t, testutil.WithSqliteDB(), sqliteInit)
 }
