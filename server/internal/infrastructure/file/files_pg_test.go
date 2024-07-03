@@ -20,23 +20,23 @@ func pgInit(t *testing.T, ctx context.Context) (file.Files, user.User) {
 }
 
 func TestPgFiles_List(t *testing.T) {
-	List(t, testutil.WithPgDB(), pgInit)
+	FilesList(t, testutil.WithPgDB(), pgInit)
 }
 
 func TestPgFiles_Save(t *testing.T) {
-	Save(t, testutil.WithPgDB(), pgInit)
+	FilesSave(t, testutil.WithPgDB(), pgInit)
 }
 
 func TestPgFiles_ByID(t *testing.T) {
-	ByID(t, testutil.WithPgDB(), pgInit)
+	FilesByID(t, testutil.WithPgDB(), pgInit)
 }
 
 func TestPgFiles_ByOwnerByPath(t *testing.T) {
-	ByOwnerByPath(t, testutil.WithPgDB(), pgInit)
+	FilesByOwnerByPath(t, testutil.WithPgDB(), pgInit)
 }
 
 func TestPgFiles_Delete(t *testing.T) {
-	Delete(t, testutil.WithPgDB(), pgInit)
+	FilesDelete(t, testutil.WithPgDB(), pgInit)
 }
 
 func insertPgUser(t *testing.T, db *sqlx.DB, username string, password string) user.User {
