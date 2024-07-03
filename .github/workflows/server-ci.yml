@@ -35,7 +35,7 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@v7
       - run: nix develop --command go mod download
       - name: Run tests
-        run: nix develop --command just server/test-integration
+        run: nix develop --command just server/test
       - name: Run mutations
         run: nix develop --command just server/test-mutations
 
