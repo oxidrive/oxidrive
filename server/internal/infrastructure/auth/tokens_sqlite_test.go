@@ -19,7 +19,7 @@ func TestSqliteTokens(t *testing.T) {
 	t.Run("stores and returns a token by ID", func(t *testing.T) {
 		t.Parallel()
 
-		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB())
 		defer done()
 
 		db := testutil.SqliteDBFromContext(ctx, t)
@@ -41,7 +41,7 @@ func TestSqliteTokens(t *testing.T) {
 	t.Run("returns the list of all expiring tokens", func(t *testing.T) {
 		t.Parallel()
 
-		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB())
 		defer done()
 
 		db := testutil.SqliteDBFromContext(ctx, t)
@@ -64,7 +64,7 @@ func TestSqliteTokens(t *testing.T) {
 	t.Run("deletes some tokens", func(t *testing.T) {
 		t.Parallel()
 
-		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB())
 		defer done()
 
 		db := testutil.SqliteDBFromContext(ctx, t)
@@ -86,7 +86,7 @@ func TestSqliteTokens(t *testing.T) {
 	t.Run("doesn't delete anything if no tokens are provided", func(t *testing.T) {
 		t.Parallel()
 
-		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithSqliteDB())
 		defer done()
 
 		db := testutil.SqliteDBFromContext(ctx, t)

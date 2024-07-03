@@ -15,7 +15,7 @@ import (
 
 func TestApi_Instance(t *testing.T) {
 	t.Run("completes the setup flow", func(t *testing.T) {
-		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir(), testutil.WithSqliteDB(testutil.SqliteDBConfig{}))
+		ctx, done := testutil.IntegrationTest(context.Background(), t, testutil.WithTempDir(), testutil.WithSqliteDB())
 		defer done()
 
 		_, handler := setup(ctx, t)
