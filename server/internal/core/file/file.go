@@ -1,59 +1,12 @@
 package file
 
 import (
-	"context"
 	"errors"
-	"fmt"
 	"io"
 	"path"
-	"strings"
 
-	"github.com/google/uuid"
-
-	"github.com/oxidrive/oxidrive/server/internal/core/list"
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
-
-type ID (uuid.UUID)
-type Content io.Reader
-type Path string
-type Name string
-type Size int
-type ContentType string
-
-func Close(c Content) error {
-	cc, ok := c.(io.Closer)
-	if !ok {
-		return nil
-	}
-
-	return cc.Close()
-}
-
-func EmptyID() ID {
-	return ID(uuid.UUID{})
-}
-
-func NewID() ID {
-	return ID(uuid.Must(uuid.NewV7()))
-}
-
-func ParseID(s string) (ID, error) {
-	id, err := uuid.Parse(s)
-	if err != nil {
-		return ID{}, err
-	}
-
-	return ID(id), nil
-}
-
-func (i ID) AsUUID() uuid.UUID {
-	return uuid.UUID(i)
-}
-
-func (i ID) String() string {
-	return uuid.UUID(i).String()
-}
 
 var (
 	ErrInvalidPath  = errors.New("the provided file path is invalid")
@@ -70,9 +23,19 @@ const (
 	ContentTypeFolder ContentType = "application/x-folder"
 )
 
-type Folder struct {
-	Name Name
-	Path Path
+type Name string
+type Size int
+type ContentType string
+
+type Content io.Reader
+
+func Close(c Content) error {
+	cc, ok := c.(io.Closer)
+	if !ok {
+		return nil
+	}
+
+	return cc.Close()
 }
 
 type File struct {
@@ -128,16 +91,20 @@ func (f *File) ChangePath(p Path) error {
 	return nil
 }
 
+type Folder struct {
+	Name Name
+	Path Path
+}
+
 func (f *File) Folder() *Folder {
-	p := path.Dir(string(f.Path))
-	if p == "/" {
+	p := f.Path.Parent()
+	if p.IsRoot() {
 		return nil
 	}
 
-	n := path.Base(p)
 	return &Folder{
-		Name: Name(n),
-		Path: Path(p),
+		Name: p.Name(),
+		Path: p,
 	}
 }
 
@@ -152,45 +119,4 @@ func (f *File) Clone() File {
 		Size:        f.Size,
 		OwnerID:     f.OwnerID,
 	}
-}
-
-func ParsePath(p string) (Path, error) {
-	if p == "" {
-		return Path("/"), nil
-	}
-
-	cleaned := path.Clean(p)
-
-	if strings.HasPrefix(cleaned, "../") {
-		return Path(""), ErrInvalidPath
-	}
-
-	if !path.IsAbs(cleaned) {
-		cleaned = fmt.Sprintf("/%s", cleaned)
-	}
-
-	return Path(cleaned), nil
-}
-
-func (p Path) Name() Name {
-	return Name(path.Base(string(p)))
-}
-
-func (p Path) String() string {
-	return string(p)
-}
-
-type Contents interface {
-	Store(context.Context, File) error
-	Load(context.Context, File) (Content, error)
-	Delete(context.Context, File) error
-	Copy(ctx context.Context, from File, to File) error
-}
-
-type Files interface {
-	List(ctx context.Context, prefix *Path, params list.Params) (list.Of[File], error)
-	Save(context.Context, File) (*File, error)
-	Delete(context.Context, File) error
-	ByID(context.Context, ID) (*File, error)
-	ByOwnerByPath(context.Context, user.ID, Path) (*File, error)
 }
