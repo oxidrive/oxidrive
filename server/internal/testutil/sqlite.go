@@ -15,13 +15,10 @@ import (
 	"github.com/oxidrive/oxidrive/server/migrations"
 )
 
-type SqliteDBConfig struct {
-	DbName   string
-	DbParams string
-}
+const dbName = "oxidrive.db"
 
 // / WithSqliteDB creates a temporary SQLite database
-func WithSqliteDB(cfg SqliteDBConfig) IntegrationDependency {
+func WithSqliteDB() IntegrationDependency {
 	return IntegrationDependency(func(ctx context.Context, t *testing.T) (context.Context, func()) {
 		t.Helper()
 
@@ -30,11 +27,7 @@ func WithSqliteDB(cfg SqliteDBConfig) IntegrationDependency {
 			t.Fatal(err)
 		}
 
-		if cfg.DbName == "" {
-			cfg.DbName = "oxidrive.db"
-		}
-
-		url := fmt.Sprintf("sqlite://%s?%s", path.Join(dir, cfg.DbName), cfg.DbParams)
+		url := fmt.Sprintf("sqlite://%s", path.Join(dir, dbName))
 
 		ctx = context.WithValue(ctx, sqliteKey{}, url)
 		return ctx, func() {
