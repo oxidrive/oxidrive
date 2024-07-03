@@ -20,23 +20,23 @@ func sqliteInit(t *testing.T, ctx context.Context) (file.Files, user.User) {
 }
 
 func TestSqliteFiles_List(t *testing.T) {
-	List(t, testutil.WithSqliteDB(), sqliteInit)
+	FilesList(t, testutil.WithSqliteDB(), sqliteInit)
 }
 
 func TestSqliteFiles_Save(t *testing.T) {
-	Save(t, testutil.WithSqliteDB(), sqliteInit)
+	FilesSave(t, testutil.WithSqliteDB(), sqliteInit)
 }
 
 func TestSqliteFiles_ByID(t *testing.T) {
-	ByID(t, testutil.WithSqliteDB(), sqliteInit)
+	FilesByID(t, testutil.WithSqliteDB(), sqliteInit)
 }
 
 func TestSqliteFiles_ByOwnerByPath(t *testing.T) {
-	ByOwnerByPath(t, testutil.WithSqliteDB(), sqliteInit)
+	FilesByOwnerByPath(t, testutil.WithSqliteDB(), sqliteInit)
 }
 
 func TestSqliteFiles_Delete(t *testing.T) {
-	Delete(t, testutil.WithSqliteDB(), sqliteInit)
+	FilesDelete(t, testutil.WithSqliteDB(), sqliteInit)
 }
 
 func insertSqliteUser(t *testing.T, db *sqlx.DB, username string, password string) user.User {

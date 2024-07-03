@@ -18,7 +18,7 @@ const ct file.ContentType = file.ContentType("text/plain")
 
 type FileTestsInit func(t *testing.T, ctx context.Context) (file.Files, user.User)
 
-func List(t *testing.T, dep testutil.IntegrationDependency, init FileTestsInit) {
+func FilesList(t *testing.T, dep testutil.IntegrationDependency, init FileTestsInit) {
 	t.Run("returns all files", func(t *testing.T) {
 		t.Parallel()
 
@@ -135,7 +135,7 @@ func List(t *testing.T, dep testutil.IntegrationDependency, init FileTestsInit) 
 	})
 }
 
-func Save(t *testing.T, dep testutil.IntegrationDependency, init FileTestsInit) {
+func FilesSave(t *testing.T, dep testutil.IntegrationDependency, init FileTestsInit) {
 	t.Run("saves a new file", func(t *testing.T) {
 		t.Parallel()
 
@@ -302,7 +302,7 @@ func Save(t *testing.T, dep testutil.IntegrationDependency, init FileTestsInit) 
 	})
 }
 
-func ByID(t *testing.T, dep testutil.IntegrationDependency, init FileTestsInit) {
+func FilesByID(t *testing.T, dep testutil.IntegrationDependency, init FileTestsInit) {
 	t.Run("returns an existing file", func(t *testing.T) {
 		t.Parallel()
 
@@ -338,7 +338,7 @@ func ByID(t *testing.T, dep testutil.IntegrationDependency, init FileTestsInit) 
 	})
 }
 
-func ByOwnerByPath(t *testing.T, dep testutil.IntegrationDependency, init FileTestsInit) {
+func FilesByOwnerByPath(t *testing.T, dep testutil.IntegrationDependency, init FileTestsInit) {
 	t.Run("returns an existing file", func(t *testing.T) {
 		t.Parallel()
 
@@ -374,7 +374,7 @@ func ByOwnerByPath(t *testing.T, dep testutil.IntegrationDependency, init FileTe
 	})
 }
 
-func Delete(t *testing.T, dep testutil.IntegrationDependency, init FileTestsInit) {
+func FilesDelete(t *testing.T, dep testutil.IntegrationDependency, init FileTestsInit) {
 	t.Run("deletes a file", func(t *testing.T) {
 		t.Parallel()
 
