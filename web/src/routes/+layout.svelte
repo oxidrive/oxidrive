@@ -10,7 +10,7 @@ import type { LayoutData } from "./$types";
 
 export let data: LayoutData;
 
-initUser(data.user);
+initUser(data.session?.user);
 </script>
 
 <FluentProvider bundles={generateBundles(data.resources, data.languages)}>

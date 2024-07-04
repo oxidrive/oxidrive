@@ -18,18 +18,18 @@ import (
 func Setup(cfg config.Config, db *sqlx.DB, logger zerolog.Logger) app.ApplicationDependencies {
 	var contents file.Contents
 	var files file.Files
-	var tokens auth.Tokens
+	var sessions auth.Sessions
 	var users user.Users
 
 	switch db.DriverName() {
 	case config.DriverPG:
 		users = userinfra.NewPgUsers(db)
 		files = fileinfra.NewPgFiles(db)
-		tokens = authinfra.NewPgTokens(db)
+		sessions = authinfra.NewPgSessions(db)
 	case config.DriverSqlite:
 		users = userinfra.NewSqliteUsers(db)
 		files = fileinfra.NewSqliteFiles(db)
-		tokens = authinfra.NewSqliteTokens(db)
+		sessions = authinfra.NewSqliteSessions(db)
 	}
 
 	contents = fileinfra.NewContentFS(cfg.StorageConfig, logger)
@@ -37,7 +37,7 @@ func Setup(cfg config.Config, db *sqlx.DB, logger zerolog.Logger) app.Applicatio
 	return app.ApplicationDependencies{
 		Contents: contents,
 		Files:    files,
-		Tokens:   tokens,
+		Sessions: sessions,
 		Users:    users,
 	}
 

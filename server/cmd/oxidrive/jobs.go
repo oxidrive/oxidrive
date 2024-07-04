@@ -9,6 +9,6 @@ import (
 func cron(deps app.ApplicationDependencies) []worker.CronJob {
 	return []worker.CronJob{
 		// every 5 minutes
-		{Cron: "*/5 * * * *", Job: auth.NewTokenCleanupJob(deps.Tokens)},
+		{Cron: "*/5 * * * *", Job: auth.NewSessionsCleanupJob(deps.Sessions)},
 	}
 }

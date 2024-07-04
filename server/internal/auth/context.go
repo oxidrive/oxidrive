@@ -16,3 +16,14 @@ func GetCurrentUser(ctx context.Context) *user.User {
 	u, _ := ctx.Value(ctxCurrentUser{}).(*user.User)
 	return u
 }
+
+type ctxCurrentSession struct{}
+
+func WithCurrentSession(parent context.Context, s *Session) context.Context {
+	return context.WithValue(parent, ctxCurrentSession{}, s)
+}
+
+func GetCurrentSession(ctx context.Context) *Session {
+	s, _ := ctx.Value(ctxCurrentSession{}).(*Session)
+	return s
+}

@@ -8,11 +8,11 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/testutil"
 )
 
-func pgInit(t *testing.T, ctx context.Context) auth.Tokens {
+func pgInit(t *testing.T, ctx context.Context) auth.Sessions {
 	db := testutil.PgDBFromContext(ctx, t)
-	return NewPgTokens(db)
+	return NewPgSessions(db)
 }
 
-func TestPgTokens(t *testing.T) {
-	Tokens(t, testutil.WithPgDB(), pgInit)
+func TestPgSessions(t *testing.T) {
+	Sessions(t, testutil.WithPgDB(), pgInit)
 }

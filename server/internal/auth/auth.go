@@ -12,15 +12,15 @@ var (
 )
 
 type Authenticator struct {
-	users  user.Users
-	tokens TokenService
+	users    user.Users
+	sessions SessionService
 }
 
-func NewAuthenticator(users user.Users, tokens TokenService) Authenticator {
-	return Authenticator{users: users, tokens: tokens}
+func NewAuthenticator(users user.Users, sessions SessionService) Authenticator {
+	return Authenticator{users: users, sessions: sessions}
 }
 
-func (a *Authenticator) AuthenticateWithPassword(ctx context.Context, username string, password string) (*Token, *user.User, error) {
+func (a *Authenticator) AuthenticateWithPassword(ctx context.Context, username string, password string) (*Session, *user.User, error) {
 	u, err := a.users.ByUsername(ctx, username)
 	if err != nil {
 		return nil, nil, err
@@ -39,28 +39,28 @@ func (a *Authenticator) AuthenticateWithPassword(ctx context.Context, username s
 		return nil, nil, ErrAuthenticationFailed
 	}
 
-	t, err := a.tokens.Generate(ctx, u)
+	session, err := a.sessions.Generate(ctx, u)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	t, err = a.tokens.Store(ctx, *t)
+	session, err = a.sessions.Store(ctx, *session)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return t, u, nil
+	return session, u, nil
 }
 
-func (a *Authenticator) UserForToken(ctx context.Context, token TokenID) (*user.User, error) {
-	tk, err := a.tokens.ByID(ctx, token)
+func (a *Authenticator) UserFromSession(ctx context.Context, sid SessionID) (*user.User, error) {
+	session, err := a.sessions.ByID(ctx, sid)
 	if err != nil {
 		return nil, err
 	}
 
-	if tk == nil {
+	if session == nil {
 		return nil, nil
 	}
 
-	return a.users.ByID(ctx, tk.UserID)
+	return a.users.ByID(ctx, session.UserID)
 }

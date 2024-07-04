@@ -13,28 +13,28 @@ type Application struct {
 	files    file.Service
 	instance instance.Service
 	users    user.Users
-	tokens   auth.TokenService
+	sessions auth.SessionService
 }
 
 type ApplicationDependencies struct {
 	Contents file.Contents
 	Files    file.Files
 	Users    user.Users
-	Tokens   auth.Tokens
+	Sessions auth.Sessions
 }
 
 func NewApplication(cfg config.Config, deps ApplicationDependencies) *Application {
-	tokens := auth.NewTokenService(deps.Tokens, cfg.SessionDuration)
+	sessions := auth.NewSessionService(deps.Sessions, cfg.SessionDuration)
 	return &Application{
-		auth:  auth.NewAuthenticator(deps.Users, tokens),
+		auth:  auth.NewAuthenticator(deps.Users, sessions),
 		files: file.NewService(deps.Contents, deps.Files),
 		instance: instance.NewService(instance.Info{
 			PublicURL:   cfg.PublicURL,
 			Database:    instance.StatusDB(cfg.DatabaseName()),
 			FileStorage: instance.StatusFileStorageFS, // TODO: add real file store
 		}, deps.Users),
-		users:  deps.Users,
-		tokens: tokens,
+		users:    deps.Users,
+		sessions: sessions,
 	}
 }
 
@@ -54,6 +54,6 @@ func (app *Application) Users() user.Users {
 	return app.users
 }
 
-func (app *Application) Tokens() *auth.TokenService {
-	return &app.tokens
+func (app *Application) Sessions() *auth.SessionService {
+	return &app.sessions
 }

@@ -10,15 +10,19 @@ export const load: LayoutLoad = async ({ fetch }) => {
 		languages: navigator.languages,
 	};
 
-	const { data, error, response } = await client.GET("/api/session", { fetch });
+	const {
+		data: session,
+		error,
+		response,
+	} = await client.GET("/api/session", { fetch });
 
 	if (response.status === 401) {
-		return { user: null, ...langs };
+		return { session: null, ...langs };
 	}
 
 	if (error) {
 		throw new ApiError(error);
 	}
 
-	return { user: data, ...langs };
+	return { session, ...langs };
 };

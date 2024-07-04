@@ -38,7 +38,7 @@ func mountApi(router *http.ServeMux, cfg *Config) error {
 
 	handler := api.NewStrictHandlerWithOptions(
 		apis,
-		[]api.StrictMiddlewareFunc{userFromToken(cfg.Application)},
+		[]api.StrictMiddlewareFunc{session(cfg.Application)},
 		api.StrictHTTPServerOptions{
 			RequestErrorHandlerFunc:  handleApiRequestError(cfg.Logger),
 			ResponseErrorHandlerFunc: handleApiResponseError(cfg.Logger),

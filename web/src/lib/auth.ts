@@ -12,6 +12,6 @@ export function getUser(): Writable<User | null> {
 	return getContext(userKey);
 }
 
-export function initUser(user: User | null) {
-	setContext(userKey, writable(user));
+export function initUser(user?: User) {
+	setContext(userKey, writable(user ?? null));
 }
