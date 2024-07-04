@@ -8,11 +8,11 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/testutil"
 )
 
-func sqliteInit(t *testing.T, ctx context.Context) auth.Tokens {
+func sqliteInit(t *testing.T, ctx context.Context) auth.Sessions {
 	db := testutil.SqliteDBFromContext(ctx, t)
-	return NewSqliteTokens(db)
+	return NewSqliteSessions(db)
 }
 
-func TestSqliteTokens(t *testing.T) {
-	Tokens(t, testutil.WithSqliteDB(), sqliteInit)
+func TestSqliteSessions(t *testing.T) {
+	Sessions(t, testutil.WithSqliteDB(), sqliteInit)
 }

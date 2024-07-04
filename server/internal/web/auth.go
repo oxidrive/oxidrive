@@ -16,12 +16,15 @@ import (
 )
 
 var (
-	ErrTokenAuthenticationFailed = errors.New("token authentication failed")
+	ErrSessionAuthenticationFailed = errors.New("session authentication failed")
 )
 
 func authenticateOpenAPI(logger zerolog.Logger, app *app.Application) openapi3filter.AuthenticationFunc {
 	return func(ctx context.Context, input *openapi3filter.AuthenticationInput) error {
-		logger.Debug().Str("securitySchemeName", input.SecuritySchemeName).Interface("securityScheme", input.SecurityScheme).Msg("verifying authentication")
+		logger.Debug().
+			Str("securitySchemeName", input.SecuritySchemeName).
+			Interface("securityScheme", input.SecurityScheme).
+			Msg("verifying authentication")
 
 		var auth authenticator
 		switch input.SecuritySchemeName {
@@ -46,7 +49,7 @@ func authenticateHttp(logger zerolog.Logger, app *app.Application) api.Middlewar
 		app:    app,
 	}
 
-	inject := injectUserFromRequest(app)
+	inject := injectSessionFromRequest(app)
 
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -80,24 +83,24 @@ type sessionAuthenticator struct {
 }
 
 func (t sessionAuthenticator) authenticate(ctx context.Context, req *http.Request) error {
-	token := extractTokenFromCookie(req)
-	if token == "" {
-		return ErrTokenAuthenticationFailed
+	session := extractSessionID(req)
+	if session == "" {
+		return ErrSessionAuthenticationFailed
 	}
 
-	if err := t.app.Tokens().Verify(ctx, auth.TokenID(token)); err != nil {
+	if err := t.app.Sessions().Verify(ctx, session); err != nil {
 		t.logger.Debug().Err(err).Msg("session authentication failed")
-		return ErrTokenAuthenticationFailed
+		return ErrSessionAuthenticationFailed
 	}
 
 	t.logger.Trace().Msg("authentication successful")
 	return nil
 }
 
-func extractTokenFromCookie(r *http.Request) string {
+func extractSessionID(r *http.Request) auth.SessionID {
 	c, err := r.Cookie(handler.SessionCookieName)
 	if err != nil {
 		return ""
 	}
-	return c.Value
+	return auth.SessionID(c.Value)
 }

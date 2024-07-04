@@ -57,8 +57,8 @@ func validator(app *app.Application) MiddlewareFactory {
 	}
 }
 
-func userFromToken(app *app.Application) api.StrictMiddlewareFunc {
-	inject := injectUserFromRequest(app)
+func session(app *app.Application) api.StrictMiddlewareFunc {
+	inject := injectSessionFromRequest(app)
 
 	return api.StrictMiddlewareFunc(func(f nethttp.StrictHTTPHandlerFunc, operationID string) nethttp.StrictHTTPHandlerFunc {
 		return func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (response interface{}, err error) {
@@ -72,14 +72,23 @@ func userFromToken(app *app.Application) api.StrictMiddlewareFunc {
 	})
 }
 
-func injectUserFromRequest(app *app.Application) func(ctx context.Context, r *http.Request) (context.Context, error) {
+func injectSessionFromRequest(app *app.Application) func(ctx context.Context, r *http.Request) (context.Context, error) {
 	return func(ctx context.Context, r *http.Request) (context.Context, error) {
-		token := extractTokenFromCookie(r)
-		if token == "" {
+		sid := extractSessionID(r)
+		if sid == "" {
 			return ctx, nil
 		}
 
-		u, err := app.Auth().UserForToken(ctx, auth.TokenID(token))
+		session, err := app.Sessions().ByID(ctx, sid)
+		if err != nil {
+			return nil, err
+		}
+
+		if session == nil {
+			return nil, nil
+		}
+
+		u, err := app.Users().ByID(ctx, session.UserID)
 		if err != nil {
 			return nil, err
 		}
@@ -88,6 +97,8 @@ func injectUserFromRequest(app *app.Application) func(ctx context.Context, r *ht
 			return ctx, nil
 		}
 
-		return auth.WithCurrentUser(ctx, u), nil
+		ctx = auth.WithCurrentUser(ctx, u)
+		ctx = auth.WithCurrentSession(ctx, session)
+		return ctx, nil
 	}
 }

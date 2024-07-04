@@ -12,13 +12,11 @@
 
         commands = [
           (mkJustCmd "server/watch" { help = "Start the API server locally (with autoreload)"; category = "Server"; })
-          (mkJustCmd "server/test" { help = "Run the API server unit tests"; category = "Server"; })
-          (mkJustCmd "server/test-integration" { help = "Run the API server integration tests"; category = "Server"; })
+          (mkJustCmd "server/test-unit" { help = "Run the API server unit tests"; category = "Server"; })
+          (mkJustCmd "server/test" { help = "Run the API server full test suite (including integration tests)"; category = "Server"; })
           (mkJustCmd "server/migration-create <name>" { help = "Create a new SQL migration"; category = "Server"; })
 
           (mkJustCmd "web/watch" { help = "Start the web frontend locally (with autoreload)"; category = "Web"; })
-          (mkJustCmd "web/watch-app" { help = "Start only the web frontend locally without the stylesheets (with autoreload)"; category = "Web"; })
-          (mkJustCmd "web/watch-styles" { help = "Recompile only the stylesheets (with autoreload)"; category = "Web"; })
           (mkJustCmd "web/test" { help = "Run the web frontend unit tests"; category = "Web"; })
 
           (mkJustCmd "e2e/setup" { help = "Prepare the local environment for running E2E tests. Only required once"; category = "E2E"; })

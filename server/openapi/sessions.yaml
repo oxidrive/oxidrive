@@ -16,12 +16,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                $ref: '#/components/schemas/Session'
 
   /api/sessions:
     post:
       operationId: authCreateSession
-      summary: Create a new session and generate the corresponding token
+      summary: Create a new session and generate the corresponding cookie
       tags: [auth]
       requestBody:
         required: true

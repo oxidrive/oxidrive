@@ -100,7 +100,7 @@ export interface paths {
 		};
 		get?: never;
 		put?: never;
-		/** Create a new session and generate the corresponding token */
+		/** Create a new session and generate the corresponding cookie */
 		post: operations["authCreateSession"];
 		delete?: never;
 		options?: never;
@@ -470,7 +470,7 @@ export interface operations {
 					[name: string]: unknown;
 				};
 				content: {
-					"application/json": components["schemas"]["User"];
+					"application/json": components["schemas"]["Session"];
 				};
 			};
 		};

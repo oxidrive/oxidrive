@@ -21,8 +21,8 @@ func TestAuthenticator(t *testing.T) {
 		ctx := context.Background()
 
 		users := user.NewUsersMock(t)
-		tokens := NewTokensMock(t)
-		svc := NewTokenService(tokens, ttl)
+		sessions := NewSessionsMock(t)
+		svc := NewSessionService(sessions, ttl)
 
 		password := "test"
 		u := testutil.Must(user.Create("test", password))
@@ -31,7 +31,7 @@ func TestAuthenticator(t *testing.T) {
 		a := NewAuthenticator(users, svc)
 
 		users.On("ByUsername", u.Username).Return(u, nil).Once()
-		tokens.On("Store", mock.Anything).Return(tk, nil).Once()
+		sessions.On("Store", mock.Anything).Return(tk, nil).Once()
 
 		tk, ua, err := a.AuthenticateWithPassword(ctx, u.Username, password)
 
@@ -47,8 +47,8 @@ func TestAuthenticator(t *testing.T) {
 		ctx := context.Background()
 
 		users := user.NewUsersMock(t)
-		tokens := NewTokensMock(t)
-		svc := NewTokenService(tokens, ttl)
+		sessions := NewSessionsMock(t)
+		svc := NewSessionService(sessions, ttl)
 
 		password := "test"
 		u := testutil.Must(user.Create("test", password))
@@ -56,7 +56,7 @@ func TestAuthenticator(t *testing.T) {
 		a := NewAuthenticator(users, svc)
 
 		users.On("ByUsername", mock.Anything).Return((*user.User)(nil), nil).Once()
-		tokens.On("Store", mock.Anything).Return((*Token)(nil), nil).Once()
+		sessions.On("Store", mock.Anything).Return((*Session)(nil), nil).Once()
 
 		tk, ua, err := a.AuthenticateWithPassword(ctx, u.Username, password)
 
@@ -71,15 +71,15 @@ func TestAuthenticator(t *testing.T) {
 		ctx := context.Background()
 
 		users := user.NewUsersMock(t)
-		tokens := NewTokensMock(t)
-		svc := NewTokenService(tokens, ttl)
+		sessions := NewSessionsMock(t)
+		svc := NewSessionService(sessions, ttl)
 
 		u := testutil.Must(user.Create("test", "test"))
 
 		a := NewAuthenticator(users, svc)
 
 		users.On("ByUsername", u.Username).Return(u, nil).Once()
-		tokens.On("Store", mock.Anything).Return((*Token)(nil), nil).Once()
+		sessions.On("Store", mock.Anything).Return((*Session)(nil), nil).Once()
 
 		tk, ua, err := a.AuthenticateWithPassword(ctx, u.Username, "wrong password")
 
@@ -89,15 +89,15 @@ func TestAuthenticator(t *testing.T) {
 	})
 }
 
-func TestAuthenticator_UserForToken(t *testing.T) {
-	t.Run("returns the user associated with the token", func(t *testing.T) {
+func TestAuthenticator_UserForSession(t *testing.T) {
+	t.Run("returns the user associated with the session", func(t *testing.T) {
 		t.Parallel()
 
 		ctx := context.Background()
 
 		users := user.NewUsersMock(t)
-		tokens := NewTokensMock(t)
-		svc := NewTokenService(tokens, ttl)
+		sessions := NewSessionsMock(t)
+		svc := NewSessionService(sessions, ttl)
 
 		u := testutil.Must(user.Create("test", "test"))
 		tk := testutil.Must(svc.Generate(ctx, u))
@@ -105,9 +105,9 @@ func TestAuthenticator_UserForToken(t *testing.T) {
 		a := NewAuthenticator(users, svc)
 
 		users.On("ByID", u.ID).Return(u, nil).Once()
-		tokens.On("ByID", tk.Value).Return(tk, nil).Once()
+		sessions.On("ByID", tk.Value).Return(tk, nil).Once()
 
-		ua, err := a.UserForToken(ctx, tk.Value)
+		ua, err := a.UserFromSession(ctx, tk.Value)
 
 		assert.NoError(t, err)
 		assert.Equal(t, u.ID, ua.ID)

@@ -13,19 +13,19 @@ import (
 	"github.com/oxidrive/oxidrive/server/internal/core/user"
 )
 
-var _ auth.Tokens = (*PgTokens)(nil)
+var _ auth.Sessions = (*SqliteSessions)(nil)
 
-type SqliteTokens struct {
+type SqliteSessions struct {
 	db *sqlx.DB
 }
 
-func NewSqliteTokens(db *sqlx.DB) *SqliteTokens {
-	return &SqliteTokens{db: db}
+func NewSqliteSessions(db *sqlx.DB) *SqliteSessions {
+	return &SqliteSessions{db: db}
 }
 
-func (p *SqliteTokens) ByID(ctx context.Context, id auth.TokenID) (*auth.Token, error) {
-	var t sqliteToken
-	err := p.db.GetContext(ctx, &t, "select id, user_id, expires_at from tokens where id = $1", string(id))
+func (p *SqliteSessions) ByID(ctx context.Context, id auth.SessionID) (*auth.Session, error) {
+	var t sqliteSession
+	err := p.db.GetContext(ctx, &t, "select id, user_id, expires_at from sessions where id = $1", string(id))
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
 	}
@@ -33,9 +33,9 @@ func (p *SqliteTokens) ByID(ctx context.Context, id auth.TokenID) (*auth.Token, 
 	return t.into(), nil
 }
 
-func (p *SqliteTokens) Store(ctx context.Context, t auth.Token) (*auth.Token, error) {
+func (p *SqliteSessions) Store(ctx context.Context, t auth.Session) (*auth.Session, error) {
 	exp := t.ExpiresAt.UTC().Format(time.RFC3339)
-	_, err := p.db.ExecContext(ctx, `insert into tokens (
+	_, err := p.db.ExecContext(ctx, `insert into sessions (
         id,
         user_id,
         expires_at
@@ -51,19 +51,19 @@ func (p *SqliteTokens) Store(ctx context.Context, t auth.Token) (*auth.Token, er
 	return &t, nil
 }
 
-func (p *SqliteTokens) ExpiringBefore(ctx context.Context, exp time.Time) ([]auth.Token, error) {
+func (p *SqliteSessions) ExpiringBefore(ctx context.Context, exp time.Time) ([]auth.Session, error) {
 	e := exp.UTC().Format(time.RFC3339)
-	stt := make([]sqliteToken, 0)
-	err := p.db.SelectContext(ctx, &stt, "select id, user_id, expires_at from tokens where expires_at <= $1", e)
+	stt := make([]sqliteSession, 0)
+	err := p.db.SelectContext(ctx, &stt, "select id, user_id, expires_at from sessions where expires_at <= $1", e)
 	if errors.Is(err, sql.ErrNoRows) {
-		return []auth.Token{}, nil
+		return []auth.Session{}, nil
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	tt := make([]auth.Token, len(stt))
+	tt := make([]auth.Session, len(stt))
 
 	for i, t := range stt {
 		tt[i] = *t.into()
@@ -72,7 +72,7 @@ func (p *SqliteTokens) ExpiringBefore(ctx context.Context, exp time.Time) ([]aut
 	return tt, nil
 }
 
-func (p *SqliteTokens) DeleteAll(ctx context.Context, tt []auth.Token) error {
+func (p *SqliteSessions) DeleteAll(ctx context.Context, tt []auth.Session) error {
 	if len(tt) == 0 {
 		return nil
 	}
@@ -82,7 +82,7 @@ func (p *SqliteTokens) DeleteAll(ctx context.Context, tt []auth.Token) error {
 		ids[i] = t.Value.String()
 	}
 
-	query, args, err := sqlx.In("delete from tokens where id in (?)", ids)
+	query, args, err := sqlx.In("delete from sessions where id in (?)", ids)
 	if err != nil {
 		return err
 	}
@@ -93,21 +93,21 @@ func (p *SqliteTokens) DeleteAll(ctx context.Context, tt []auth.Token) error {
 	return err
 }
 
-type sqliteToken struct {
+type sqliteSession struct {
 	ID        string    `db:"id"`
 	UserID    uuid.UUID `db:"user_id"`
 	ExpiresAt string    `db:"expires_at"`
 }
 
-func (t sqliteToken) into() *auth.Token {
+func (t sqliteSession) into() *auth.Session {
 	exp, err := time.Parse(time.RFC3339, t.ExpiresAt)
 	if err != nil {
 		// We serialized the string, so it should be fine
 		panic(err)
 	}
 
-	return &auth.Token{
-		Value:     auth.TokenID(t.ID),
+	return &auth.Session{
+		Value:     auth.SessionID(t.ID),
 		UserID:    user.ID(t.UserID),
 		ExpiresAt: exp,
 	}

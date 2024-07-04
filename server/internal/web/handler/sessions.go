@@ -70,8 +70,12 @@ func (a *Sessions) CreateSession(ctx context.Context, request api.AuthCreateSess
 
 func (a *Sessions) GetSession(ctx context.Context, _ api.AuthGetSessionRequestObject) (api.AuthGetSessionResponseObject, error) {
 	u := auth.GetCurrentUser(ctx)
+	s := auth.GetCurrentSession(ctx)
 	return api.AuthGetSession200JSONResponse{
-		Id:       u.ID.AsUUID(),
-		Username: u.Username,
+		ExpiresAt: s.ExpiresAt,
+		User: api.User{
+			Id:       u.ID.AsUUID(),
+			Username: u.Username,
+		},
 	}, nil
 }
