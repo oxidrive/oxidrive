@@ -8,4 +8,3 @@ type Users interface {
 	ByID(context.Context, ID) (*User, error)
 	ByUsername(context.Context, string) (*User, error)
 }
-
