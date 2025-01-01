@@ -1,0 +1,60 @@
+[workspace]
+
+resolver = "2"
+
+members = [
+    "app/*",
+    "bin/*", "lib/config", "lib/telemetry",
+]
+
+[workspace.package]
+version = "0.1.0"
+authors = ["Matteo Joliveau <matteo@matteojoliveau.com>"]
+documentation = "https://oxidrive.github.io/oxidrive"
+edition = "2021"
+
+[workspace.dependencies]
+# workspace
+oxidrive-web.path = "app/web"
+
+oxidrive-config.path = "lib/config"
+oxidrive-telemetry.path = "lib/telemetry"
+
+app.path = "lib/app"
+
+# crates.io
+async-trait = "0.1"
+argon2 = "0.5"
+assert2 = "0.3"
+async-graphql-axum = "7.0"
+axum = "0.8"
+axum-extra = "0.10"
+base64 = "0.22"
+bytes = "1"
+clap = "4"
+eyre = "0.6"
+fake = { version = "2.9", features = ["chrono", "uuid"] }
+figment = "0.10"
+futures = "0.3"
+mockall = "0.13"
+pasetors = "0.7"
+rstest = "0.22"
+rust-embed = "8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sqlx = { version = "0.8", features = [
+    "chrono",
+    "json",
+    "macros",
+    "postgres",
+    "uuid",
+] }
+tempfile = "3"
+thiserror = "1"
+tokio = "1"
+tower = "0.5"
+tower-http = "0.5"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+url = { version = "2", features = ["serde"] }
+uuid = { version = "1", features = ["v7", "serde"] }

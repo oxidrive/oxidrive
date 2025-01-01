@@ -1,0 +1,19 @@
+[package]
+name = "oxidrive"
+version.workspace = true
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+
+[dependencies]
+oxidrive-web = { workspace = true }
+
+oxidrive-config = { workspace = true }
+oxidrive-telemetry = { workspace = true }
+
+app = { workspace = true }
+
+clap = { workspace = true, features = ["derive", "env"] }
+eyre = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+tracing = { workspace = true }

@@ -6,35 +6,23 @@ pre-commit:
   parallel: true
   commands:
     biome-check: &biome
-      run: npx @biomejs/biome check --no-errors-on-unmatched --files-ignore-unknown=true --apply {staged_files}
+      run: npx @biomejs/biome check --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
     biome-format:
       run: npx @biomejs/biome format --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
       <<: *biome
     biome-lint:
-      run: npx @biomejs/biome lint --no-errors-on-unmatched --files-ignore-unknown=true --apply {staged_files}
+      run: npx @biomejs/biome lint --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
       <<: *biome
 
-    govet: &go
-      run: go vet ./...
-      files: git ls-files -m
-      glob: "*.go"
-    gofmt:
-      run: gofmt -l {files}
-      <<: *go
-    golangci-lint:
-      run: golangci-lint run --new-from-rev HEAD --fix
-      <<: *go
-    goimports:
-      run: goimports -local github.com/oxidrive/oxidrive -l -d {files}
-      <<: *go
+    rustfmt:
+      run: cargo fmt --all
+    clippy:
+      run: cargo clippy --fix --allow-dirty --allow-staged
+      
 
-    dotenv-linter:
-      glob: "{.env,.env.*}"
-      run: dotenv-linter fix --no-backup --recursive {staged_files}
-
-    nixpkgs-fmt:
-      glob: "*.nix"
-      run: nixpkgs-fmt {staged_files}
+    # nixpkgs-fmt:
+    #   glob: "*.nix"
+    #   run: nixpkgs-fmt
 
     links:
       glob: "*.md"
@@ -42,7 +30,7 @@ pre-commit:
       run: lychee --max-concurrency 3 {staged_files}
 
     fix-typos:
-      exclude: '(^|/)((.*)\.pub|go.mod|go.sum|flake.lock|package-lock.json|(.*)\.gen\.go)$'
+      exclude: '(^|/)((.*)\.pub|Cargo.lock|flake.lock|package-lock.json$'
       file_types:
         - text
         - not symlink

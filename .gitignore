@@ -1,13 +1,3 @@
-.env
-.env*
-!.env.example
-!e2e/.env.tpl
 node_modules/
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-/.direnv/
-/.pre-commit-config.yaml
-/target/
-/release/
+result
+target/

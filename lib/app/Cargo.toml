@@ -1,0 +1,11 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-trait.workspace = true
+eyre.workspace = true
+futures.workspace = true
+tracing.workspace = true
+tokio = { workspace = true, features = ["macros", "signal"] }
