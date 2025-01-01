@@ -1,0 +1,11 @@
+[package]
+name = "oxidrive-config"
+version.workspace = true
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+
+[dependencies]
+figment = { workspace = true, features = ["env", "toml", "yaml"] }
+serde = { workspace = true }
+tracing = { workspace = true }

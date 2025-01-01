@@ -1,43 +1,31 @@
-default:
-    @echo $'Available commands:\n'
-    @just --list --list-heading $'Global:\n' --unsorted | grep -v '  default'
-    @echo ""
-    @just -f web/Justfile --list --list-heading $'Web:\n'  --unsorted| grep -v '  default'
-    @echo ""
-    @just -f server/Justfile --list --list-heading $'Server:\n'  --unsorted | grep -v '  default'
-    @echo ""
-    @just -f e2e/Justfile --list --list-heading $'E2E Tests:\n'  --unsorted | grep -v '  default'
+set dotenv-load
 
-build:
-    @just web/build
-    @just server/build
+default:
+    @just --list --unsorted | grep -v '  default'
+
+add-lib name:
+    cargo new --lib ./lib/{{ name }} --vcs=none --name oxidrive-{{ name }}
+
+add-app name:
+    cargo new --lib ./app/{{ name }} --vcs=none --name oxidrive-{{ name }}
+
+add-bin name:
+    cargo new --bin ./bin/{{ name }} --vcs=none --name oxidrive-{{ name }}
+
+watch *args:
+    cargo watch -s 'just run {{ args }}'
+
+run *args:
+    cargo run -p oxidrive -- {{ args }}
+
+test *args:
+    cargo nextest run {{ args }}
 
 fmt:
-    just web/fmt
-    just server/fmt
-    just docs/fmt
-    just e2e/fmt
+    cargo fmt
 
-lint:
-    @just web/lint
-    @just server/lint
-    @just docs/lint
-    @just e2e/lint
+clippy:
+    cargo clippy --fix --workspace --all-targets --all-features --fix --allow-dirty --allow-staged
 
-act *args:
-    act -s GITHUB_TOKEN=$(gh auth token) {{ args }}
-
-test e2e="test":
-    @just server/test
-    @just web/test
-    @just e2e/{{ e2e }}
-
-release:
-    rm -rf release && mkdir -p release/staging
-    @just server/openapi
-    @just web/build
-    @just server/build
-    cp ./server/bin/oxidrive release/staging/
-    cp -r ./web/build release/staging/assets
-    tar -cvzf release/oxidrive.tar.gz -C ./release/staging .
-    rm -rf release/staging
+db-reset:
+    docker compose down -v && docker compose up -d && just migrations/run

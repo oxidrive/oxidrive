@@ -1,24 +1,52 @@
 {
-  description = "Description for the project";
+  description = "Tag-based private cloud storage";
 
   inputs = {
     flake-parts.url = "github:hercules-ci/flake-parts";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    devshell.url = "github:numtide/devshell";
+    rust-overlay = {
+      url = "github:oxalica/rust-overlay";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = inputs@{ flake-parts, ... }:
+  outputs = inputs @ { flake-parts, rust-overlay, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
       imports = [
-        inputs.devshell.flakeModule
-
-        ./nix/go.nix
-        ./nix/node.nix
-        ./nix/shell.nix
       ];
 
       systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
 
-      perSystem = { system, ... }: { };
+      perSystem = { pkgs, ... }:
+        let
+          rustPkgs = pkgs.appendOverlays [ (import rust-overlay) ];
+          toolchain = rustPkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+        in
+        {
+          formatter = pkgs.nixpkgs-fmt;
+
+          packages = rec {
+            default = oxidrive;
+            oxidrive = pkgs.callPackage ./nix/server.nix { };
+          };
+
+          devShells.default = pkgs.mkShell {
+            BIOME_BINARY = "${pkgs.biome}/bin/biome";
+
+            packages = with pkgs; [
+              bacon
+              cargo-nextest
+              clang
+              just
+              mold
+              sqlx-cli
+              toolchain
+              nodejs_20
+              lefthook
+              lychee
+              typos
+            ];
+          };
+        };
     };
 }
