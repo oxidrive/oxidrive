@@ -1,1 +1,43 @@
-../../../web/src/lib/assets/logo.svg
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   version="1.1"
+   width="2222"
+   height="2222"
+   style="clip-rule:evenodd;fill-rule:evenodd;image-rendering:optimizeQuality;shape-rendering:geometricPrecision;text-rendering:geometricPrecision"
+   id="svg1"
+   sodipodi:docname="logo.svg"
+   inkscape:version="1.3.2 (091e20ef0f, 2023-11-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.3729237"
+     inkscape:cx="705.2381"
+     inkscape:cy="1197.2959"
+     inkscape:window-width="1710"
+     inkscape:window-height="1259"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <g
+     id="g1"
+     transform="translate(0.5,135)">
+    <path
+       style="opacity:0.997"
+       fill="#476f95"
+       d="m 864.5,-0.5 c 28.667,0 57.333,0 86,0 269.14,17.9829 489.97,129.65 662.5,335 120.15,149.501 187.31,320.501 201.5,513 -120.7,4.861 -221.7,51.528 -303,140 19.51,-178.039 -27.33,-336.039 -140.5,-474 -122.52,-138.743 -276.86,-210.076 -463,-214 -193.515,4.268 -351.849,80.268 -475,228 -103.934,133.529 -146.934,284.863 -129,454 22.94,166.74 99.774,302.24 230.5,406.5 142.114,107.03 301.448,146.69 478,119 172.12,-33.24 306.96,-122.08 404.5,-266.5 7.59,-12.17 14.92,-24.5 22,-37 18.06,-39.12 36.39,-78.12 55,-117 62.1,-108.022 154.93,-172.189 278.5,-192.5 115.74,-14.634 217.07,16.366 304,93 84.61,83.11 124.11,184.27 118.5,303.5 -3.8,56.21 -17.47,109.87 -41,161 -17.84,37.46 -38.51,73.12 -62,107 -31.89,43.9 -66.06,86.07 -102.5,126.5 77.33,0.5 154.67,0.67 232,0.5 0,89 0,178 0,267 -196.33,0 -392.67,0 -589,0 -0.17,-89.67 0,-179.33 0.5,-269 75.79,-63.77 140.79,-136.77 195,-219 27.12,-40.59 48.12,-84.25 63,-131 8.39,-26.81 11.05,-54.14 8,-82 -12.09,-43.97 -40.93,-64.14 -86.5,-60.5 -17.65,2.66 -32.15,10.83 -43.5,24.5 -4,6 -8,12 -12,18 -91.48,227.82 -247.98,394.65 -469.5,500.5 -189.05,84.52 -384.717,104.19 -587,59 C 489.534,1741.2 317.701,1630.03 185,1459.5 71.8902,1309.38 10.0569,1140.04 -0.5,951.5 c 0,-29 0,-58 0,-87 C 15.337,613.02 115.337,402.187 299.5,232 460.413,89.594 648.746,12.094 864.5,-0.5 Z"
+       id="path1" />
+  </g>
+</svg>

@@ -11,7 +11,7 @@ astro *args: setup
     npx astro {{ args }}
 
 setup:
-    [ -d ../node_modules ] || npm ci
+    [ -d ./node_modules ] || npm ci
 
 fmt: setup
     npx biome format --write .
