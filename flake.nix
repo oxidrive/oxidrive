@@ -11,7 +11,7 @@
   };
 
   outputs = inputs @ { flake-parts, rust-overlay, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
+    flake-parts.lib.mkFlake { inherit inputs; } rec {
       imports = [
       ];
 
@@ -28,6 +28,7 @@
           packages = rec {
             default = oxidrive;
             oxidrive = pkgs.callPackage ./nix/server.nix { };
+            web = pkgs.callPackage ./nix/web.nix { };
           };
 
           devShells.default = pkgs.mkShell {
@@ -35,6 +36,7 @@
 
             packages = with pkgs; [
               bacon
+              bruno-cli
               cargo-nextest
               clang
               just

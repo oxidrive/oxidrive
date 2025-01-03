@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: public.ecr.aws/docker/library/postgres:16-alpine
+    environment:
+      POSTGRES_USER: oxidrive
+      POSTGRES_PASSWORD: oxidrive
+      POSTGRES_DB: oxidrive
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+volumes:
+  postgres: {}

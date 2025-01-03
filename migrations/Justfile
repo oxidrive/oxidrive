@@ -1,0 +1,23 @@
+default:
+    @just --list --unsorted | grep -v '  default'
+
+add name:
+    for dir in postgres sqlite; do \
+      sqlx migrate add -r {{ name }} --source "$dir"; \
+    done
+
+run:
+    #!/usr/bin/env bash
+    export DATABASE_URL=sqlite://../oxidrive.db?mode=rwc
+    sqlx migrate run --source sqlite;
+
+    export DATABASE_URL=postgres://oxidrive:oxidrive@localhost:5432/oxidrive
+    sqlx migrate run --source postgres;
+
+prepare:
+    #!/usr/bin/env bash
+    cd ..
+    just migrations/run
+    export DATABASE_URL=sqlite://oxidrive.db
+    echo $PWD
+    cargo sqlx prepare --workspace

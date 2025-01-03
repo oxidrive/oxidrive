@@ -13,7 +13,7 @@ add-bin name:
     cargo new --bin ./bin/{{ name }} --vcs=none --name oxidrive-{{ name }}
 
 watch *args:
-    cargo watch -s 'just run {{ args }}'
+    bacon run-server -- {{ args }}
 
 run *args:
     cargo run -p oxidrive -- {{ args }}

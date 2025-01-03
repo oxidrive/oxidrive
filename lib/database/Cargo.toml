@@ -1,0 +1,17 @@
+[package]
+name = "oxidrive-database"
+version.workspace = true
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+
+[dependencies]
+app = { workspace = true }
+
+futures = { workspace = true }
+rust-embed = { workspace = true }
+serde = { workspace = true }
+sqlx = { workspace = true, features = ["runtime-tokio"] }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+url = { workspace = true }

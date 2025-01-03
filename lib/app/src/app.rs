@@ -49,6 +49,7 @@ impl App {
     }
 
     pub fn init(self) -> Container {
+        tracing::debug!(app = %self.name, "building dependency injection container");
         self.container.init()
     }
 
@@ -57,47 +58,55 @@ impl App {
         F: FnOnce(Arc<Container>) -> Fut,
         Fut: Future<Output = eyre::Result<()>>,
     {
-        tracing::debug!(app = %self.name, "building dependency injection container");
+        let name = self.name;
+
         let container = Arc::new(self.container.init());
 
-        tracing::info!(app = %self.name, "app starting up");
+        tracing::info!(app = %name, "app starting up");
 
-        tracing::debug!(app = %self.name, "running before_start hooks");
+        tracing::debug!(app = %name, "running before_start hooks");
         run_hooks(self.hooks.iter_mut(), |h| h.before_start(&container)).await;
 
-        tracing::debug!(app = %self.name, "running main function");
+        tracing::debug!(app = %name, "running after_start hooks");
+        run_hooks(self.hooks.iter_mut(), |h| h.after_start(&container)).await;
+
+        tracing::debug!(app = %name, "running app");
         let res = tokio::select! {
             res = run(container.clone()) => res,
             res = tokio::signal::ctrl_c() => res.wrap_err("failed to listen for SIGINT event"),
         }
         .inspect(|_| {
-            tracing::info!(app = %self.name, "app shutting down");
+            tracing::info!(app = %name, "app shutting down");
         })
         .inspect_err(|err| {
-            let stack = err
-                .chain()
-                .enumerate()
-                .map(|(i, e)| format!("{i}: {e:?}"))
-                .collect::<Vec<_>>()
-                .join("\n");
-
-            tracing::error!(
-                app = %self.name,
-                error.message = %err,
-                error.kind = "AppError",
-                error.stack = ?stack,
-                "{} exited with error",
-                self.name,
-            );
+            handle_error(&name, err);
         });
 
         let code = res.map(|_| 0).unwrap_or(1);
 
-        tracing::debug!(app = %self.name, "running on_shutdown hooks");
+        tracing::debug!(app = %name, "running on_shutdown hooks");
         run_hooks(self.hooks.iter_mut().rev(), |h| h.on_shutdown(&container)).await;
 
         std::process::exit(code);
     }
+}
+
+pub fn handle_error(app_name: &str, err: &eyre::Report) {
+    let stack = err
+        .chain()
+        .enumerate()
+        .map(|(i, e)| format!("{i}: {e:?}"))
+        .collect::<Vec<_>>()
+        .join("\n");
+
+    tracing::error!(
+        app = %app_name,
+        error.message = %err,
+        error.kind = "AppError",
+        error.stack = ?stack,
+        "{} exited with error",
+        app_name,
+    );
 }
 
 async fn run_hooks<'iter, 'hook, I, F, Fut>(hooks: I, hook: F)

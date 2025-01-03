@@ -2,10 +2,7 @@
 
 resolver = "2"
 
-members = [
-    "app/*",
-    "bin/*", "lib/config", "lib/telemetry",
-]
+members = ["app/*", "bin/*", "lib/*"]
 
 [workspace.package]
 version = "0.1.0"
@@ -15,16 +12,19 @@ edition = "2021"
 
 [workspace.dependencies]
 # workspace
+oxidrive-auth.path = "app/auth"
 oxidrive-web.path = "app/web"
 
 oxidrive-config.path = "lib/config"
+oxidrive-database.path = "lib/database"
+oxidrive-domain.path = "lib/domain"
 oxidrive-telemetry.path = "lib/telemetry"
 
 app.path = "lib/app"
 
 # crates.io
 async-trait = "0.1"
-argon2 = "0.5"
+argon2 = { version = "0.5", features = ["std"] }
 assert2 = "0.3"
 async-graphql-axum = "7.0"
 axum = "0.8"
@@ -36,8 +36,10 @@ eyre = "0.6"
 fake = { version = "2.9", features = ["chrono", "uuid"] }
 figment = "0.10"
 futures = "0.3"
+mime_guess = "2"
 mockall = "0.13"
 pasetors = "0.7"
+rand = "0.8"
 rstest = "0.22"
 rust-embed = "8"
 serde = { version = "1", features = ["derive"] }
@@ -47,8 +49,10 @@ sqlx = { version = "0.8", features = [
     "json",
     "macros",
     "postgres",
+    "sqlite",
     "uuid",
 ] }
+strum = { version = "0.26", features = ["derive"] }
 tempfile = "3"
 thiserror = "1"
 tokio = "1"
