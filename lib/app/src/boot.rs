@@ -9,6 +9,10 @@ pub trait Hooks: Send + 'static {
         Ok(())
     }
 
+    async fn after_start(&mut self, c: &Container) -> eyre::Result<()> {
+        Ok(())
+    }
+
     async fn on_shutdown(&mut self, c: &Container) -> eyre::Result<()> {
         Ok(())
     }

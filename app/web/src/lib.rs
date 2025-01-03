@@ -1,19 +1,26 @@
 use std::net::{IpAddr, Ipv6Addr, SocketAddr};
 
 use serde::Deserialize;
+use state::AppState;
 use tokio::net::TcpListener;
 
 mod routes;
+mod state;
+
+mod api;
+mod ui;
 
 #[derive(Clone)]
 pub struct Server {
     addr: SocketAddr,
+    state: AppState,
 }
 
 impl Server {
-    fn new(cfg: Config) -> Self {
+    fn new(cfg: Config, state: AppState) -> Self {
         Self {
             addr: SocketAddr::new(cfg.host, cfg.port),
+            state,
         }
     }
 
@@ -23,16 +30,18 @@ impl Server {
 
     pub async fn run(&self) -> std::io::Result<()> {
         let listener = TcpListener::bind(self.addr).await?;
-        axum::serve(listener, routes::routes()).await
+        axum::serve(listener, routes::routes(self.state.clone())).await
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Debug, Deserialize)]
 pub struct Config {
     #[serde(default = "default_host")]
     host: IpAddr,
     #[serde(default = "default_port")]
     port: u16,
+
+    secret_key: String,
 }
 
 fn default_host() -> IpAddr {
@@ -43,19 +52,11 @@ fn default_port() -> u16 {
     4000
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            host: default_host(),
-            port: default_port(),
-        }
-    }
-}
-
 pub struct WebModule;
 
 impl app::Module for WebModule {
     fn mount(self: Box<Self>, c: &mut app::di::Context) {
+        c.bind(AppState::new);
         c.bind(Server::new);
     }
 }

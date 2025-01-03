@@ -6,14 +6,17 @@ documentation.workspace = true
 edition.workspace = true
 
 [dependencies]
+oxidrive-auth = { workspace = true }
 oxidrive-web = { workspace = true }
 
 oxidrive-config = { workspace = true }
+oxidrive-database = { workspace = true }
 oxidrive-telemetry = { workspace = true }
 
 app = { workspace = true }
 
 clap = { workspace = true, features = ["derive", "env"] }
 eyre = { workspace = true }
+serde_json = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
 tracing = { workspace = true }

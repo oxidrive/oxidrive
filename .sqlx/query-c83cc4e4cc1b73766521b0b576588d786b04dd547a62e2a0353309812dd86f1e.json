@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\nselect\n  a.id,\n  a.username\nfrom accounts a\nwhere\n  id = $1\n",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Text"
+      },
+      {
+        "name": "username",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "c83cc4e4cc1b73766521b0b576588d786b04dd547a62e2a0353309812dd86f1e"
+}
