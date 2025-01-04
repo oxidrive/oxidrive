@@ -1,0 +1,37 @@
+[store]
+dir = "target/nextest"
+
+[test-groups.pg]
+max-threads = 1
+
+[test-groups.sqlite]
+max-threads = "num-cpus"
+
+[profile.default]
+default-filter = "not test(::pg::)"
+status-level = "all"
+final-status-level = "fail"
+
+failure-output = "final"
+success-output = "never"
+
+fail-fast = false
+
+slow-timeout = { period = "20s" }
+leak-timeout = "100ms"
+
+retries = { backoff = "exponential", count = 3, delay = "1s", jitter = true, max-delay = "10s" }
+
+[[profile.default.overrides]]
+filter = 'test(::pg::)'
+test-group = 'pg'
+
+[[profile.default.overrides]]
+filter = 'test(::sqlite::)'
+test-group = 'sqlite'
+
+[profile.ci]
+default-filter = "all()"
+
+[profile.ci.junit]
+path = "junit.xml"

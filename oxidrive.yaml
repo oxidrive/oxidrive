@@ -1,8 +1,9 @@
 telemetry:
-  log: debug
+  log: info
 
 server:
   secret_key: 1D/El3AvfsvuhvCWFzuexHZWqn/vs//2kTIdX+CzX4xroIz8gItEaG2XOWmGqmTjkd+KqpwvZhOlsW125D62CDs27wY0EgrWlNfiX463yYc=
 
-database:
-  url: sqlite://oxidrive.db?mode=rwc
+storage:
+  provider: fs
+  root_folder_path: local/files

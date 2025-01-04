@@ -13,6 +13,7 @@ edition = "2021"
 [workspace.dependencies]
 # workspace
 oxidrive-auth.path = "app/auth"
+oxidrive-files.path = "app/files"
 oxidrive-web.path = "app/web"
 
 oxidrive-config.path = "lib/config"
@@ -36,6 +37,7 @@ eyre = "0.6"
 fake = { version = "2.9", features = ["chrono", "uuid"] }
 figment = "0.10"
 futures = "0.3"
+infer = "0.16"
 mime_guess = "2"
 mockall = "0.13"
 pasetors = "0.7"
@@ -56,6 +58,7 @@ strum = { version = "0.26", features = ["derive"] }
 tempfile = "3"
 thiserror = "1"
 tokio = "1"
+tokio-util = "0.7"
 tower = "0.5"
 tower-http = "0.5"
 tracing = "0.1"

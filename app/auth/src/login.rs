@@ -1,6 +1,8 @@
 use std::sync::Arc;
 
-use crate::account::{Account, AccountCredentials, Accounts, VerifyCreds};
+use crate::account::{
+    Account, AccountCredentials, Accounts, ByUsernameError, ForAccountError, VerifyCreds,
+};
 
 #[derive(Clone)]
 pub struct Login {
@@ -14,29 +16,26 @@ impl Login {
         username: &str,
         password: impl Into<String>,
     ) -> Result<Account, AuthenticationFailed> {
-        let Some(account) = self
-            .accounts
-            .by_username(username)
-            .await
-            .map_err(|_| AuthenticationFailed)?
-        else {
-            return Err(AuthenticationFailed);
+        let Some(account) = self.accounts.by_username(username).await? else {
+            return Err(AuthenticationFailed::Unauthorized);
         };
 
-        let credentials = self
-            .credentials
-            .for_account(account.id)
-            .await
-            .map_err(|_| AuthenticationFailed)?;
+        let credentials = self.credentials.for_account(account.id).await?;
 
         credentials
             .verify(VerifyCreds::Password(password.into()))
-            .map_err(|_| AuthenticationFailed)?;
+            .map_err(|_| AuthenticationFailed::Unauthorized)?;
 
         Ok(account)
     }
 }
 
 #[derive(Debug, thiserror::Error)]
-#[error("authentication failed")]
-pub struct AuthenticationFailed;
+pub enum AuthenticationFailed {
+    #[error(transparent)]
+    ByUsernameError(#[from] ByUsernameError),
+    #[error(transparent)]
+    CredentialsError(#[from] ForAccountError),
+    #[error("authentication failed")]
+    Unauthorized,
+}

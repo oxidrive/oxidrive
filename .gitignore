@@ -1,4 +1,5 @@
 node_modules/
 result
 target/
+local/data
 *.db

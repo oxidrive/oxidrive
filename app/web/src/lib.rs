@@ -5,9 +5,11 @@ use state::AppState;
 use tokio::net::TcpListener;
 
 mod routes;
+mod session;
 mod state;
 
 mod api;
+mod files;
 mod ui;
 
 #[derive(Clone)]
@@ -30,7 +32,7 @@ impl Server {
 
     pub async fn run(&self) -> std::io::Result<()> {
         let listener = TcpListener::bind(self.addr).await?;
-        axum::serve(listener, routes::routes(self.state.clone())).await
+        axum::serve(listener, routes::routes().with_state(self.state.clone())).await
     }
 }
 

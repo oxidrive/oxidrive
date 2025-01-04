@@ -8,6 +8,7 @@ pub use store::*;
 
 make_uuid_type!(AccountId, account_id);
 
+#[derive(Clone, Debug)]
 pub struct Account {
     pub id: AccountId,
     pub username: String,

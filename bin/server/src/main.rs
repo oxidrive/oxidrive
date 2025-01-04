@@ -5,10 +5,11 @@ use clap::{Parser, Subcommand};
 use oxidrive_auth::{Auth, AuthModule};
 use oxidrive_config::Config;
 use oxidrive_database::{self as database, Database, DatabaseModule};
+use oxidrive_files::{self as files, FilesModule};
 use oxidrive_telemetry as telemetry;
 use oxidrive_web::{self as web, Server, WebModule};
 
-type FullConfig = Config<telemetry::Config, web::Config, database::Config>;
+type FullConfig = Config<telemetry::Config, web::Config, database::Config, files::Config>;
 
 #[derive(Debug, Parser)]
 struct Args {
@@ -99,7 +100,9 @@ fn bootstrap(cfg: FullConfig) -> app::App {
     app::app!()
         .add(cfg.database)
         .add(cfg.server)
+        .add(cfg.storage)
         .mount_and_hook(DatabaseModule)
         .mount_and_hook(AuthModule)
+        .mount(FilesModule)
         .mount(WebModule)
 }

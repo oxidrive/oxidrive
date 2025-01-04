@@ -1,6 +1,9 @@
 use std::sync::Arc;
 
-use account::{AccountCredentials, Accounts, PgAccounts, SqliteAccountCredentials, SqliteAccounts};
+use account::{
+    AccountCredentials, Accounts, PgAccountCredentials, PgAccounts, SqliteAccountCredentials,
+    SqliteAccounts,
+};
 use login::Login;
 use oxidrive_database::Database;
 
@@ -58,7 +61,7 @@ fn accounts(database: Database) -> Arc<dyn Accounts> {
 fn credentials(database: Database) -> Arc<dyn AccountCredentials> {
     match database {
         Database::Sqlite(pool) => Arc::new(SqliteAccountCredentials::new(pool)),
-        Database::Pg(pool) => todo!(),
+        Database::Pg(pool) => Arc::new(PgAccountCredentials::new(pool)),
     }
 }
 
