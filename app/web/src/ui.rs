@@ -5,9 +5,11 @@ use axum::{
 };
 use rust_embed::Embed;
 
+use crate::state::AppState;
+
 static INDEX_HTML: &str = "index.html";
 
-pub fn routes() -> Router {
+pub fn routes() -> Router<AppState> {
     Router::new().fallback(static_handler)
 }
 

@@ -1,0 +1,20 @@
+meta {
+  name: Download File
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{server}}/files/:file_name
+  body: none
+  auth: none
+}
+
+params:path {
+  file_name: goose.jpg
+}
+
+assert {
+  res.headers["content-type"]: eq image/jpeg
+  res.status: eq 200
+}

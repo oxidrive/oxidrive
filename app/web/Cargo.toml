@@ -8,9 +8,11 @@ edition.workspace = true
 [dependencies]
 app = { workspace = true }
 oxidrive-auth = { workspace = true }
+oxidrive-files = { workspace = true }
 
-axum = { workspace = true, features = ["macros"] }
-axum-extra = { workspace = true, features = ["typed-header", "cookie", "cookie-signed"] }
+axum = { workspace = true, features = ["macros", "multipart"] }
+axum-extra = { workspace = true, features = ["typed-header", "cookie", "cookie-signed", "file-stream"] }
+futures = { workspace = true }
 mime_guess = { workspace = true }
 rust-embed = { workspace = true, features = ["axum"] }
 serde = { workspace = true }

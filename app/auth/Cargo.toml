@@ -20,6 +20,7 @@ serde = { workspace = true }
 sqlx = { workspace = true }
 tracing = { workspace = true }
 thiserror = { workspace = true }
+tokio = { workspace = true, features = ["sync"] }
 uuid = { workspace = true }
 
 fake = { workspace = true, optional = true }
@@ -29,3 +30,5 @@ rstest = { workspace = true, optional = true }
 assert2 = { workspace = true }
 fake = { workspace = true }
 rstest = { workspace = true }
+sqlx = { workspace = true, features = ["migrate"] }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

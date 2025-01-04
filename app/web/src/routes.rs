@@ -11,12 +11,13 @@ use mime_guess::{
     Mime,
 };
 
-use crate::{api, state::AppState, ui};
+use crate::{api, files, state::AppState, ui};
 
-pub fn routes(state: AppState) -> Router {
+pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(root))
-        .nest("/api", api::routes().with_state(state))
+        .nest("/api", api::routes())
+        .nest("/files", files::routes())
         .nest("/ui", ui::routes())
 }
 

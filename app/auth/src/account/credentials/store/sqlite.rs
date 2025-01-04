@@ -19,20 +19,17 @@ impl SqliteAccountCredentials {
 #[async_trait]
 impl AccountCredentials for SqliteAccountCredentials {
     async fn for_account(&self, account_id: AccountId) -> Result<Credentials, ForAccountError> {
-        let id = account_id.to_string();
-
-        let creds = sqlx::query_as!(
-            SqliteCredentials,
+        let creds: Vec<SqliteCredentials> = sqlx::query_as(
             r#"
 select
   id,
-  kind as "kind: SqliteCredentialsKind",
-  data as "data: Json<SqliteCredentialsData>"
+  kind,
+  data
 from account_credentials
 where account_id = $1
 "#,
-            id
         )
+        .bind(account_id.to_string())
         .fetch_all(&self.pool)
         .await
         .map_err(ForAccountError::wrap)?;
@@ -43,7 +40,13 @@ where account_id = $1
         Ok(credentials)
     }
 
-    async fn save(&self, credentials: Credentials) -> Result<Credentials, SaveError> {
+    async fn save(&self, credentials: Credentials) -> Result<Credentials, SaveCredentialsError> {
+        if credentials.creds.is_empty() {
+            return Ok(credentials);
+        }
+
+        let account_id = credentials.account_id.to_string();
+
         let mut qb =
             QueryBuilder::new("insert into account_credentials (id, account_id, kind, data)");
 
@@ -56,7 +59,7 @@ where account_id = $1
             };
 
             b.push_bind(creds.id())
-                .push_bind(credentials.account_id.to_string())
+                .push_bind(&account_id)
                 .push_bind(kind)
                 .push_bind(Json(data));
         });
@@ -73,12 +76,13 @@ do update set
         qb.build()
             .execute(&self.pool)
             .await
-            .map_err(SaveError::wrap)?;
+            .map_err(SaveCredentialsError::wrap)?;
 
         Ok(credentials)
     }
 }
 
+#[derive(sqlx::FromRow)]
 struct SqliteCredentials {
     id: String,
     kind: SqliteCredentialsKind,
@@ -100,7 +104,6 @@ impl SqliteCredentials {
 }
 
 #[derive(sqlx::Type)]
-#[sqlx(type_name = "kind")]
 #[sqlx(rename_all = "lowercase")]
 enum SqliteCredentialsKind {
     Password,

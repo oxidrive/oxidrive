@@ -2,7 +2,7 @@ use serde::Deserialize;
 use sqlx::{postgres::PgPoolOptions, sqlite::SqlitePoolOptions};
 use url::Url;
 
-mod migrate;
+pub mod migrate;
 
 pub use migrate::migrate;
 

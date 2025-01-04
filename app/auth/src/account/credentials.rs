@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt::Debug};
 
 use argon2::PasswordVerifier;
 
@@ -8,6 +8,7 @@ mod store;
 
 pub use store::*;
 
+#[derive(Clone, Debug)]
 pub struct Credentials {
     pub account_id: AccountId,
     pub(crate) creds: HashMap<String, Creds>,
@@ -56,18 +57,13 @@ pub enum AddError {
 #[error("invalid credentials")]
 pub struct InvalidCredentials;
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum Creds {
     Password(Password),
 }
 
 impl Creds {
     pub(crate) fn id(&self) -> &str {
-        match self {
-            Creds::Password(_) => "password",
-        }
-    }
-
-    pub(crate) fn kind(&self) -> &str {
         match self {
             Creds::Password(_) => "password",
         }
@@ -114,6 +110,12 @@ impl Password {
     }
 }
 
+impl Debug for Password {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Password").finish()
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 #[error("password hashing failed")]
 pub struct HashError(#[from] argon2::password_hash::Error);
@@ -143,8 +145,15 @@ pub mod fixtures {
     }
 
     #[fixture]
-    pub fn credentials(account: Account) -> Credentials {
+    pub fn empty(account: Account) -> Credentials {
         Credentials::new(account.id)
+    }
+
+    #[fixture]
+    pub fn with_password(account: Account, password: String) -> Credentials {
+        let mut c = Credentials::new(account.id);
+        c.add(Password::hash(password).unwrap()).unwrap();
+        c
     }
 }
 
@@ -156,14 +165,14 @@ mod tests {
     use super::*;
 
     #[rstest]
-    fn it_adds_a_new_credential(mut credentials: Credentials, password: String) {
-        credentials
+    fn it_adds_a_new_credential(mut empty: Credentials, password: String) {
+        empty
             .add(Password::hash(password.clone()).unwrap())
             .unwrap();
 
-        credentials.verify(VerifyCreds::Password(password)).unwrap();
+        empty.verify(VerifyCreds::Password(password)).unwrap();
 
-        credentials
+        empty
             .verify(VerifyCreds::Password("wrong password".into()))
             .unwrap_err();
     }

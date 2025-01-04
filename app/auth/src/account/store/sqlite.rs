@@ -17,7 +17,7 @@ impl SqliteAccounts {
 #[async_trait]
 impl Accounts for SqliteAccounts {
     async fn count(&self) -> Result<usize, CountError> {
-        let count = sqlx::query_scalar!("select count(id) as count from accounts")
+        let count: i64 = sqlx::query_scalar("select count(id) as count from accounts")
             .fetch_one(&self.pool)
             .await
             .map_err(CountError::wrap)?;
@@ -26,10 +26,7 @@ impl Accounts for SqliteAccounts {
     }
 
     async fn by_id(&self, id: AccountId) -> Result<Option<Account>, ByIdError> {
-        let id = id.to_string();
-
-        let account = sqlx::query_as!(
-            SqliteAccount,
+        let account: Option<SqliteAccount> = sqlx::query_as(
             r#"
 select
   a.id,
@@ -38,8 +35,8 @@ from accounts a
 where
   id = $1
 "#,
-            id
         )
+        .bind(id.to_string())
         .fetch_optional(&self.pool)
         .await
         .map_err(ByIdError::wrap)?;
@@ -48,8 +45,7 @@ where
     }
 
     async fn by_username(&self, username: &str) -> Result<Option<Account>, ByUsernameError> {
-        let account = sqlx::query_as!(
-            SqliteAccount,
+        let account: Option<SqliteAccount> = sqlx::query_as(
             r#"
 select
   a.id,
@@ -58,8 +54,8 @@ from accounts a
 where
   username = $1
 "#,
-            username
         )
+        .bind(username)
         .fetch_optional(&self.pool)
         .await
         .map_err(ByUsernameError::wrap)?;
@@ -67,10 +63,8 @@ where
         Ok(account.map(Into::into))
     }
 
-    async fn save(&self, account: Account) -> Result<Account, SaveError> {
-        let id = account.id.to_string();
-
-        sqlx::query!(
+    async fn save(&self, account: Account) -> Result<Account, SaveAccountError> {
+        sqlx::query(
             r#"
 insert into accounts (
   id,
@@ -83,17 +77,18 @@ on conflict(id)
 do update set
   username = excluded.username
 "#,
-            id,
-            account.username
         )
+        .bind(account.id.to_string())
+        .bind(&account.username)
         .execute(&self.pool)
         .await
-        .map_err(SaveError::wrap)?;
+        .map_err(SaveAccountError::wrap)?;
 
         Ok(account)
     }
 }
 
+#[derive(sqlx::FromRow)]
 struct SqliteAccount {
     id: String,
     username: String,
