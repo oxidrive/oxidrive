@@ -11,7 +11,7 @@ use oxidrive_auth::account::{Account, AccountId};
 pub struct FilesModule;
 
 mod content_type;
-mod file;
+pub mod file;
 
 pub use file::{ContentStreamError, File};
 use oxidrive_database::Database;
@@ -26,13 +26,20 @@ pub enum Config {
 
 #[derive(Clone)]
 pub struct Files {
-    files: Arc<dyn FileMetadata>,
+    metadata: Arc<dyn FileMetadata>,
     contents: Arc<dyn FileContents>,
 }
 
 impl Files {
     pub fn new(files: Arc<dyn FileMetadata>, contents: Arc<dyn FileContents>) -> Self {
-        Self { files, contents }
+        Self {
+            metadata: files,
+            contents,
+        }
+    }
+
+    pub fn metadata(&self) -> &dyn FileMetadata {
+        self.metadata.as_ref()
     }
 
     pub async fn download(
@@ -46,7 +53,7 @@ impl Files {
         )>,
         DownloadError,
     > {
-        let Some(file) = self.files.by_name(owner.id, file_name).await? else {
+        let Some(file) = self.metadata.by_name(owner.id, file_name).await? else {
             return Ok(None);
         };
 
@@ -64,7 +71,11 @@ impl Files {
     {
         let (content, content_type) = content_type::detect_from_stream(content).await;
 
-        let file = match self.files.by_name(meta.owner_id, &meta.file_name).await? {
+        let file = match self
+            .metadata
+            .by_name(meta.owner_id, &meta.file_name)
+            .await?
+        {
             Some(mut file) => {
                 file.content_type = content_type;
                 file
@@ -76,7 +87,7 @@ impl Files {
             .upload(&file, content.map_err(ContentStreamError::wrap).boxed())
             .await?;
 
-        let file = self.files.save(file).await?;
+        let file = self.metadata.save(file).await?;
 
         Ok(file)
     }

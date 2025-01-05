@@ -9,9 +9,12 @@ edition.workspace = true
 app = { workspace = true }
 oxidrive-auth = { workspace = true }
 oxidrive-files = { workspace = true }
+    
+oxidrive-paginate = { workspace = true }
 
 axum = { workspace = true, features = ["macros", "multipart"] }
 axum-extra = { workspace = true, features = ["typed-header", "cookie", "cookie-signed", "file-stream"] }
+base64 = { workspace = true }
 futures = { workspace = true }
 mime_guess = { workspace = true }
 rust-embed = { workspace = true, features = ["axum"] }

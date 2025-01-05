@@ -1,0 +1,9 @@
+[package]
+name = "oxidrive-paginate"
+version.workspace = true
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde = { workspace = true }

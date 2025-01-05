@@ -16,7 +16,7 @@ watch *args:
     bacon run-server -- {{ args }}
 
 run *args:
-    cargo run -p oxidrive -- {{ args }}
+    cargo run -p oxidrive -- server {{ args }}
 
 test *args:
     cargo nextest run {{ args }}

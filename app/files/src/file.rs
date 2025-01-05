@@ -1,13 +1,13 @@
 use oxidrive_auth::account::AccountId;
 use oxidrive_domain::make_uuid_type;
 
-make_uuid_type!(FileId, file_id);
-
 mod content;
 mod store;
 
 pub use content::*;
 pub use store::*;
+
+make_uuid_type!(FileId, file_id);
 
 #[derive(Clone)]
 pub struct File {

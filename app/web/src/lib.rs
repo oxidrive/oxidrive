@@ -4,6 +4,7 @@ use serde::Deserialize;
 use state::AppState;
 use tokio::net::TcpListener;
 
+mod paginate;
 mod routes;
 mod session;
 mod state;
