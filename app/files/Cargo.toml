@@ -15,6 +15,7 @@ oxidrive-auth = { workspace = true }
 app = { workspace = true }
 oxidrive-database = { workspace = true }
 oxidrive-domain = { workspace = true }
+oxidrive-paginate = { workspace = true }
 
 async-trait = { workspace = true }
 bytes = { workspace = true }

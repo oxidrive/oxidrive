@@ -1,10 +1,11 @@
 use async_trait::async_trait;
 use oxidrive_auth::account::AccountId;
+use oxidrive_paginate::{Paginate, Slice};
 use uuid::Uuid;
 
 use crate::file::File;
 
-use super::{ByNameError, FileMetadata, SaveFileError};
+use super::{AllOwnedByError, ByNameError, FileMetadata, SaveFileError};
 
 pub struct PgFileMetadata {
     pool: sqlx::PgPool,
@@ -18,6 +19,75 @@ impl PgFileMetadata {
 
 #[async_trait]
 impl FileMetadata for PgFileMetadata {
+    async fn all_owned_by(
+        &self,
+        owner_id: AccountId,
+        paginate: Paginate,
+    ) -> Result<Slice<File>, AllOwnedByError> {
+        let (query, id, limit, is_forward) = match paginate {
+            Paginate::Forward { after, first } => (
+                r#"
+select
+  id,
+  owner_id,
+  name,
+  content_type
+from files
+where owner_id = $1
+  and id::text > $2
+order by id
+limit $3
+"#,
+                if after.is_empty() {
+                    Uuid::nil().to_string()
+                } else {
+                    after
+                },
+                first,
+                true,
+            ),
+            Paginate::Backward { before, last } => (
+                r#"
+select
+  id,
+  owner_id,
+  name,
+  content_type
+from files
+where owner_id = $1
+  and id::text < $2
+order by id desc
+limit $3
+"#,
+                if before.is_empty() {
+                    Uuid::max().to_string()
+                } else {
+                    before
+                },
+                last,
+                false,
+            ),
+        };
+
+        let files: Vec<PgFile> = sqlx::query_as(query)
+            .bind(owner_id.as_uuid())
+            .bind(id)
+            .bind(limit as i64)
+            .fetch_all(&self.pool)
+            .await
+            .map_err(AllOwnedByError::wrap)?;
+
+        let cursor = files.last().map(|f| f.id.to_string());
+
+        let slice = if is_forward {
+            Slice::new(files, cursor, None)
+        } else {
+            Slice::new(files, None, cursor)
+        }
+        .map(File::from);
+        Ok(slice)
+    }
+
     async fn by_name(
         &self,
         owner_id: AccountId,

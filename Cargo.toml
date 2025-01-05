@@ -19,6 +19,7 @@ oxidrive-web.path = "app/web"
 oxidrive-config.path = "lib/config"
 oxidrive-database.path = "lib/database"
 oxidrive-domain.path = "lib/domain"
+oxidrive-paginate.path = "lib/paginate"
 oxidrive-telemetry.path = "lib/telemetry"
 
 app.path = "lib/app"

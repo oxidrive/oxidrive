@@ -1646,6 +1646,7 @@ dependencies = [
  "oxidrive-auth",
  "oxidrive-database",
  "oxidrive-domain",
+ "oxidrive-paginate",
  "rstest",
  "serde",
  "sqlx",
@@ -1655,6 +1656,13 @@ dependencies = [
  "tokio-util",
  "tracing",
  "uuid",
+]
+
+[[package]]
+name = "oxidrive-paginate"
+version = "0.1.0"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -1675,10 +1683,12 @@ dependencies = [
  "app",
  "axum 0.8.0",
  "axum-extra",
+ "base64 0.22.1",
  "futures",
  "mime_guess",
  "oxidrive-auth",
  "oxidrive-files",
+ "oxidrive-paginate",
  "rust-embed",
  "serde",
  "thiserror",
