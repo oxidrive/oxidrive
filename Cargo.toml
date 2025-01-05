@@ -14,6 +14,7 @@ edition = "2021"
 # workspace
 oxidrive-auth.path = "app/auth"
 oxidrive-files.path = "app/files"
+oxidrive-tags.path = "app/tags"
 oxidrive-web.path = "app/web"
 
 oxidrive-config.path = "lib/config"

@@ -34,7 +34,21 @@ async fn list_all_files<S: FileMetadata>(store: S) {
     check!(forward_ids == backward_ids);
 }
 
-async fn store_and_load_account_by_file_name<S: FileMetadata>(store: S) {
+async fn store_and_load_file_by_id<S: FileMetadata>(store: S) {
+    let owner = owner();
+
+    let file = file::fixtures::file(owner.clone());
+
+    let stored = store.save(file.clone()).await.unwrap();
+    check!(stored.id == file.id);
+
+    let loaded = store.by_id(owner.id, file.id).await.unwrap().unwrap();
+    check!(loaded.id == file.id);
+    check!(loaded.owner_id == file.owner_id);
+    check!(loaded.name == file.name);
+}
+
+async fn store_and_load_file_by_name<S: FileMetadata>(store: S) {
     let owner = owner();
 
     let file = file::fixtures::file(owner.clone());
@@ -65,9 +79,15 @@ mod inmemory {
     }
 
     #[tokio::test]
-    async fn it_stores_and_loads_account_by_file_name() {
+    async fn it_stores_and_loads_file_by_id() {
         let store = InMemoryFileMetadata::default();
-        store_and_load_account_by_file_name(store).await;
+        store_and_load_file_by_id(store).await;
+    }
+
+    #[tokio::test]
+    async fn it_stores_and_loads_file_by_name() {
+        let store = InMemoryFileMetadata::default();
+        store_and_load_file_by_name(store).await;
     }
 }
 
@@ -94,9 +114,18 @@ mod pg {
         migrator = "PG_MIGRATOR",
         fixtures("../../fixtures/postgres/accounts.sql")
     )]
-    async fn it_stores_and_loads_account_by_file_name(pool: sqlx::PgPool) {
+    async fn it_stores_and_loads_file_by_id(pool: sqlx::PgPool) {
         let store = PgFileMetadata::new(pool);
-        store_and_load_account_by_file_name(store).await;
+        store_and_load_file_by_id(store).await;
+    }
+
+    #[sqlx::test(
+        migrator = "PG_MIGRATOR",
+        fixtures("../../fixtures/postgres/accounts.sql")
+    )]
+    async fn it_stores_and_loads_file_by_name(pool: sqlx::PgPool) {
+        let store = PgFileMetadata::new(pool);
+        store_and_load_file_by_name(store).await;
     }
 }
 
@@ -123,8 +152,17 @@ mod sqlite {
         migrator = "SQLITE_MIGRATOR",
         fixtures("../../fixtures/sqlite/accounts.sql",)
     )]
-    async fn it_stores_and_loads_account_by_file_name(pool: sqlx::SqlitePool) {
+    async fn it_stores_and_loads_file_by_id(pool: sqlx::SqlitePool) {
         let store = SqliteFileMetadata::new(pool);
-        store_and_load_account_by_file_name(store).await;
+        store_and_load_file_by_id(store).await;
+    }
+
+    #[sqlx::test(
+        migrator = "SQLITE_MIGRATOR",
+        fixtures("../../fixtures/sqlite/accounts.sql",)
+    )]
+    async fn it_stores_and_loads_file_by_name(pool: sqlx::SqlitePool) {
+        let store = SqliteFileMetadata::new(pool);
+        store_and_load_file_by_name(store).await;
     }
 }

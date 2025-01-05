@@ -20,15 +20,16 @@ fail-fast = false
 slow-timeout = { period = "20s" }
 leak-timeout = "100ms"
 
-retries = { backoff = "exponential", count = 3, delay = "1s", jitter = true, max-delay = "10s" }
 
 [[profile.default.overrides]]
 filter = 'test(::pg::)'
 test-group = 'pg'
+retries = { backoff = "exponential", count = 3, delay = "1s", jitter = true, max-delay = "10s" }
 
 [[profile.default.overrides]]
 filter = 'test(::sqlite::)'
 test-group = 'sqlite'
+retries = { backoff = "exponential", count = 3, delay = "1s", jitter = true, max-delay = "10s" }
 
 [profile.ci]
 default-filter = "all()"
