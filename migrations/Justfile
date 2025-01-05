@@ -14,3 +14,11 @@ run:
     export DATABASE_URL=postgres://oxidrive:oxidrive@localhost:5432/oxidrive
     sqlx migrate run --source postgres;
 
+revert:
+    #!/usr/bin/env bash
+    export DATABASE_URL=sqlite://../local/oxidrive.db?mode=rwc
+    sqlx migrate revert --source sqlite;
+
+    export DATABASE_URL=postgres://oxidrive:oxidrive@localhost:5432/oxidrive
+    sqlx migrate revert --source postgres;
+

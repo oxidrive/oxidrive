@@ -3,9 +3,9 @@ use oxidrive_auth::account::AccountId;
 use oxidrive_paginate::{Paginate, Slice};
 use uuid::Uuid;
 
-use crate::file::File;
+use crate::file::{File, FileId};
 
-use super::{AllOwnedByError, ByNameError, FileMetadata, SaveFileError};
+use super::{AllOwnedByError, ByIdError, ByNameError, FileMetadata, SaveFileError};
 
 pub struct SqliteFileMetadata {
     pool: sqlx::SqlitePool,
@@ -86,6 +86,28 @@ limit $3
         }
         .map(File::from);
         Ok(slice)
+    }
+
+    async fn by_id(&self, owner_id: AccountId, id: FileId) -> Result<Option<File>, ByIdError> {
+        let file: Option<SqliteFile> = sqlx::query_as(
+            r#"
+select
+  id,
+  owner_id,
+  name,
+  content_type
+from files
+where owner_id = $1
+  and id = $2
+"#,
+        )
+        .bind(owner_id.to_string())
+        .bind(id.to_string())
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(ByIdError::wrap)?;
+
+        Ok(file.map(File::from))
     }
 
     async fn by_name(

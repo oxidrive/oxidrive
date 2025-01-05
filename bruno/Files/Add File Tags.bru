@@ -1,0 +1,15 @@
+meta {
+  name: Add File Tags
+  type: http
+  seq: 5
+}
+
+get {
+  url: {{server}}/api/v1/files/:id/tags
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{file_id}}
+}

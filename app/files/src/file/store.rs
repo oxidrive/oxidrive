@@ -16,6 +16,7 @@ pub use pg::*;
 pub use sqlite::*;
 
 make_error_wrapper!(AllOwnedByError);
+make_error_wrapper!(ByIdError);
 make_error_wrapper!(ByNameError);
 make_error_wrapper!(SaveFileError);
 
@@ -26,6 +27,8 @@ pub trait FileMetadata: Send + Sync + 'static {
         owner_id: AccountId,
         paginate: Paginate,
     ) -> Result<Slice<File>, AllOwnedByError>;
+
+    async fn by_id(&self, owner_id: AccountId, id: FileId) -> Result<Option<File>, ByIdError>;
 
     async fn by_name(
         &self,
@@ -102,6 +105,11 @@ impl FileMetadata for InMemoryFileMetadata {
             let previous = files.last().map(|f| f.id.to_string());
             Ok(Slice::new(files, None, previous))
         }
+    }
+
+    async fn by_id(&self, owner_id: AccountId, id: FileId) -> Result<Option<File>, ByIdError> {
+        let inner = self.inner.read().await;
+        Ok(inner.get(&id).filter(|f| f.owner_id == owner_id).cloned())
     }
 
     async fn by_name(

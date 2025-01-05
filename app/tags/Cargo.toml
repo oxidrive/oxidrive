@@ -1,41 +1,32 @@
 [package]
-name = "oxidrive-files"
+name = "oxidrive-tags"
 version.workspace = true
 authors.workspace = true
 documentation.workspace = true
 edition.workspace = true
 
-[features]
-fixtures = ["dep:fake", "dep:rstest", "oxidrive-auth/fixtures"]
 
 [dependencies]
-oxidrive-auth = { workspace = true }
+oxidrive-files = { workspace = true }
 
 app = { workspace = true }
 oxidrive-database = { workspace = true }
 oxidrive-domain = { workspace = true }
-oxidrive-paginate = { workspace = true }
 
 async-trait = { workspace = true }
-bytes = { workspace = true }
 futures = { workspace = true }
-infer = { workspace = true }
 serde = { workspace = true }
 sqlx = { workspace = true }
 tracing = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true, features = ["fs"] }
-tokio-util = { workspace = true, features = ["codec"] }
+tokio = { workspace = true, features = ["sync"] }
 uuid = { workspace = true }
-
-fake = { workspace = true, optional = true }
-rstest = { workspace = true, optional = true }
 
 [dev-dependencies]
 oxidrive-auth = { workspace = true, features = ["fixtures"] }
+oxidrive-files = { workspace = true, features = ["fixtures"] }
 
 assert2 = { workspace = true }
 fake = { workspace = true }
 rstest = { workspace = true }
-tempfile = { workspace = true }
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
