@@ -29,3 +29,6 @@ clippy:
 
 db-reset:
     docker compose down -v && docker compose up -d && just migrations/run
+
+oxidrive *args:
+    cargo run -p oxidrive -- {{ args }}

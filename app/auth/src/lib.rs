@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use account::{
-    AccountCredentials, Accounts, PgAccountCredentials, PgAccounts, SqliteAccountCredentials,
-    SqliteAccounts,
+    Account, AccountCredentials, Accounts, AddError, ByUsernameError, Credentials, HashError,
+    Password, PgAccountCredentials, PgAccounts, SaveAccountError, SaveCredentialsError,
+    SqliteAccountCredentials, SqliteAccounts,
 };
 use login::Login;
 use oxidrive_database::Database;
@@ -38,6 +39,42 @@ impl Auth {
     pub fn accounts(&self) -> &dyn Accounts {
         self.accounts.as_ref()
     }
+
+    pub async fn create_account(
+        &self,
+        username: &str,
+        password: &str,
+    ) -> Result<Account, CreateAccountError> {
+        if self.accounts.by_username(username).await?.is_some() {
+            return Err(CreateAccountError::AlreadyExists);
+        };
+
+        let account = Account::create(username);
+        let account = self.accounts.save(account).await?;
+
+        let mut credentials = Credentials::new(account.id);
+        match credentials.add(Password::hash(password)?) {
+            Ok(_) | Err(AddError::AlreadyPresent) => {}
+        }
+
+        self.credentials.save(credentials).await?;
+
+        Ok(account)
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum CreateAccountError {
+    #[error(transparent)]
+    Load(#[from] ByUsernameError),
+    #[error("account already exists")]
+    AlreadyExists,
+    #[error(transparent)]
+    SaveAccount(#[from] SaveAccountError),
+    #[error(transparent)]
+    InvalidPassword(#[from] HashError),
+    #[error(transparent)]
+    SaveCredentials(#[from] SaveCredentialsError),
 }
 
 #[derive(Copy, Clone)]

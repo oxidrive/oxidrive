@@ -1,0 +1,26 @@
+meta {
+  name: Verify file has new tags
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{server}}/api/v1/files/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{file_id}}
+}
+
+assert {
+  res.status: eq 200
+}
+
+tests {
+  test("should contain the new tags", function() {
+    const data = res.getBody();
+    expect(data.tags).to.include.deep.members([{key: "test"}, {key: "hello", value: "world"}]);
+  });
+}

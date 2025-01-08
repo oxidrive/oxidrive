@@ -1,5 +1,5 @@
 meta {
-  name: Fetch File
+  name: Fetch file
   type: http
   seq: 4
 }
@@ -12,4 +12,8 @@ get {
 
 params:path {
   id: {{file_id}}
+}
+
+assert {
+  res.status: eq 200
 }
