@@ -19,8 +19,8 @@ e2e: setup
 fmt: setup
     npm run format
 
-lint: setup
-    npm run lint
+lint *args: setup
+    npm run lint -- {{ args }}
 
 setup:
     [ -d ./node_modules ] || npm ci

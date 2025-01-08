@@ -39,7 +39,7 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@v7
       - run: npm ci
       - name: Lint
-        run: nix develop --command just docs/lint
+        run: nix develop --command just docs/lint --reporter=github
 
   build:
     if: github.ref == 'refs/heads/main'

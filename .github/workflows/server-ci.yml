@@ -61,7 +61,7 @@ jobs:
           DATABASE_URL: 'postgres://oxidrive:oxidrive@localhost:5432/oxidrive?sslmode=disable'
       - name: Test Summary
         uses: test-summary/action@v2
-        if: always()
+        if: '!cancelled()'
         with:
           paths: "target/nextest/ci/junit.xml"
       # - name: Run mutations
@@ -116,4 +116,9 @@ jobs:
         run: nix develop --command bash -c 'target/debug/oxidrive server &'
       - name: Run Bruno tests
         run: nix develop --command just bruno/test
-    
+      - name: Test Summary
+        uses: test-summary/action@v2
+        if: '!cancelled()'
+        with:
+          paths: "bruno/results.xml"
+
