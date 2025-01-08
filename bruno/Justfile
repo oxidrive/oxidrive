@@ -1,5 +1,8 @@
 default:
     @just --list --unsorted | grep -v '  default'
 
-test:
-    bru run -r --output results.html --format html
+test: setup
+    bru run -r --output results.html --format html --env local
+
+setup:
+    cargo run -p oxidrive -- create-account test --password test --if-not-exists

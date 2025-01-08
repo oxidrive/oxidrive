@@ -1,15 +1,21 @@
 meta {
-  name: Add File Tags
+  name: Add file tags
   type: http
   seq: 5
 }
 
-get {
+post {
   url: {{server}}/api/v1/files/:id/tags
-  body: none
+  body: json
   auth: none
 }
 
 params:path {
   id: {{file_id}}
+}
+
+body:json {
+  {
+    "tags": ["test", "hello:world"]
+  }
 }

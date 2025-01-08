@@ -1,0 +1,16 @@
+meta {
+  name: Create account
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{server}}/api/v1/auth/accounts
+  body: formUrlEncoded
+  auth: none
+}
+
+body:form-urlencoded {
+  username: test
+  password: test
+}

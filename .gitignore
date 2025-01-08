@@ -1,6 +1,7 @@
 node_modules/
 result
 target/
-local/data
+local/files
 *.db
 mutants.out*/
+bruno/results.html

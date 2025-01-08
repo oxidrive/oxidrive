@@ -1,5 +1,5 @@
 meta {
-  name: Current User
+  name: Current session
   type: http
   seq: 2
 }
@@ -12,5 +12,5 @@ get {
 
 assert {
   res.status: eq 200
-  res.body: isJson 
+  res.body.username: eq test
 }
