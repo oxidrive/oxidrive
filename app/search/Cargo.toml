@@ -1,0 +1,15 @@
+[package]
+name = "oxidrive-search"
+version.workspace = true
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+
+[dependencies]
+pest = { workspace = true }
+pest_derive = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+assert2 = { workspace = true }
+rstest = { workspace = true }

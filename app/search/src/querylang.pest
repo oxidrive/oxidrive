@@ -1,0 +1,26 @@
+// Oxidrive Query Language
+
+WHITESPACE = _{ " " }
+
+reserved_char = _ { ":" | "(" | ")" }
+
+char = _{ !reserved_char ~ (LETTER | EMOJI | SYMBOL | PUNCTUATION) }
+
+op = _{ and | or }
+	and = { "AND" }
+    or = { "OR" }
+
+all = ${ "*" }
+
+key = @{ !op ~ char+ }
+value = @{ !op ~ (char | ":")+ }
+
+tag = ${key ~ ":" ~ value | key }
+
+tags = { tag+ }
+
+term = _{ tags | "(" ~ filter ~ ")" }
+
+filter = { term ~ (op ~ term)* }
+
+query = _{ SOI ~ (all | filter) ~ EOI }

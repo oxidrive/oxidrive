@@ -10,6 +10,7 @@ fixtures = ["dep:fake", "dep:rstest", "oxidrive-auth/fixtures"]
 
 [dependencies]
 oxidrive-auth = { workspace = true }
+oxidrive-search = { workspace = true }
 
 app = { workspace = true }
 oxidrive-database = { workspace = true }
@@ -21,6 +22,7 @@ bytes = { workspace = true }
 futures = { workspace = true }
 infer = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 sqlx = { workspace = true }
 tracing = { workspace = true }
 thiserror = { workspace = true }

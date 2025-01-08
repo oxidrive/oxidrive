@@ -7,6 +7,7 @@ pre-commit:
   commands:
     biome-check: &biome
       run: npx @biomejs/biome check --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
+      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
     biome-format:
       run: npx @biomejs/biome format --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
       <<: *biome

@@ -2,20 +2,24 @@ use std::{path::PathBuf, sync::Arc};
 
 use bytes::Bytes;
 use file::{
-    ByNameError, DownloadFileError, FileContents, FileMetadata, FsFileContents, PgFileMetadata,
-    SaveFileError, SqliteFileMetadata, UploadFileError,
+    ByIdError, ByNameError, DownloadFileError, FileContents, FileId, FileMetadata, FsFileContents,
+    PgFileMetadata, SaveFileError, SqliteFileMetadata, UploadFileError,
 };
 use futures::{Stream, StreamExt, TryStreamExt};
 use oxidrive_auth::account::{Account, AccountId};
+use oxidrive_database::Database;
+use oxidrive_paginate::{Paginate, Slice};
+use oxidrive_search::QueryParseError;
+use serde::Deserialize;
 
 pub struct FilesModule;
 
 mod content_type;
 pub mod file;
+pub mod tag;
 
 pub use file::{ContentStreamError, File};
-use oxidrive_database::Database;
-use serde::Deserialize;
+pub use tag::Tag;
 
 #[derive(Clone, Debug, Deserialize)]
 #[serde(tag = "provider")]
@@ -71,7 +75,7 @@ impl Files {
     {
         let (content, content_type) = content_type::detect_from_stream(content).await;
 
-        let file = match self
+        let mut file = match self
             .metadata
             .by_name(meta.owner_id, &meta.file_name)
             .await?
@@ -80,16 +84,50 @@ impl Files {
                 file.content_type = content_type;
                 file
             }
-            None => File::create(meta.owner_id, meta.file_name, content_type),
+            None => File::new(meta.owner_id, meta.file_name, content_type),
         };
 
-        self.contents
+        let size = self
+            .contents
             .upload(&file, content.map_err(ContentStreamError::wrap).boxed())
             .await?;
+
+        file.size = size;
 
         let file = self.metadata.save(file).await?;
 
         Ok(file)
+    }
+
+    pub async fn add_tags<I>(
+        &self,
+        owner_id: AccountId,
+        file_id: FileId,
+        tags: I,
+    ) -> Result<(), AddTagsError>
+    where
+        I: IntoIterator<Item = Tag>,
+    {
+        let Some(mut file) = self.metadata.by_id(owner_id, file_id).await? else {
+            return Err(AddTagsError::FileNotFound);
+        };
+
+        file.add_tags(tags);
+
+        self.metadata.save(file).await?;
+
+        Ok(())
+    }
+
+    pub async fn search(
+        &self,
+        owner_id: AccountId,
+        query: impl AsRef<str>,
+        paginate: Paginate,
+    ) -> Result<Slice<File>, SearchError> {
+        let filter = oxidrive_search::parse_query(query)?;
+        let files = self.metadata.search(owner_id, filter, paginate).await?;
+        Ok(files)
     }
 }
 
@@ -97,7 +135,6 @@ impl Files {
 pub enum DownloadError {
     #[error("failed to load file by name")]
     LoadFailed(#[from] ByNameError),
-
     #[error(transparent)]
     DownloadFailed(#[from] DownloadFileError),
 }
@@ -115,6 +152,24 @@ pub enum UploadError {
     UploadFailed(#[from] UploadFileError),
     #[error("failed to save file metadata")]
     SaveMetadataFailed(#[from] SaveFileError),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum AddTagsError {
+    #[error("failed to load file by id")]
+    LoadFailed(#[from] ByIdError),
+    #[error("file does not exist")]
+    FileNotFound,
+    #[error("failed to save file")]
+    SaveFileFailed(#[from] SaveFileError),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum SearchError {
+    #[error(transparent)]
+    QueryParse(#[from] QueryParseError),
+    #[error(transparent)]
+    SearchFailed(#[from] file::SearchError),
 }
 
 impl app::Module for FilesModule {

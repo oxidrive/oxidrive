@@ -8,7 +8,6 @@ edition.workspace = true
 [dependencies]
 oxidrive-auth = { workspace = true }
 oxidrive-files = { workspace = true }
-oxidrive-tags = { workspace = true }
 oxidrive-web = { workspace = true }
 
 oxidrive-config = { workspace = true }

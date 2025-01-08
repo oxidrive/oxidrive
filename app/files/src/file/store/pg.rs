@@ -1,11 +1,16 @@
 use async_trait::async_trait;
 use oxidrive_auth::account::AccountId;
 use oxidrive_paginate::{Paginate, Slice};
+use oxidrive_search::Filter;
+use sqlx::{postgres::types::PgHstore, QueryBuilder};
 use uuid::Uuid;
 
-use crate::file::{File, FileId};
+use crate::{
+    file::{File, FileId},
+    Tag,
+};
 
-use super::{AllOwnedByError, ByIdError, ByNameError, FileMetadata, SaveFileError};
+use super::{ByIdError, ByNameError, FileMetadata, SaveFileError, SearchError};
 
 pub struct PgFileMetadata {
     pool: sqlx::PgPool,
@@ -19,75 +24,6 @@ impl PgFileMetadata {
 
 #[async_trait]
 impl FileMetadata for PgFileMetadata {
-    async fn all_owned_by(
-        &self,
-        owner_id: AccountId,
-        paginate: Paginate,
-    ) -> Result<Slice<File>, AllOwnedByError> {
-        let (query, id, limit, is_forward) = match paginate {
-            Paginate::Forward { after, first } => (
-                r#"
-select
-  id,
-  owner_id,
-  name,
-  content_type
-from files
-where owner_id = $1
-  and id::text > $2
-order by id
-limit $3
-"#,
-                if after.is_empty() {
-                    Uuid::nil().to_string()
-                } else {
-                    after
-                },
-                first,
-                true,
-            ),
-            Paginate::Backward { before, last } => (
-                r#"
-select
-  id,
-  owner_id,
-  name,
-  content_type
-from files
-where owner_id = $1
-  and id::text < $2
-order by id desc
-limit $3
-"#,
-                if before.is_empty() {
-                    Uuid::max().to_string()
-                } else {
-                    before
-                },
-                last,
-                false,
-            ),
-        };
-
-        let files: Vec<PgFile> = sqlx::query_as(query)
-            .bind(owner_id.as_uuid())
-            .bind(id)
-            .bind(limit as i64)
-            .fetch_all(&self.pool)
-            .await
-            .map_err(AllOwnedByError::wrap)?;
-
-        let cursor = files.last().map(|f| f.id.to_string());
-
-        let slice = if is_forward {
-            Slice::new(files, cursor, None)
-        } else {
-            Slice::new(files, None, cursor)
-        }
-        .map(File::from);
-        Ok(slice)
-    }
-
     async fn by_id(&self, owner_id: AccountId, id: FileId) -> Result<Option<File>, ByIdError> {
         let file: Option<PgFile> = sqlx::query_as(
             r#"
@@ -95,7 +31,9 @@ select
   id,
   owner_id,
   name,
-  content_type
+  content_type,
+  size,
+  tags
 from files
 where owner_id = $1
   and id = $2
@@ -121,7 +59,9 @@ select
   id,
   owner_id,
   name,
-  content_type
+  content_type,
+  size,
+  tags
 from files
 where owner_id = $1
   and name = $2
@@ -143,27 +83,144 @@ insert into files (
   id,
   owner_id,
   name,
-  content_type
+  content_type,
+  size,
+  tags
 ) values (
   $1,
   $2,
   $3,
-  $4
+  $4,
+  $5,
+  $6
 ) on conflict (id)
 do update set
   name = excluded.name,
-  content_type = excluded.content_type
+  content_type = excluded.content_type,
+  size = excluded.size,
+  tags = excluded.tags
 "#,
         )
         .bind(file.id.as_uuid())
         .bind(file.owner_id.as_uuid())
         .bind(&file.name)
         .bind(&file.content_type)
+        .bind(file.size as i64)
+        .bind(PgHstore(
+            file.tags.clone().into_iter().map(Tag::into).collect(),
+        ))
         .execute(&self.pool)
         .await
         .map_err(SaveFileError::wrap)?;
 
         Ok(file)
+    }
+
+    async fn search(
+        &self,
+        owner_id: AccountId,
+        filter: Filter,
+        paginate: Paginate,
+    ) -> Result<Slice<File>, SearchError> {
+        let mut qb = QueryBuilder::new(
+            r#"
+select
+  id,
+  owner_id,
+  name,
+  content_type,
+  size,
+  tags
+from files
+where owner_id =
+"#,
+        );
+
+        qb.push_bind(owner_id.as_uuid());
+
+        push_search_query(&mut qb, filter);
+
+        let is_forward = paginate.is_forward();
+
+        match paginate {
+            Paginate::Forward { after, first } => {
+                let cursor = if after.is_empty() {
+                    Uuid::nil().to_string()
+                } else {
+                    after
+                };
+
+                qb.push(" and id::text >")
+                    .push_bind(cursor)
+                    .push(" order by id limit ")
+                    .push_bind(first as i64);
+            }
+
+            Paginate::Backward { before, last } => {
+                let cursor = if before.is_empty() {
+                    Uuid::max().to_string()
+                } else {
+                    before
+                };
+
+                qb.push(" and id::text < ")
+                    .push_bind(cursor)
+                    .push(" order by id desc limit ")
+                    .push_bind(last as i64);
+            }
+        }
+
+        let files: Vec<PgFile> = qb
+            .build_query_as()
+            .fetch_all(&self.pool)
+            .await
+            .map_err(SearchError::wrap)?;
+
+        let cursor = files.last().map(|f| f.id.to_string());
+
+        let slice = if is_forward {
+            Slice::new(files, cursor, None)
+        } else {
+            Slice::new(files, None, cursor)
+        }
+        .map(File::from);
+        Ok(slice)
+    }
+}
+
+fn push_search_query(qb: &mut QueryBuilder<'_, sqlx::Postgres>, filter: Filter) {
+    qb.push(" and (");
+    traverse_query(qb, filter);
+    qb.push(")");
+}
+
+fn traverse_query(qb: &mut QueryBuilder<'_, sqlx::Postgres>, filter: Filter) {
+    match filter {
+        Filter::All => {
+            qb.push("1=1");
+        }
+        Filter::Tag { key, value } => match value {
+            Some(value) => {
+                qb.push(format!("tags->'{key}' = ")).push_bind(value);
+            }
+            None => {
+                qb.push("tags ? ").push_bind(key);
+            }
+        },
+        Filter::Op { lhs, op, rhs } => {
+            qb.push("(");
+            traverse_query(qb, *lhs);
+            qb.push(") ");
+
+            match op {
+                oxidrive_search::Op::And => qb.push(" and "),
+                oxidrive_search::Op::Or => qb.push(" or "),
+            };
+
+            qb.push("(");
+            traverse_query(qb, *rhs);
+            qb.push(") ");
+        }
     }
 }
 
@@ -173,6 +230,8 @@ struct PgFile {
     owner_id: Uuid,
     name: String,
     content_type: String,
+    size: i64,
+    tags: PgHstore,
 }
 
 impl From<PgFile> for File {
@@ -182,6 +241,8 @@ impl From<PgFile> for File {
             owner_id: file.owner_id.into(),
             name: file.name,
             content_type: file.content_type,
+            size: file.size.try_into().unwrap(),
+            tags: file.tags.0.into_iter().map(Tag::from).collect(),
         }
     }
 }

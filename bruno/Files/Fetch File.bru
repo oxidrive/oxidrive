@@ -1,0 +1,15 @@
+meta {
+  name: Fetch File
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{server}}/api/v1/files/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{file_id}}
+}

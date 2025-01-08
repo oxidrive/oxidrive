@@ -59,7 +59,8 @@ impl FileContents for FsFileContents {
         &self,
         file: &File,
         mut content: BoxStream<'_, Result<Bytes, ContentStreamError>>,
-    ) -> Result<(), UploadFileError> {
+    ) -> Result<usize, UploadFileError> {
+        let mut size = 0;
         let path = self.path_for_file(file);
 
         fs::create_dir_all(path.parent().unwrap())
@@ -72,7 +73,8 @@ impl FileContents for FsFileContents {
 
         while let Some(mut chunk) = content.try_next().await.map_err(UploadFileError::wrap)? {
             while chunk.has_remaining() {
-                f.write_buf(&mut chunk)
+                size += f
+                    .write_buf(&mut chunk)
                     .await
                     .map_err(UploadFileError::wrap)?;
             }
@@ -80,7 +82,7 @@ impl FileContents for FsFileContents {
 
         f.flush().await.map_err(UploadFileError::wrap)?;
 
-        Ok(())
+        Ok(size)
     }
 }
 
@@ -133,12 +135,13 @@ mod tests {
 
         let content = content("hello world").boxed();
 
-        contents.upload(&file, content).await.unwrap();
+        let size = contents.upload(&file, content).await.unwrap();
 
         let path = contents.path_for_file(&file);
 
         let read = tokio::fs::read_to_string(path).await.unwrap();
 
         check!(read == "hello world");
+        check!(size == "hello world".len());
     }
 }

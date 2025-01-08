@@ -34,6 +34,8 @@ macro_rules! make_uuid_type {
             }};
         }
 
+        pub(crate) use $macro_name;
+
         impl $typ {
             pub fn new() -> Self {
                 Self(::uuid::Uuid::now_v7())
