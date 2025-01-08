@@ -2,21 +2,20 @@
 	"name": "oxidrive-web",
 	"private": true,
 	"type": "module",
-    "version": "0.1.0",
-    "scripts": {
-        "dev": "vite dev",
-        "start": "vite dev",
-        "build": "vite build",
-        "preview": "vite preview",
-        "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-        "test:unit": "vitest",
-        "test:e2e": "playwright test",
-        "format": "biome format --write .",
-        "lint": "biome ci"
-    },
+	"version": "0.1.0",
+	"scripts": {
+		"dev": "vite dev",
+		"start": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"test:unit": "vitest",
+		"test:e2e": "playwright test",
+		"format": "biome check --write .",
+		"lint": "biome ci"
+	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.9.0",
-		"@biomejs/biome": "1.7.3",
 		"@melt-ui/pp": "^0.3.2",
 		"@melt-ui/svelte": "^0.81.0",
 		"@nubolab-ffwd/svelte-fluent": "^1.0.3",

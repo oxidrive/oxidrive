@@ -1,7 +1,14 @@
-use std::process::Command;
+use std::{io::ErrorKind, process::Command};
 
 fn main() {
-    if cfg!(feature = "no-build") {
+    let build_dir = std::env::current_dir().unwrap().join("build");
+    match std::fs::create_dir(&build_dir) {
+        Ok(_) => {}
+        Err(err) if err.kind() == ErrorKind::AlreadyExists => {}
+        err => err.unwrap(),
+    }
+
+    if cfg!(not(feature = "build-assets")) {
         println!("cargo:warning=skipping web assets build");
         return;
     }

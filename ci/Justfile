@@ -6,10 +6,10 @@ test:
     cargo nextest run --profile=ci
 
 test-mutations:
-    cargo mutants -vV --in-place
+    cargo mutants -vV --in-place --all-features
 
 fmt:
-    cargo fmt --check
+    cd .. && cargo fmt --check
 
 clippy:
     cargo clippy --all-targets --all-features

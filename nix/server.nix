@@ -16,9 +16,6 @@ rustPlatform.buildRustPackage {
 
   useNextest = true;
 
-  buildFeatures = [ "no-build" ];
-  checkFeatures = [ "no-build" ];
-
   configurePhase = ''
     runHook preConfigure
 

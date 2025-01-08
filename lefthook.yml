@@ -6,13 +6,13 @@ pre-commit:
   parallel: true
   commands:
     biome-check: &biome
-      run: npx @biomejs/biome check --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
+      run: npx --no @biomejs/biome check --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
       glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
     biome-format:
-      run: npx @biomejs/biome format --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
+      run: npx --no @biomejs/biome format --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
       <<: *biome
     biome-lint:
-      run: npx @biomejs/biome lint --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
+      run: npx --no @biomejs/biome lint --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
       <<: *biome
 
     rustfmt:
