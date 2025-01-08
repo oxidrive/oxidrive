@@ -1,5 +1,10 @@
+use std::str::FromStr;
+
 use serde::Deserialize;
-use sqlx::{postgres::PgPoolOptions, sqlite::SqlitePoolOptions};
+use sqlx::{
+    postgres::PgPoolOptions,
+    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
+};
 use url::Url;
 
 pub mod migrate;
@@ -54,10 +59,16 @@ fn database(cfg: Config) -> Database {
             Database::Pg(pool)
         }
         "sqlite" => {
+            let options = SqliteConnectOptions::from_str(cfg.url.as_str())
+                .expect("failed to parse SQLite database URL")
+                .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)
+                .create_if_missing(true)
+                .analysis_limit(400)
+                .optimize_on_close(true, None);
+
             let pool = SqlitePoolOptions::new()
                 .max_connections(cfg.max_connections)
-                .connect_lazy(cfg.url.as_str())
-                .expect("failed to open SQLite database");
+                .connect_lazy_with(options);
 
             Database::Sqlite(pool)
         }
