@@ -1,0 +1,12 @@
+[package]
+name = "oxidrive-web-assets"
+version.workspace = true
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+
+[features]
+no-build = []
+
+[dependencies]
+rust-embed = { workspace = true }

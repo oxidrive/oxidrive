@@ -10,9 +10,17 @@ on:
       - main
     paths:
       - .github/workflows/**
-      - server/**
-      - go.*
+      - .cargo/**
+      - app/**
+      - bin/**
+      - lib/**
+      - migrations/**
+      - Cargo.*
+      - rust-toolchain.toml
   merge_group:
+
+env:
+  CARGO_TERM_COLOR: always
 
 concurrency:
   group: server-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -27,17 +35,42 @@ jobs:
     if: github.event.pull_request.draft == false
     name: Test
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: 'postgres:16-alpine'
+        env:
+          POSTGRES_USER: oxidrive
+          POSTGRES_PASSWORD: oxidrive
+          POSTGRES_DB: oxidrive
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v27
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
-      - run: nix develop --command go mod download
       - name: Run tests
-        run: nix develop --command just server/test
-      - name: Run mutations
-        run: nix develop --command just server/test-mutations
+        run: nix develop --command just ci/test
+        env:
+          DATABASE_URL: 'postgres://oxidrive:oxidrive@localhost:5432/oxidrive?sslmode=disable'
+      - name: Test Summary
+        uses: test-summary/action@v2
+        if: always()
+        with:
+          paths: "target/nextest/ci/junit.xml"
+      # - name: Run mutations
+      #   run: nix develop --command just test-mutations
+      #   uses: actions/upload-artifact@v4
+      #   if: always()
+      #   with:
+      #     name: mutants.out
+      #     path: mutants.out
 
   fmt:
     if: github.event.pull_request.draft == false
@@ -50,9 +83,9 @@ jobs:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
       - name: Check formatting
-        run: nix develop --command bash -c 'test -z $(gofmt -l .)'
+        run: nix develop --command just ci/fmt
 
-  lint:
+  clippy:
     if: github.event.pull_request.draft == false
     name: Lint
     runs-on: ubuntu-latest
@@ -63,4 +96,4 @@ jobs:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
       - name: Check for issues
-        run: nix develop --command just server/lint
+        run: nix develop --command just ci/clippy

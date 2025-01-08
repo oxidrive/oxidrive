@@ -21,14 +21,15 @@
         let
           rustPkgs = pkgs.appendOverlays [ (import rust-overlay) ];
           toolchain = rustPkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+
+          web = pkgs.callPackage ./nix/web.nix { };
         in
         {
           formatter = pkgs.nixpkgs-fmt;
 
           packages = rec {
             default = oxidrive;
-            oxidrive = pkgs.callPackage ./nix/server.nix { };
-            web = pkgs.callPackage ./nix/web.nix { };
+            oxidrive = pkgs.callPackage ./nix/server.nix { inherit web; };
           };
 
           devShells.default = pkgs.mkShell {
@@ -37,6 +38,8 @@
             packages = with pkgs; [
               bacon
               bruno-cli
+              cargo-machete
+              cargo-mutants
               cargo-nextest
               clang
               just

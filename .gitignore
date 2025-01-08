@@ -3,3 +3,4 @@ result
 target/
 local/data
 *.db
+mutants.out*/

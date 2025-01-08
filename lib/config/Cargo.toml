@@ -9,4 +9,3 @@ edition.workspace = true
 eyre = { workspace = true }
 figment = { workspace = true, features = ["env", "toml", "yaml"] }
 serde = { workspace = true }
-tracing = { workspace = true }
