@@ -76,4 +76,4 @@ jobs:
             ${{ runner.OS }}-npm-cache-
       - run: npm ci
       - name: Run linter
-        run: nix develop --command just web/lint
+        run: nix develop --command just web/lint --reporter=github

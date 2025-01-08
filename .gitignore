@@ -4,4 +4,4 @@ target/
 local/files
 *.db
 mutants.out*/
-bruno/results.html
+bruno/results.*
