@@ -1,6 +1,7 @@
 { pkgs
 , lib
 , rustPlatform
+, web
 }:
 
 let
@@ -14,6 +15,17 @@ rustPlatform.buildRustPackage {
   src = lib.cleanSource ../.;
 
   useNextest = true;
+
+  buildFeatures = [ "no-build" ];
+  checkFeatures = [ "no-build" ];
+
+  configurePhase = ''
+    runHook preConfigure
+
+    cp -r ${web} web/build
+
+    runHook postConfigure
+  '';
 
   nativeBuildInputs = with pkgs; [
     clang

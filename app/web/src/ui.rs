@@ -3,7 +3,7 @@ use axum::{
     response::{Html, IntoResponse, Response},
     Router,
 };
-use rust_embed::Embed;
+use oxidrive_web_assets::Assets;
 
 use crate::state::AppState;
 
@@ -12,10 +12,6 @@ static INDEX_HTML: &str = "index.html";
 pub fn routes() -> Router<AppState> {
     Router::new().fallback(static_handler)
 }
-
-#[derive(Embed)]
-#[folder = "../../web/build"]
-struct Assets;
 
 #[axum::debug_handler]
 async fn static_handler(uri: Uri) -> impl IntoResponse {

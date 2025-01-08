@@ -21,7 +21,7 @@ run:
 revert:
     #!/usr/bin/env bash
     set -e
-    
+
     echo "==== reverting SQLite ===="
     export DATABASE_URL=sqlite://../local/oxidrive.db?mode=rwc
     sqlx migrate revert --source sqlite;

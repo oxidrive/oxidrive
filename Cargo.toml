@@ -2,7 +2,7 @@
 
 resolver = "2"
 
-members = ["app/*", "bin/*", "lib/*"]
+members = ["app/*", "bin/*", "lib/*", "web"]
 
 [workspace.package]
 version = "0.1.0"
@@ -17,13 +17,14 @@ oxidrive-files.path = "app/files"
 oxidrive-search.path = "app/search"
 oxidrive-web.path = "app/web"
 
+app.path = "lib/app"
 oxidrive-config.path = "lib/config"
 oxidrive-database.path = "lib/database"
 oxidrive-domain.path = "lib/domain"
 oxidrive-paginate.path = "lib/paginate"
 oxidrive-telemetry.path = "lib/telemetry"
 
-app.path = "lib/app"
+oxidrive-web-assets.path = "web"
 
 # crates.io
 async-trait = "0.1"
