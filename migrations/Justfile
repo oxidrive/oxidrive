@@ -11,7 +11,7 @@ run:
     set -e
 
     echo "==== migrating SQLite ===="
-    export DATABASE_URL=sqlite://../local/oxidrive.db?mode=rwc
+    export DATABASE_URL=sqlite://../local/oxidrive.db
     sqlx migrate run --source sqlite;
 
     echo "==== migrating PostgreSQL ===="
@@ -23,7 +23,7 @@ revert:
     set -e
 
     echo "==== reverting SQLite ===="
-    export DATABASE_URL=sqlite://../local/oxidrive.db?mode=rwc
+    export DATABASE_URL=sqlite://../local/oxidrive.db
     sqlx migrate revert --source sqlite;
 
     echo "==== reverting PostgreSQL ===="
