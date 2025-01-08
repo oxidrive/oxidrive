@@ -6,7 +6,7 @@ documentation.workspace = true
 edition.workspace = true
 
 [features]
-no-build = []
+build-assets = []
 
 [dependencies]
 rust-embed = { workspace = true }

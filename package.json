@@ -1,0 +1,7 @@
+{
+	"name": "oxidrive",
+	"workspaces": ["."],
+	"devDependencies": {
+		"@biomejs/biome": "1.7.3"
+	}
+}

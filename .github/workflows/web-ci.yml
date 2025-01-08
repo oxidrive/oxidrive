@@ -34,6 +34,7 @@ jobs:
           key: ${{ runner.OS }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-npm-cache-
+      - run: npm ci
       - name: Check source code
         run: nix develop --command just web/check
 
@@ -53,6 +54,7 @@ jobs:
           key: ${{ runner.OS }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-npm-cache-
+      - run: npm ci
       - name: Run tests
         run: nix develop --command just web/test
 
@@ -72,5 +74,6 @@ jobs:
           key: ${{ runner.OS }}-npm-cache-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-npm-cache-
+      - run: npm ci
       - name: Run linter
         run: nix develop --command just web/lint
