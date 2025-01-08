@@ -29,7 +29,7 @@ pub trait FileContents: Send + Sync + 'static {
         &self,
         file: &File,
         content: BoxStream<'_, Result<Bytes, ContentStreamError>>,
-    ) -> Result<(), UploadFileError>;
+    ) -> Result<usize, UploadFileError>;
 }
 
 #[derive(Clone, Default)]
@@ -68,14 +68,15 @@ impl FileContents for InMemoryFileContents {
         &self,
         file: &File,
         content: BoxStream<'_, Result<Bytes, ContentStreamError>>,
-    ) -> Result<(), UploadFileError> {
+    ) -> Result<usize, UploadFileError> {
         let mut inner = self.inner.write().await;
 
         let content: BytesMut = content.try_collect().await.map_err(UploadFileError::wrap)?;
+        let size = content.len();
 
         inner.insert(path_for(file.owner_id, &file.name), content.freeze());
 
-        Ok(())
+        Ok(size)
     }
 }
 

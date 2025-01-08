@@ -9,7 +9,6 @@ edition.workspace = true
 app = { workspace = true }
 oxidrive-auth = { workspace = true }
 oxidrive-files = { workspace = true }
-oxidrive-tags = { workspace = true }
     
 oxidrive-paginate = { workspace = true }
 

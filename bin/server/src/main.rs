@@ -6,7 +6,6 @@ use oxidrive_auth::{Auth, AuthModule};
 use oxidrive_config::Config;
 use oxidrive_database::{self as database, Database, DatabaseModule};
 use oxidrive_files::{self as files, FilesModule};
-use oxidrive_tags::TagsModule;
 use oxidrive_telemetry as telemetry;
 use oxidrive_web::{self as web, Server, WebModule};
 
@@ -105,6 +104,5 @@ fn bootstrap(cfg: FullConfig) -> app::App {
         .mount_and_hook(DatabaseModule)
         .mount_and_hook(AuthModule)
         .mount(FilesModule)
-        .mount(TagsModule)
         .mount(WebModule)
 }

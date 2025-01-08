@@ -66,6 +66,16 @@ pub enum Paginate {
     Backward { before: String, last: usize },
 }
 
+impl Paginate {
+    pub fn is_forward(&self) -> bool {
+        matches!(self, Self::Forward { .. })
+    }
+
+    pub fn is_backward(&self) -> bool {
+        matches!(self, Self::Backward { .. })
+    }
+}
+
 impl Default for Paginate {
     fn default() -> Self {
         Self::Forward {

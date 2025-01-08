@@ -1,15 +1,15 @@
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     response::IntoResponse,
-    routing::get,
+    routing::{get, post},
     Json, Router,
 };
 use oxidrive_files::{
-    file::{AllOwnedByError, ByIdError, ByNameError, FileId},
-    File, Files,
+    file::{AllOwnedByError, ByIdError, FileId},
+    tag::ParseError,
+    File, Files, SearchError,
 };
-use oxidrive_tags::{ForFileError, IndexTagError, ParseError, Tags};
 use serde::{Deserialize, Serialize};
 
 use crate::{
@@ -21,60 +21,59 @@ use crate::{
 pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/", get(list))
-        .route("/{file_id}/tags", get(tags).post(add_tags))
+        .route("/{file_id}", get(fetch))
+        .route("/{file_id}/tags", post(add_tags))
 }
 
 #[axum::debug_handler(state = AppState)]
 async fn list(
     State(files): State<Files>,
     CurrentUser(account): CurrentUser,
+    Query(ListQuery { query }): Query<ListQuery>,
     PageParams(params): PageParams,
 ) -> Result<Json<Page<FileData>>, ListError> {
-    let files = files.metadata().all_owned_by(account.id, params).await?;
+    let files = match query {
+        Some(query) => files.search(account.id, query, params).await?,
+        None => files.metadata().all_owned_by(account.id, params).await?,
+    };
     Ok(Json(files.map(FileData::from).into()))
 }
 
 #[axum::debug_handler(state = AppState)]
-async fn tags(
-    State(tags): State<Tags>,
+async fn fetch(
     State(files): State<Files>,
     CurrentUser(account): CurrentUser,
     Path(file_id): Path<FileId>,
-) -> Result<Json<Vec<Tag>>, TagsError> {
+) -> Result<Json<FileData>, FetchError> {
     let Some(file) = files.metadata().by_id(account.id, file_id).await? else {
-        return Err(TagsError::FileNotFound);
+        return Err(FetchError::NotFound);
     };
 
-    let tags = tags
-        .for_file(file.id)
-        .await?
-        .into_iter()
-        .map(Tag::from)
-        .collect();
-    Ok(Json(tags))
+    Ok(Json(file.into()))
 }
 
 #[axum::debug_handler(state = AppState)]
 async fn add_tags(
-    State(tags): State<Tags>,
     State(files): State<Files>,
     CurrentUser(account): CurrentUser,
     Path(file_id): Path<FileId>,
     Json(body): Json<AddTags>,
 ) -> Result<TagsAdded, AddTagsError> {
-    let Some(file) = files.metadata().by_id(account.id, file_id).await? else {
-        return Err(AddTagsError::FileNotFound);
-    };
-
-    let tt: Result<Vec<_>, _> = body
+    let tags = body
         .tags
         .into_iter()
-        .map(oxidrive_tags::Tag::parse)
-        .collect();
+        .map(oxidrive_files::Tag::parse_public)
+        .collect::<Result<Vec<_>, _>>()?;
 
-    tags.index(&file, tt?).await?;
+    files.add_tags(account.id, file_id, tags).await?;
 
     Ok(TagsAdded)
+}
+
+#[derive(Debug, Deserialize)]
+struct ListQuery {
+    #[serde(alias = "q", alias = "search")]
+    query: Option<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -82,6 +81,8 @@ struct FileData {
     id: String,
     name: String,
     content_type: String,
+    size: usize,
+    tags: Vec<Tag>,
 }
 
 impl From<File> for FileData {
@@ -90,6 +91,8 @@ impl From<File> for FileData {
             id: file.id.to_string(),
             name: file.name,
             content_type: file.content_type,
+            size: file.size,
+            tags: file.tags.into_iter().map(Tag::from).collect(),
         }
     }
 }
@@ -97,28 +100,52 @@ impl From<File> for FileData {
 #[derive(Debug, thiserror::Error)]
 enum ListError {
     #[error(transparent)]
-    LoadError(#[from] AllOwnedByError),
+    Search(#[from] SearchError),
+    #[error(transparent)]
+    Load(#[from] AllOwnedByError),
 }
 
 impl IntoResponse for ListError {
     fn into_response(self) -> axum::response::Response {
         match self {
-            Self::LoadError(err) => {
+            Self::Load(err) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
+            }
+            Self::Search(err) => {
                 (StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
             }
         }
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, thiserror::Error)]
+enum FetchError {
+    #[error(transparent)]
+    Load(#[from] ByIdError),
+    #[error("file not found")]
+    NotFound,
+}
+
+impl IntoResponse for FetchError {
+    fn into_response(self) -> axum::response::Response {
+        match self {
+            Self::Load(err) => {
+                (StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
+            }
+            Self::NotFound => StatusCode::NOT_FOUND.into_response(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 struct Tag {
     key: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     value: Option<String>,
 }
 
-impl From<oxidrive_tags::Tag> for Tag {
-    fn from(tag: oxidrive_tags::Tag) -> Self {
+impl From<oxidrive_files::Tag> for Tag {
+    fn from(tag: oxidrive_files::Tag) -> Self {
         Self {
             key: tag.key,
             value: tag.value,
@@ -126,35 +153,11 @@ impl From<oxidrive_tags::Tag> for Tag {
     }
 }
 
-impl From<Tag> for oxidrive_tags::Tag {
+impl From<Tag> for oxidrive_files::Tag {
     fn from(tag: Tag) -> Self {
         Self {
             key: tag.key,
             value: tag.value,
-        }
-    }
-}
-
-#[derive(Debug, thiserror::Error)]
-enum TagsError {
-    #[error(transparent)]
-    LoadFileError(#[from] ByIdError),
-    #[error(transparent)]
-    LoadTagsError(#[from] ForFileError),
-    #[error("file not found")]
-    FileNotFound,
-}
-
-impl IntoResponse for TagsError {
-    fn into_response(self) -> axum::response::Response {
-        match self {
-            Self::LoadFileError(err) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
-            }
-            Self::LoadTagsError(err) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
-            }
-            Self::FileNotFound => StatusCode::NOT_FOUND.into_response(),
         }
     }
 }
@@ -175,25 +178,22 @@ impl IntoResponse for TagsAdded {
 #[derive(Debug, thiserror::Error)]
 enum AddTagsError {
     #[error(transparent)]
-    LoadFileError(#[from] ByIdError),
-    #[error(transparent)]
-    AddTagsError(#[from] IndexTagError),
+    AddTags(#[from] oxidrive_files::AddTagsError),
     #[error(transparent)]
     InvalidTag(#[from] ParseError),
-    #[error("file not found")]
-    FileNotFound,
 }
 
 impl IntoResponse for AddTagsError {
     fn into_response(self) -> axum::response::Response {
         match self {
-            Self::LoadFileError(err) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
+            Self::AddTags(oxidrive_files::AddTagsError::FileNotFound) => {
+                StatusCode::NOT_FOUND.into_response()
             }
-            Self::AddTagsError(err) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
-            }
-            Self::FileNotFound => StatusCode::NOT_FOUND.into_response(),
+            Self::AddTags(err) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("{err} ({err:?})"),
+            )
+                .into_response(),
             Self::InvalidTag(err) => (StatusCode::BAD_REQUEST, format!("{err}")).into_response(),
         }
     }

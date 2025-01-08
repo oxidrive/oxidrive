@@ -1,14 +1,32 @@
 use assert2::check;
-use oxidrive_auth::account::Account;
+use oxidrive_auth::{
+    account::{Account, AccountId},
+    account_id,
+};
 use oxidrive_paginate::Paginate;
 
-use crate::file;
+use crate::{file, FileId};
 
 use super::FileMetadata;
 
+macro_rules! check_file {
+    ($expected:ident, $actual:ident) => {
+        check!($expected.id == $actual.id);
+        check!($expected.owner_id == $actual.owner_id);
+        check!($expected.name == $actual.name);
+        check!($expected.size == $actual.size);
+        check!($expected.tags == $actual.tags);
+    };
+}
+
+const FILE_ID_1: FileId = file::file_id!("019433e9-ffbb-7c8b-af6c-d4cb061fb919");
+const FILE_ID_2: FileId = file::file_id!("019433ea-5976-7982-bedb-760ad14d4c1a");
+
+const OWNER_ID: AccountId = account_id!("0194327d-becc-7ef3-809c-35dd09f62f45");
+
 fn owner() -> Account {
     Account {
-        id: "0194327d-becc-7ef3-809c-35dd09f62f45".parse().unwrap(),
+        id: OWNER_ID,
         username: "admin".into(),
     }
 }
@@ -31,6 +49,8 @@ async fn list_all_files<S: FileMetadata>(store: S) {
     forward.items.reverse();
     let forward_ids = forward.items.iter().map(|f| f.id).collect::<Vec<_>>();
     let backward_ids = backward.items.iter().map(|f| f.id).collect::<Vec<_>>();
+
+    dbg!(&forward_ids, &backward_ids);
     check!(forward_ids == backward_ids);
 }
 
@@ -40,12 +60,10 @@ async fn store_and_load_file_by_id<S: FileMetadata>(store: S) {
     let file = file::fixtures::file(owner.clone());
 
     let stored = store.save(file.clone()).await.unwrap();
-    check!(stored.id == file.id);
+    check_file!(file, stored);
 
     let loaded = store.by_id(owner.id, file.id).await.unwrap().unwrap();
-    check!(loaded.id == file.id);
-    check!(loaded.owner_id == file.owner_id);
-    check!(loaded.name == file.name);
+    check_file!(file, loaded);
 }
 
 async fn store_and_load_file_by_name<S: FileMetadata>(store: S) {
@@ -54,16 +72,44 @@ async fn store_and_load_file_by_name<S: FileMetadata>(store: S) {
     let file = file::fixtures::file(owner.clone());
 
     let stored = store.save(file.clone()).await.unwrap();
-    check!(stored.id == file.id);
+    check_file!(file, stored);
 
     let loaded = store.by_name(owner.id, &file.name).await.unwrap().unwrap();
-    check!(loaded.id == file.id);
-    check!(loaded.owner_id == file.owner_id);
-    check!(loaded.name == file.name);
+    check_file!(file, loaded);
+}
+
+const SEARCH_FILES_CASES: &[(&str, &[FileId])] = &[
+    ("*", &[FILE_ID_1, FILE_ID_2]),
+    ("name content_type:text/plain", &[FILE_ID_1, FILE_ID_2]),
+    ("name:hello.txt", &[FILE_ID_1]),
+    ("name:world.txt", &[FILE_ID_2]),
+    ("file1", &[FILE_ID_1]),
+    ("file2", &[FILE_ID_2]),
+];
+
+async fn search_files<S: FileMetadata>(store: S) {
+    let owner = owner();
+
+    for (query, expected_ids) in SEARCH_FILES_CASES {
+        let filter = oxidrive_search::parse_query(query).unwrap();
+
+        let files = store
+            .search(owner.id, filter, Paginate::default())
+            .await
+            .unwrap()
+            .items;
+
+        let mut ids = files.into_iter().map(|f| f.id).collect::<Vec<_>>();
+        ids.sort();
+
+        check!(*expected_ids == ids.as_slice(), "query failed: {query}");
+    }
 }
 
 mod inmemory {
-    use crate::file::InMemoryFileMetadata;
+    use file::File;
+
+    use crate::{file::InMemoryFileMetadata, tag};
 
     use super::*;
 
@@ -88,6 +134,18 @@ mod inmemory {
     async fn it_stores_and_loads_file_by_name() {
         let store = InMemoryFileMetadata::default();
         store_and_load_file_by_name(store).await;
+    }
+
+    #[tokio::test]
+    async fn it_searches_files() {
+        let mut file_1 = File::new(OWNER_ID, "hello.txt", "text/plain").tagged(tag!("file1"));
+        file_1.id = FILE_ID_1;
+
+        let mut file_2 = File::new(OWNER_ID, "world.txt", "text/plain").tagged(tag!("file2"));
+        file_2.id = FILE_ID_2;
+
+        let store = InMemoryFileMetadata::from([file_1, file_2]);
+        search_files(store).await;
     }
 }
 
@@ -127,6 +185,18 @@ mod pg {
         let store = PgFileMetadata::new(pool);
         store_and_load_file_by_name(store).await;
     }
+
+    #[sqlx::test(
+        migrator = "PG_MIGRATOR",
+        fixtures(
+            "../../fixtures/postgres/accounts.sql",
+            "../../fixtures/postgres/files.sql"
+        )
+    )]
+    async fn it_searches_files(pool: sqlx::PgPool) {
+        let store = PgFileMetadata::new(pool);
+        search_files(store).await;
+    }
 }
 
 mod sqlite {
@@ -164,5 +234,17 @@ mod sqlite {
     async fn it_stores_and_loads_file_by_name(pool: sqlx::SqlitePool) {
         let store = SqliteFileMetadata::new(pool);
         store_and_load_file_by_name(store).await;
+    }
+
+    #[sqlx::test(
+        migrator = "SQLITE_MIGRATOR",
+        fixtures(
+            "../../fixtures/sqlite/accounts.sql",
+            "../../fixtures/sqlite/files.sql"
+        )
+    )]
+    async fn it_searches_files(pool: sqlx::SqlitePool) {
+        let store = SqliteFileMetadata::new(pool);
+        search_files(store).await;
     }
 }

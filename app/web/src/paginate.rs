@@ -90,16 +90,6 @@ pub struct Page<T> {
     pub previous: Option<Cursor>,
 }
 
-impl<T> Page<T> {
-    pub fn encoded(slice: Slice<T>) -> Self {
-        Self {
-            items: slice.items,
-            next: slice.next.map(Cursor::encode),
-            previous: slice.previous.map(Cursor::encode),
-        }
-    }
-}
-
 impl<T> From<Slice<T>> for Page<T> {
     fn from(slice: Slice<T>) -> Self {
         Self {
@@ -117,10 +107,6 @@ pub enum Cursor {
 }
 
 impl Cursor {
-    pub fn encode<S: Into<String>>(value: S) -> Self {
-        Self::Encoded(ENGINE.encode(value.into()))
-    }
-
     pub fn unwrap(self) -> Result<String, InvalidCursor> {
         let s = match self {
             Cursor::Plain(s) => return Ok(s),
