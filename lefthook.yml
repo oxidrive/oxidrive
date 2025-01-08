@@ -15,9 +15,11 @@ pre-commit:
       run: npx --no @biomejs/biome lint --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
       <<: *biome
 
-    rustfmt:
+    rustfmt: &rust
+      glob: "*.rs"
       run: cargo fmt --all
     clippy:
+      glob: "*.rs"
       run: cargo clippy --fix --allow-dirty --allow-staged
       
 

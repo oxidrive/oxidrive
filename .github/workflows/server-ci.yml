@@ -110,8 +110,10 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@v7
       - name: Configure SQLite database
         run: echo "DATABASE_URL=sqlite://$(mktemp -d)/oxidrive.db" >> $GITHUB_ENV
+      - run: nix develop --command cargo build
+      - run: nix develop --command target/debug/oxidrive migrate
       - name: Start Oxidrive server
-        run: nix develop --command cargo run oxidrive -- server &
+        run: nix develop --command 'target/debug/oxidrive &'
       - name: Run Bruno tests
         run: nix develop --command just bruno/test
     
