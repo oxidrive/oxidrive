@@ -1,0 +1,5 @@
+default:
+    @just --list --unsorted | grep -v '  default'
+
+test:
+    bru run -r --output results.html --format html
