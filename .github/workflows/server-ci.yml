@@ -113,7 +113,7 @@ jobs:
       - run: nix develop --command cargo build
       - run: nix develop --command target/debug/oxidrive migrate
       - name: Start Oxidrive server
-        run: nix develop --command 'target/debug/oxidrive &'
+        run: nix develop --command bash -c 'target/debug/oxidrive server &'
       - name: Run Bruno tests
         run: nix develop --command just bruno/test
     
