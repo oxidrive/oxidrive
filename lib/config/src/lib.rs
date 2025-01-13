@@ -29,7 +29,7 @@ where
         let path = path.as_ref();
 
         let cfg = Figment::new()
-            .merge(Env::prefixed("OXIDRIVE_").split('_'))
+            .merge(Env::prefixed("OXIDRIVE_").split("__"))
             .merge(Env::raw().only(&["DATABASE_URL"]).split('_'))
             .merge(Env::raw().only(&["HOST", "PORT"]).map(|k| {
                 // make them equivalent to OXIDRIVE_SERVER_HOST and OXIDRIVER_SERVER_PORT
