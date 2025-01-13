@@ -10,6 +10,7 @@ pub use content::*;
 pub use store::*;
 
 use crate::tag;
+use crate::tag::reserved::SIZE;
 use crate::tag::Tag;
 
 pub type Tags = HashMap<String, Tag>;
@@ -47,6 +48,11 @@ impl File {
         this.tags = Self::default_tags(&this);
 
         this
+    }
+
+    pub fn set_size(&mut self, size: usize) {
+        self.size = size;
+        self.add_tag(Tag::full(SIZE, size.to_string()));
     }
 
     pub fn with_tags<I>(mut self, tags: I) -> Self

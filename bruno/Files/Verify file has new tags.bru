@@ -21,6 +21,7 @@ assert {
 tests {
   test("should contain the new tags", function() {
     const data = res.getBody();
-    expect(data.tags).to.include.deep.members([{key: "test"}, {key: "hello", value: "world"}]);
+    expect(data.tags).to.deep.include({key: "test"})
+    expect(data.tags).to.deep.include({key: "hello", value: "world"});
   });
 }

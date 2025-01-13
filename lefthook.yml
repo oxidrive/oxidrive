@@ -15,6 +15,8 @@ pre-commit:
             run: npx --no @biomejs/biome format --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
           - name: biome-lint
             run: npx --no @biomejs/biome lint --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
+          - name: check-types
+            run: just web/check
 
     - name: "rust"
       group:

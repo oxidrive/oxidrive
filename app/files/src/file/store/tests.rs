@@ -34,7 +34,7 @@ fn owner() -> Account {
 async fn list_all_files<S: FileMetadata>(store: S) {
     let owner = owner();
 
-    let mut forward = store
+    let forward = store
         .all_owned_by(owner.id, Paginate::first(2))
         .await
         .unwrap();
@@ -46,7 +46,6 @@ async fn list_all_files<S: FileMetadata>(store: S) {
         .unwrap();
     check!(backward.len() == 2);
 
-    forward.items.reverse();
     let forward_ids = forward.items.iter().map(|f| f.id).collect::<Vec<_>>();
     let backward_ids = backward.items.iter().map(|f| f.id).collect::<Vec<_>>();
 

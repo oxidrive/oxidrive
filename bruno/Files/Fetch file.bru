@@ -17,3 +17,14 @@ params:path {
 assert {
   res.status: eq 200
 }
+
+tests {
+  function expectTagEqual(body, expected, actual) {
+    const { value: exp } = body.tags.find(({ key }) => key === expected);
+    expect(exp).to.equal(actual);
+  }
+  test("size tag should be equal to size", function() {
+    const body = res.getBody();
+    expectTagEqual(body, 'size', body.size.toString())
+  });
+}

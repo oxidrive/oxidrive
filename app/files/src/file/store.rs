@@ -133,7 +133,7 @@ impl FileMetadata for InMemoryFileMetadata {
             ),
         };
 
-        let mut files: Vec<File> = inner
+        let files: Vec<File> = inner
             .values()
             .filter(|f| f.owner_id == owner_id)
             .filter(|file| filter(&file.tags))
@@ -152,8 +152,7 @@ impl FileMetadata for InMemoryFileMetadata {
             let next = files.last().map(|f| f.id.to_string());
             Ok(Slice::new(files, next, None))
         } else {
-            files.reverse();
-            let previous = files.last().map(|f| f.id.to_string());
+            let previous = files.first().map(|f| f.id.to_string());
             Ok(Slice::new(files, None, previous))
         }
     }

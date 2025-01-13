@@ -4,7 +4,7 @@ meta {
   seq: 6
 }
 
-post {
+put {
   url: {{server}}/api/v1/files/:id/tags
   body: json
   auth: none
@@ -16,6 +16,10 @@ params:path {
 
 body:json {
   {
-    "tags": ["test", "hello:oxidrive"]
+    "tags": ["test", "hello:world"]
   }
+}
+
+assert {
+  res.status: eq 200
 }

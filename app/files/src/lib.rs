@@ -92,7 +92,7 @@ impl Files {
             .upload(&file, content.map_err(ContentStreamError::wrap).boxed())
             .await?;
 
-        file.size = size;
+        file.set_size(size);
 
         let file = self.metadata.save(file).await?;
 

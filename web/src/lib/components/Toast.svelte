@@ -28,7 +28,7 @@ export function notify(data: Omit<ToastData, "level">) {
 }
 
 export function reportError(
-	error: { error: string, message: string },
+	error: { error: string; message: string },
 	title: string = error.error,
 ) {
 	addToast({

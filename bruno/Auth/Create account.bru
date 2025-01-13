@@ -21,5 +21,7 @@ assert {
 }
 
 script:pre-request {
-  bru.setVar("createUsername", "bruno-" + nanoid.nanoid());
+  const { nanoid } = require('nanoid');
+  
+  bru.setVar("createUsername", "bruno-" + nanoid());
 }
