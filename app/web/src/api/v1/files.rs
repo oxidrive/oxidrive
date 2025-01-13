@@ -31,17 +31,19 @@ struct FileData {
 
 impl From<File> for FileData {
     fn from(file: File) -> Self {
+        let mut tags: Vec<Tag> = file.tags.into_values().map(Tag::from).collect();
+        tags.sort();
         Self {
             id: file.id.to_string(),
             name: file.name,
             content_type: file.content_type,
             size: file.size,
-            tags: file.tags.into_values().map(Tag::from).collect(),
+            tags,
         }
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, ToSchema)]
+#[derive(Debug, Serialize, Deserialize, ToSchema, PartialEq, Eq, PartialOrd, Ord)]
 struct Tag {
     key: String,
     #[serde(skip_serializing_if = "Option::is_none")]
