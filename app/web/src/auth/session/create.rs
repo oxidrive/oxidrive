@@ -1,11 +1,10 @@
 use axum::{
     extract::{Query, State},
-    http::{self, HeaderMap, StatusCode, Uri},
+    http::{self, header::REFERER, HeaderMap, StatusCode, Uri},
     response::{IntoResponse, Redirect},
     Form,
 };
 use axum_extra::extract::cookie::SignedCookieJar;
-use headers::{HeaderMapExt, Referer};
 use oxidrive_auth::{login::AuthenticationFailed, Auth};
 use serde::Deserialize;
 use url::Url;
@@ -20,9 +19,15 @@ pub async fn handler(
     headers: HeaderMap,
     Form(creds): Form<SessionCredentials>,
 ) -> Result<SessionCreated, CreateSessionError> {
+    // TODO: replace with this as soon as a new docs.rs/headers release is cut
+    // let referer = headers
+    //     .typed_get::<Referer>()
+    //     .and_then(|referer| Url::parse(&referer.to_string()).ok());
     let referer = headers
-        .typed_get::<Referer>()
-        .and_then(|referer| Url::parse(&referer.to_string()).ok());
+        .get(REFERER)
+        .and_then(|referer| referer.to_str().ok())
+        .and_then(|referer| Url::parse(referer).ok());
+
     let error = CreateSessionError::new(referer);
 
     let redirect_to = query

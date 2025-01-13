@@ -19,7 +19,6 @@ axum-extra = { workspace = true, features = ["typed-header", "cookie", "cookie-s
 base64 = { workspace = true }
 bytesize = { workspace = true, features = ["serde"] }
 futures = { workspace = true }
-headers = { workspace = true }
 mime_guess = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

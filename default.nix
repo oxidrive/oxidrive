@@ -12,8 +12,11 @@ in
 rustPlatform.buildRustPackage {
   pname = "oxidrive";
   version = meta.version;
-  cargoLock.lockFile = ./Cargo.lock;
   src = lib.cleanSource ./.;
+
+  cargoLock = {
+    lockFile = ./Cargo.lock;
+  };
 
   useNextest = true;
 

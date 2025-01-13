@@ -16,7 +16,7 @@ buildNpmPackage {
     nodejs_20
   ];
 
-  npmDepsHash = "sha256-wgg8N+fL0/jLxTHy/G8TpNhWdW9BBOnz5fgO9aYF90Q=";
+  npmDepsHash = "sha256-8/zkME4+C3+CfCcFYOJLkEm9q8GKcQPIrxHoOV2GdFw=";
 
   installPhase = ''
     runHook preInstall
