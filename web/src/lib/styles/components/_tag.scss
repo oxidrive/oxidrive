@@ -1,0 +1,25 @@
+.tag {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: var(--oxi-size-4xs) var(--oxi-size-3xs);
+        color: var(--oxi-primary-500);
+        background-color: var(--oxi-primary-50);
+        border: solid var(--oxi-primary-500) 2px;
+        border-radius: var(--oxi-rounded-lg);
+
+        .key {
+            font-weight: var(--oxi-text-bold);
+        }
+
+        &.small {
+            font-size: var(--oxi-text-xs-font-size);
+            line-height: var(--oxi-text-xs-line-height);
+        }
+
+        .value {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }

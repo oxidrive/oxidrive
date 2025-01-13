@@ -10,6 +10,7 @@ fn main() {
 
     if cfg!(not(feature = "build-assets")) {
         println!("cargo:warning=skipping web assets build");
+        println!("cargo:rerun-if-changed=");
         return;
     }
 

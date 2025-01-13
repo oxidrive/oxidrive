@@ -170,7 +170,7 @@ where
         Filter::Tag { key, value } => Box::new(move |tags| {
             current(tags)
                 && tags
-                    .iter()
+                    .values()
                     .any(|tag| tag_matches(tag, &key, value.as_ref()))
         }),
         Filter::Op { lhs, op, rhs } => {

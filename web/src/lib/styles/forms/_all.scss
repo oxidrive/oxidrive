@@ -1,0 +1,31 @@
+@forward "input";
+
+.form {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    gap: var(--oxi-size-2xl);
+    width: 100%;
+}
+
+.fieldset {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
+
+    &.inline {
+        flex-direction: row-reverse;
+    }
+
+    &.inputs {
+        gap: var(--oxi-size-xl);
+        width: 100%;
+    }
+
+    &.buttons {
+        gap: var(--oxi-size-2xs);
+    }
+}

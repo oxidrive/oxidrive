@@ -1,0 +1,36 @@
+.input {
+    padding: var(--oxi-size-xs) var(--oxi-size-2xs);
+    border: 2px solid var(--oxi-primary-500);
+    border-radius: var(--oxi-rounded);
+    background-color: var(--oxi-primary-50);
+    width: 100%;
+
+    &:disabled {
+        border-color: var(--oxi-primary-200);
+        color: var(--oxi-primary-200);
+    }
+
+    &::placeholder {
+        font-size: var(--oxi-text-md-font-size);
+        line-height: var(--oxi-text-md-line-height);
+        color: var(--oxi-primary-500);
+        opacity: 1;
+    }
+
+    &.error {
+        color: var(--oxi-danger-500);
+        border-color: var(--oxi-danger-500);
+        &::placeholder {
+            color: var(--oxi-danger-500);
+        }
+    }
+
+    &.thin {
+        padding: var(--oxi-size-3xs);
+    }
+}
+
+.checkbox {
+    accent-color: var(--oxi-primary-500);
+    transform: scale(1.2);
+}

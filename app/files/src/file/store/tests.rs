@@ -50,7 +50,6 @@ async fn list_all_files<S: FileMetadata>(store: S) {
     let forward_ids = forward.items.iter().map(|f| f.id).collect::<Vec<_>>();
     let backward_ids = backward.items.iter().map(|f| f.id).collect::<Vec<_>>();
 
-    dbg!(&forward_ids, &backward_ids);
     check!(forward_ids == backward_ids);
 }
 

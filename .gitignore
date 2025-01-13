@@ -1,7 +1,7 @@
 node_modules/
 result
 target/
-local/files
+local/files/
 *.db
 mutants.out*/
 bruno/results.*

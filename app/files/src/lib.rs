@@ -99,12 +99,12 @@ impl Files {
         Ok(file)
     }
 
-    pub async fn add_tags<I>(
+    pub async fn update_tags<I>(
         &self,
         owner_id: AccountId,
         file_id: FileId,
         tags: I,
-    ) -> Result<(), AddTagsError>
+    ) -> Result<File, AddTagsError>
     where
         I: IntoIterator<Item = Tag>,
     {
@@ -112,11 +112,11 @@ impl Files {
             return Err(AddTagsError::FileNotFound);
         };
 
-        file.add_tags(tags);
+        file.set_tags(tags);
 
-        self.metadata.save(file).await?;
+        let file = self.metadata.save(file).await?;
 
-        Ok(())
+        Ok(file)
     }
 
     pub async fn search(

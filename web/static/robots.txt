@@ -1,0 +1,37 @@
+user-agent: *
+disallow: /
+
+# explicit disallows because some bots are assholes that need that
+
+User-Agent: Googlebot
+Disallow: /
+
+User-Agent: Storebot-Google
+Disallow: /
+
+User-Agent: GoogleOther
+Disallow: /
+
+User-Agent: Google-Extended
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: GPTBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: Omgilibot
+Disallow: /
+
+User-Agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /

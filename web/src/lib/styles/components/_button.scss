@@ -1,0 +1,148 @@
+.button {
+    padding: var(--oxi-size-2xs) var(--oxi-size-2xl);
+    border-radius: var(--oxi-rounded);
+    width: 100%;
+    text-align: center;
+    cursor: pointer;
+    font-size: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    align-items: center;
+    gap: var(--oxi-size-sm);
+
+    &.disabled {
+        pointer-events: none;
+    }
+
+
+    &.filled {
+        @mixin light {
+            background-color: var(--oxi-primary-400);
+        }
+
+        border: 0;
+        background-color: var(--oxi-primary-500);
+        color: var(--oxi-primary-50);
+
+        &.light {
+            background-color: var(--oxi-primary-200);
+        }
+
+        &:hover {
+            @include light;
+        }
+
+        &:disabled {
+            @include light;
+        }
+
+        &.disabled {
+            @include light;
+        }
+    }
+
+    &.outline {
+        @mixin light {
+            border: 1px solid var(--oxi-primary-400);
+            color: var(--oxi-primary-400);
+        }
+
+        border: 1px solid var(--oxi-primary-500);
+        color: var(--oxi-primary-500);
+
+        &:hover {
+            @include light;
+        }
+
+        &:disabled {
+            @include light;
+        }
+
+        &.disabled {
+            @include light;
+        }
+    }
+
+    &.ghost {
+        @mixin light {
+            color: var(--oxi-primary-300);
+        }
+
+        color: var(--oxi-primary-500);
+        text-decoration: underline;
+
+        &:hover {
+            @include light;
+        }
+
+        &:disabled {
+            @include light;
+        }
+
+        &.disabled {
+            @include light;
+        }
+    }
+}
+
+@mixin fab-floating {
+    position: fixed;
+    z-index: 10;
+    bottom: 0;
+    right: 0;
+    margin: var(--oxi-size-xl);
+    height: 50px;
+    width: 50px;
+    aspect-ratio: 1/1;
+}
+
+.fab {
+    @include fab-floating;
+
+    padding: var(--oxi-size-xs);
+    border-radius: var(--oxi-rounded-full);
+
+    svg {
+        height: 100%;
+        width: 100%;
+    }
+
+    &.primary {
+        background-color: var(--oxi-primary-500);
+        color: var(--oxi-primary-50);
+    }
+
+    &.secondary {
+        background-color: var(--oxi-primary-300);
+        color: var(--oxi-primary-50);
+    }
+}
+
+.fab-multi {
+    @include fab-floating;
+
+    display: flex;
+    flex-direction: column-reverse;
+    align-content: center;
+    gap: var(--oxi-size-sm);
+
+    .fab {
+        position: unset;
+        margin: 0;
+    }
+
+    .fab-children {
+        display: flex;
+        flex-direction: column;
+        align-content: center;
+        gap: var(--oxi-size-sm);
+        position: unset !important; // overriding melt-ui
+
+        .fab {
+            height: 45px;
+            width: 45px;
+            align-self: center;
+        }
+    }
+}

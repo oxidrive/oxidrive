@@ -1,0 +1,71 @@
+@use "sass:list";
+@use "../utils";
+
+$text-sizes: (
+    "2xs": (10px, 21px),
+    "xs":  (12px, 16px),
+    "sm":  (14px, 20px),
+    "m":   (16px, 24px),
+    "lg":  (18px, 28px),
+    "xl":  (20px, 28px),
+    "2xl": (24px, 32px),
+    "3xl": (30px, 36px),
+    "4xl": (36px, 40px),
+    "5xl": (48px, 1px),
+    "6xl": (60px, 1px),
+    "7xl": (72px, 1px),
+    "8xl": (96px, 1px),
+    "9xl": (128px, 1px),
+);
+
+$weights: (
+    "light": 300,
+    "regular": 400,
+    "bold": 600,
+);
+
+
+:root {
+    --oxi-font-family: Roboto, sans-serif;
+    --oxi-mono-font-family: Roboto Mono, monospace;
+
+    @each $size, $values in $text-sizes {
+        --oxi-text-#{$size}-font-size: #{utils.px-to-rem(list.nth($values, 1))};
+        --oxi-text-#{$size}-line-height: #{utils.px-to-rem(list.nth($values, 2))};
+    }
+
+    @each $weight, $value in $weights {
+        --oxi-text-#{$weight}: #{$value};
+    }
+}
+
+html {
+    font-family: var(--oxi-font-family);
+    @extend .text-m;
+    @extend .text-regular;
+}
+
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@each $size, $_ in $text-sizes {
+    .text-#{$size} {
+        font-size: var(--oxi-text-#{$size}-font-size);
+        line-height: var(--oxi-text-#{$size}-line-height);
+    }
+}
+
+@each $weight, $_ in $weights {
+    .text-#{$weight} {
+        font-weight: var(--oxi-text-#{$weight});
+    }
+}
+
+
+
+.text-center {
+    text-align: center;
+}

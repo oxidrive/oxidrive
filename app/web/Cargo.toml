@@ -17,8 +17,20 @@ oxidrive-web-assets = { workspace = true }
 axum = { workspace = true, features = ["macros", "multipart"] }
 axum-extra = { workspace = true, features = ["typed-header", "cookie", "cookie-signed", "file-stream"] }
 base64 = { workspace = true }
+bytesize = { workspace = true, features = ["serde"] }
 futures = { workspace = true }
+headers = { workspace = true }
 mime_guess = { workspace = true }
 serde = { workspace = true }
+serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["net"] }
+tower = { workspace = true, features = ["util"] }
+tower-http = { workspace = true, features = ["cors", "set-header"] }
+tower-surf = { workspace = true, features = ["axum"] }
+tracing = { workspace = true }
+url = { workspace = true }
+utoipa = { workspace = true, features = ["uuid", "axum_extras"] }
+utoipa-axum = { workspace = true }
+utoipa-swagger-ui = { workspace = true, features = ["axum", "vendored"] }
+uuid = { workspace = true }

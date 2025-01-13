@@ -12,6 +12,9 @@ add-app name:
 add-bin name:
     cargo new --bin ./bin/{{ name }} --vcs=none --name oxidrive-{{ name }}
 
+add-tool name:
+    cargo new --bin ./tools/{{ name }} --vcs=none --name {{ name }}
+
 watch *args:
     bacon run-server -- {{ args }}
 
@@ -32,3 +35,13 @@ db-reset:
 
 oxidrive *args:
     cargo run -p oxidrive -- {{ args }}
+
+generate-openapi-schema:
+    cargo run --bin generate-openapi
+
+generate-openapi-types *args:
+    [ -d ./node_modules ] || npm ci
+    npx openapi-typescript openapi.json -o web/src/lib/openapi.ts --root-types {{ args }}
+
+generate-openapi: generate-openapi-schema generate-openapi-types
+

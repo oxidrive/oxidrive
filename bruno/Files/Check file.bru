@@ -1,0 +1,15 @@
+meta {
+  name: Check file
+  type: http
+  seq: 2
+}
+
+head {
+  url: {{server}}/files/:file_name
+  body: none
+  auth: none
+}
+
+params:path {
+  file_name: goose.jpg
+}

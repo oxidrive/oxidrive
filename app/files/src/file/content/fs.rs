@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    borrow::Cow,
+    path::{Path, PathBuf},
+};
 
 use async_trait::async_trait;
 use bytes::{Buf, Bytes, BytesMut};
@@ -33,6 +36,10 @@ impl FsFileContents {
 
 #[async_trait]
 impl FileContents for FsFileContents {
+    fn display_name(&self) -> Cow<'static, str> {
+        "FileSystem".into()
+    }
+
     async fn download(
         &self,
         owner_id: AccountId,

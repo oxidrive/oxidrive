@@ -2,6 +2,7 @@
 	"name": "oxidrive",
 	"workspaces": ["."],
 	"devDependencies": {
-		"@biomejs/biome": "1.7.3"
+		"@biomejs/biome": "1.7.3",
+		"openapi-typescript": "^7.5.2"
 	}
 }

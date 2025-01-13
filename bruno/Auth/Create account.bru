@@ -5,12 +5,21 @@ meta {
 }
 
 post {
-  url: {{server}}/api/v1/auth/accounts
+  url: {{server}}/api/v1/accounts
   body: formUrlEncoded
   auth: none
 }
 
 body:form-urlencoded {
-  username: test
-  password: test
+  username: {{createUsername}}
+  password: {{password}}
+}
+
+assert {
+  res.status: eq 201
+  res.body.username: eq {{createUsername}}
+}
+
+script:pre-request {
+  bru.setVar("createUsername", "bruno-" + nanoid.nanoid());
 }

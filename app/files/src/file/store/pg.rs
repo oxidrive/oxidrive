@@ -107,7 +107,11 @@ do update set
         .bind(&file.content_type)
         .bind(file.size as i64)
         .bind(PgHstore(
-            file.tags.clone().into_iter().map(Tag::into).collect(),
+            file.tags
+                .clone()
+                .into_iter()
+                .map(|(key, tag)| (key, tag.value))
+                .collect(),
         ))
         .execute(&self.pool)
         .await
@@ -152,7 +156,7 @@ where owner_id =
 
                 qb.push(" and id::text >")
                     .push_bind(cursor)
-                    .push(" order by id limit ")
+                    .push(" order by lower(name) limit ")
                     .push_bind(first as i64);
             }
 
@@ -165,7 +169,7 @@ where owner_id =
 
                 qb.push(" and id::text < ")
                     .push_bind(cursor)
-                    .push(" order by id desc limit ")
+                    .push(" order by lower(name) limit ")
                     .push_bind(last as i64);
             }
         }
@@ -242,7 +246,13 @@ impl From<PgFile> for File {
             name: file.name,
             content_type: file.content_type,
             size: file.size.try_into().unwrap(),
-            tags: file.tags.0.into_iter().map(Tag::from).collect(),
+            tags: file
+                .tags
+                .0
+                .into_iter()
+                .map(Tag::from)
+                .map(Tag::into)
+                .collect(),
         }
     }
 }

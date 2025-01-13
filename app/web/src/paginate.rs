@@ -11,6 +11,7 @@ use axum::{
 use base64::{engine::general_purpose::URL_SAFE_NO_PAD as ENGINE, Engine};
 use oxidrive_paginate::{Paginate, Slice, DEFAULT_LIMIT};
 use serde::{Deserialize, Serialize};
+use utoipa::{PartialSchema, ToSchema};
 
 #[derive(Debug)]
 pub struct PageParams(pub Paginate);
@@ -83,7 +84,7 @@ impl IntoResponse for InvalidPageParams {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, ToSchema)]
 pub struct Page<T> {
     pub items: Vec<T>,
     pub next: Option<Cursor>,
@@ -152,6 +153,27 @@ impl DerefMut for Cursor {
             Cursor::Plain(s) => s,
             Cursor::Encoded(s) => s,
         }
+    }
+}
+
+impl PartialSchema for Cursor {
+    fn schema() -> utoipa::openapi::RefOr<utoipa::openapi::schema::Schema> {
+        String::schema()
+    }
+}
+
+impl ToSchema for Cursor {
+    fn name() -> std::borrow::Cow<'static, str> {
+        "Cursor".into()
+    }
+
+    fn schemas(
+        schemas: &mut Vec<(
+            String,
+            utoipa::openapi::RefOr<utoipa::openapi::schema::Schema>,
+        )>,
+    ) {
+        String::schemas(schemas)
     }
 }
 

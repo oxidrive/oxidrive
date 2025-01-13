@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 
 use async_trait::async_trait;
 use oxidrive_auth::account::AccountId;
@@ -8,7 +8,7 @@ use sqlx::{types::Json, QueryBuilder};
 use uuid::Uuid;
 
 use crate::{
-    file::{File, FileId},
+    file::{File, FileId, Tags},
     Tag,
 };
 
@@ -154,7 +154,7 @@ where owner_id ="#,
 
                 qb.push(" and id >")
                     .push_bind(cursor)
-                    .push(" order by id limit ")
+                    .push(" order by lower(name) limit ")
                     .push_bind(first as i64);
             }
 
@@ -167,7 +167,7 @@ where owner_id ="#,
 
                 qb.push(" and id < ")
                     .push_bind(cursor)
-                    .push(" order by id desc limit ")
+                    .push(" order by lower(name) limit ")
                     .push_bind(last as i64);
             }
         }
@@ -253,6 +253,7 @@ impl From<SqliteFile> for File {
                     serde_json::Value::Object(_) => Tag::key(key),
                     _ => unreachable!(),
                 })
+                .map(Tag::into)
                 .collect(),
         }
     }
@@ -260,9 +261,9 @@ impl From<SqliteFile> for File {
 
 type SqliteTags = Json<BTreeMap<String, serde_json::Value>>;
 
-fn to_sqlite_tags(tags: HashSet<Tag>) -> SqliteTags {
+fn to_sqlite_tags(tags: Tags) -> SqliteTags {
     let tags = tags
-        .into_iter()
+        .into_values()
         .map(|tag| match tag.value {
             Some(value) => (tag.key, serde_json::Value::String(value)),
             None => (tag.key, serde_json::Value::Object(Default::default())),

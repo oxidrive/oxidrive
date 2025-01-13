@@ -1,0 +1,47 @@
+@use "../utils";
+
+$sizes: (
+    /* none: '0', */
+	'4xs': 2px,
+	'3xs': 4px,
+	'2xs': 8px,
+	xs:    12px,
+	sm:    16px,
+	m:     20px,
+	lg:    24px,
+	xl:    32px,
+	'2xl': 40px,
+	'3xl': 60px,
+	'4xl': 80px,
+    '5xl': 96px,
+	'6xl': 120px,
+);
+
+$rounded: (
+    /* none: 0, */
+    "sm":	2px,
+    /* "":  4px, */
+    "m":	6px,
+    "lg":	8px,
+    "xl":	12px,
+    "2xl":	16px,
+    "3xl":  24px,
+    /* "full":	9999px, */
+);
+
+:root {
+    --oxi-size-0: 0px;
+    --oxi-size-none: 0px;
+    --oxi-size-px: 1px;
+
+    @each $size, $value in $sizes {
+        --oxi-size-#{$size}: #{utils.px-to-rem($value)};
+    }
+
+    --oxi-rounded-none: 0px;
+    --oxi-rounded: #{utils.px-to-rem(4px)};
+    @each $size, $value in $rounded {
+        --oxi-rounded-#{$size}:	#{utils.px-to-rem($value)};
+    }
+    --oxi-rounded-full: 9999px;
+}

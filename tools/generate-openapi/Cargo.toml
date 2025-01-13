@@ -1,0 +1,11 @@
+[package]
+name = "generate-openapi"
+version.workspace = true
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+
+[dependencies]
+oxidrive-web = { workspace = true }
+
+eyre = { workspace = true }

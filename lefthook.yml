@@ -4,37 +4,55 @@
 #
 pre-commit:
   parallel: true
-  commands:
-    biome-check: &biome
-      run: npx --no @biomejs/biome check --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
-      glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
-    biome-format:
-      run: npx --no @biomejs/biome format --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
-      <<: *biome
-    biome-lint:
-      run: npx --no @biomejs/biome lint --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
-      <<: *biome
+  jobs:
+    - name: "js"
+      group:
+        glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+        jobs:
+          - name: biome-check 
+            run: npx --no @biomejs/biome check --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
+          - name: biome-format
+            run: npx --no @biomejs/biome format --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
+          - name: biome-lint
+            run: npx --no @biomejs/biome lint --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
 
-    rustfmt: &rust
-      glob: "*.rs"
-      run: cargo fmt --all
-    clippy:
-      glob: "*.rs"
-      run: cargo clippy --fix --allow-dirty --allow-staged
+    - name: "rust"
+      group:
+        piped: true
+        jobs:
+          - name: rustfmt
+            glob: "*.rs"
+            run: cargo fmt --all
+          - name: clippy
+            glob: "*.rs"
+            run: cargo clippy --fix --allow-dirty --allow-staged
       
 
     # nixpkgs-fmt:
     #   glob: "*.nix"
     #   run: nixpkgs-fmt
 
-    links:
+    - name: links
       glob: "*.md"
       exclude: CHANGELOG.md
       run: lychee --max-concurrency 3 {staged_files}
 
-    fix-typos:
+    - name: fix-typos
       exclude: '(^|/)((.*)\.pub|Cargo.lock|flake.lock|package-lock.json$'
       file_types:
         - text
         - not symlink
       run: typos --write-changes {staged_files}
+
+    - name: "openapi"
+      group:
+        piped: true
+        jobs:
+        - name: openapi-schema
+          glob: '*.rs'
+          run: just generate-openapi-schema
+
+        - name: openapi-types
+          glob: openapi.json
+          run: just generate-openapi-types --check
+          fail_text: rerun 'just generate-openapi' and commit the updated files

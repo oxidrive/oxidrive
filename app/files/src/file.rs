@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 
 use oxidrive_auth::account::AccountId;
 use oxidrive_domain::make_uuid_type;
@@ -12,7 +12,7 @@ pub use store::*;
 use crate::tag;
 use crate::tag::Tag;
 
-pub type Tags = HashSet<Tag>;
+pub type Tags = HashMap<String, Tag>;
 
 make_uuid_type!(FileId, file_id);
 
@@ -62,22 +62,38 @@ impl File {
         self
     }
 
+    pub fn set_tags<I>(&mut self, tags: I)
+    where
+        I: IntoIterator<Item = Tag>,
+    {
+        self.tags = Self::default_tags(self);
+        let tags = tags.into_iter().filter(Tag::is_public);
+
+        self.add_tags(tags);
+    }
+
     pub fn add_tags<I>(&mut self, tags: I)
     where
         I: IntoIterator<Item = Tag>,
     {
-        self.tags.extend(tags);
+        self.tags
+            .extend(tags.into_iter().map(|tag| (tag.key.clone(), tag)));
     }
 
     pub fn add_tag(&mut self, tag: Tag) {
-        self.tags.insert(tag);
+        self.tags.insert(tag.key.clone(), tag);
     }
 
     fn default_tags(file: &File) -> Tags {
-        HashSet::from([
-            tag!("{}:{}", tag::reserved::NAME, file.name),
-            tag!("{}:{}", tag::reserved::CONTENT_TYPE, file.content_type),
-        ])
+        HashMap::from_iter(
+            [
+                tag!("{}:{}", tag::reserved::NAME, file.name),
+                tag!("{}:{}", tag::reserved::CONTENT_TYPE, file.content_type),
+                tag!("{}:{}", tag::reserved::SIZE, file.size),
+            ]
+            .into_iter()
+            .map(|tag| (tag.key.clone(), tag)),
+        )
     }
 }
 
@@ -116,7 +132,7 @@ mod tests {
     use oxidrive_auth::account::{fixtures::account, Account};
     use rstest::rstest;
 
-    use crate::tag;
+    use crate::tag::reserved::*;
 
     use super::*;
 
@@ -140,5 +156,26 @@ mod tests {
         file.add_tags([tag!("test"), tag!("test")]);
 
         check!(file.tags.len() == default_tags.len() + 1);
+    }
+
+    #[rstest]
+    fn it_updates_the_tags_without_overriding_the_default_ones(mut file: File) {
+        let name = file.tags.get(NAME).cloned().unwrap();
+        let content_type = file.tags.get(CONTENT_TYPE).cloned().unwrap();
+        let size = file.tags.get(SIZE).cloned().unwrap();
+
+        file.set_tags([
+            tag!("name:different"),
+            tag!("content_type:changed"),
+            tag!("size:0"),
+            tag!("added"),
+        ]);
+
+        dbg!(&file.tags);
+
+        check!(file.tags.get(NAME) == Some(&name));
+        check!(file.tags.get(CONTENT_TYPE) == Some(&content_type));
+        check!(file.tags.get(SIZE) == Some(&size));
+        check!(file.tags.get("added") == Some(&tag!("added")));
     }
 }

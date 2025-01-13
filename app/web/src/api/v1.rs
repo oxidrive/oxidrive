@@ -1,12 +1,24 @@
-use axum::Router;
+use accounts::AccountsApi;
+use files::FilesApi;
+use utoipa::OpenApi;
+use utoipa_axum::router::OpenApiRouter;
 
 use crate::state::AppState;
 
-mod auth;
+mod accounts;
 mod files;
 
-pub fn routes() -> Router<AppState> {
-    Router::new()
-        .nest("/auth", auth::routes())
+#[derive(OpenApi)]
+#[openapi(
+    nest(
+        (path = "accounts", api = AccountsApi, tags = ["accounts"]),
+        (path = "files", api = FilesApi, tags = ["files"]),
+    ),
+)]
+pub struct V1Api;
+
+pub fn routes() -> OpenApiRouter<AppState> {
+    OpenApiRouter::new()
+        .nest("/accounts", accounts::routes())
         .nest("/files", files::routes())
 }

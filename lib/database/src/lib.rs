@@ -1,9 +1,10 @@
-use std::str::FromStr;
+use std::{fmt::Display, str::FromStr};
 
 use serde::Deserialize;
 use sqlx::{
     postgres::PgPoolOptions,
     sqlite::{SqliteConnectOptions, SqlitePoolOptions},
+    Database as _,
 };
 use url::Url;
 
@@ -31,8 +32,15 @@ pub enum Database {
 impl Database {
     pub fn name(&self) -> &'static str {
         match self {
-            Database::Sqlite(_) => "sqlite",
-            Database::Pg(_) => "postgres",
+            Self::Sqlite(_) => "sqlite",
+            Self::Pg(_) => "postgres",
+        }
+    }
+
+    pub fn display_name(&self) -> impl Display {
+        match self {
+            Self::Sqlite(_) => sqlx::Sqlite::NAME,
+            Self::Pg(_) => sqlx::Postgres::NAME,
         }
     }
 }
@@ -50,7 +58,7 @@ impl app::Module for DatabaseModule {
 
 fn database(cfg: Config) -> Database {
     match cfg.url.scheme() {
-        "postgres" | "postgresql" => {
+        scheme if sqlx::Postgres::URL_SCHEMES.contains(&scheme) => {
             let pool = PgPoolOptions::new()
                 .max_connections(cfg.max_connections)
                 .connect_lazy(cfg.url.as_str())
@@ -58,7 +66,7 @@ fn database(cfg: Config) -> Database {
 
             Database::Pg(pool)
         }
-        "sqlite" => {
+        scheme if sqlx::Sqlite::URL_SCHEMES.contains(&scheme) => {
             let options = SqliteConnectOptions::from_str(cfg.url.as_str())
                 .expect("failed to parse SQLite database URL")
                 .journal_mode(sqlx::sqlite::SqliteJournalMode::Wal)

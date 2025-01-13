@@ -5,12 +5,12 @@ use axum::{
 };
 use oxidrive_web_assets::Assets;
 
-use crate::state::AppState;
+use crate::{state::AppState, Config};
 
 static INDEX_HTML: &str = "index.html";
 
-pub fn routes() -> Router<AppState> {
-    Router::new().fallback(static_handler)
+pub fn routes(cfg: &Config) -> Router<AppState> {
+    Router::new().fallback(static_handler).layer(cfg.csrf())
 }
 
 #[axum::debug_handler]

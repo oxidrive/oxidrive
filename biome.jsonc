@@ -13,7 +13,13 @@
 		}
 	},
 	"files": {
-		"ignore": ["build/*", ".svelte-kit/*", "dist/*", ".astro/*"]
+		"ignore": [
+			"build/*",
+			".svelte-kit/*",
+			"dist/*",
+			".astro/*",
+			"src/lib/openapi.ts"
+		]
 	},
 	"overrides": [
 		{

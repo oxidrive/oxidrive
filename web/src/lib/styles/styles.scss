@@ -1,0 +1,18 @@
+@use '@fortawesome/fontawesome-free/css/all.css';
+@use "preflight" as *;
+@use "tokens/all" as *;
+@use "layout/all" as *;
+@use "components/all" as *;
+@use "forms/all" as *;
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}

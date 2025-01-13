@@ -1,0 +1,1 @@
+navbar-logout = Sign Out

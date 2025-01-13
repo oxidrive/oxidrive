@@ -5,7 +5,7 @@ use clap::{Parser, Subcommand};
 use oxidrive_auth::{Auth, AuthModule, CreateAccountError};
 use oxidrive_config::Config;
 use oxidrive_database::{self as database, Database, DatabaseModule};
-use oxidrive_files::{self as files, FilesModule};
+use oxidrive_files::{self as files, file::FileContents, FilesModule};
 use oxidrive_telemetry as telemetry;
 use oxidrive_web::{self as web, Server, WebModule};
 
@@ -138,4 +138,20 @@ fn bootstrap(cfg: FullConfig) -> app::App {
         .mount_and_hook(AuthModule)
         .mount(FilesModule)
         .mount(WebModule)
+        .hook(Startup)
+}
+
+struct Startup;
+
+#[app::async_trait]
+impl app::Hooks for Startup {
+    async fn after_start(&mut self, c: &app::di::Container) -> eyre::Result<()> {
+        let db = c.get::<Database>();
+        let contents = c.get::<Arc<dyn FileContents>>();
+
+        tracing::info!("using database {}", db.display_name());
+        tracing::info!("using storage {}", contents.display_name());
+
+        Ok(())
+    }
 }

@@ -5,9 +5,13 @@ meta {
 }
 
 post {
-  url: {{server}}/api/v1/auth/session
+  url: {{server}}/auth/session
   body: formUrlEncoded
   auth: none
+}
+
+params:query {
+  ~redirect_to: /ui
 }
 
 body:form-urlencoded {

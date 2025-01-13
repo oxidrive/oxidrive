@@ -3,6 +3,11 @@ telemetry:
 
 server:
   secret_key: 1D/El3AvfsvuhvCWFzuexHZWqn/vs//2kTIdX+CzX4xroIz8gItEaG2XOWmGqmTjkd+KqpwvZhOlsW125D62CDs27wY0EgrWlNfiX463yYc=
+  disable_csrf: true
+  cors:
+    allow_headers: any
+    allow_methods: any
+    allow_origins: any
 
 storage:
   provider: fs

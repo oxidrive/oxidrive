@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{borrow::Cow, collections::HashMap, sync::Arc};
 
 use async_trait::async_trait;
 use bytes::{Bytes, BytesMut};
@@ -19,6 +19,8 @@ make_error_wrapper!(UploadFileError);
 
 #[async_trait]
 pub trait FileContents: Send + Sync + 'static {
+    fn display_name(&self) -> Cow<'static, str>;
+
     async fn download(
         &self,
         owner_id: AccountId,
@@ -48,6 +50,10 @@ impl<const N: usize> From<[(String, Bytes); N]> for InMemoryFileContents {
 
 #[async_trait]
 impl FileContents for InMemoryFileContents {
+    fn display_name(&self) -> Cow<'static, str> {
+        "InMemory".into()
+    }
+
     async fn download(
         &self,
         owner_id: AccountId,

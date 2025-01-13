@@ -1,12 +1,12 @@
 use std::fmt::Display;
 
 pub mod reserved {
+    pub const ALL: &[&str] = &[NAME, CONTENT_TYPE, SIZE];
+
     pub const NAME: &str = "name";
     pub const CONTENT_TYPE: &str = "content_type";
+    pub const SIZE: &str = "size";
 }
-
-use reserved::*;
-pub const RESERVED_KEYS: &[&str] = &[NAME];
 
 const RESERVED_KEYWORDS: &[&str] = &["AND", "OR"];
 const INVALID_CHARACTERS: &[char] = &[';', '(', ')'];
@@ -68,11 +68,20 @@ impl Tag {
 
     pub fn parse_public<S: AsRef<str>>(expr: S) -> Result<Self, ParseError> {
         let tag = Self::parse(expr)?;
-        if RESERVED_KEYS.contains(&tag.key.as_str()) {
+        if tag.is_reserved() {
             return Err(ParseError::Reserved(tag.key));
         }
 
         Ok(tag)
+    }
+
+    pub fn is_reserved(&self) -> bool {
+        reserved::ALL.contains(&self.key.as_str())
+    }
+
+    #[inline]
+    pub fn is_public(&self) -> bool {
+        !self.is_reserved()
     }
 }
 
@@ -85,6 +94,12 @@ impl From<(String, Option<String>)> for Tag {
 impl From<Tag> for (String, Option<String>) {
     fn from(tag: Tag) -> Self {
         (tag.key, tag.value)
+    }
+}
+
+impl From<Tag> for (String, Tag) {
+    fn from(tag: Tag) -> Self {
+        (tag.key.clone(), tag)
     }
 }
 
@@ -154,7 +169,7 @@ mod tests {
 
     #[rstest]
     fn it_fails_to_parse_a_reserved_key() {
-        for tag in RESERVED_KEYS {
+        for tag in reserved::ALL {
             let_assert!(Err(ParseError::Reserved(_)) = Tag::parse_public(tag));
         }
     }
