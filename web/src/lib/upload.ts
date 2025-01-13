@@ -38,7 +38,7 @@ export async function uploadFile(
 			const err = e as Error;
 
 			reportError(
-				{ error: "json_response", message: err.message },
+				{ error: "JSON_RESPONSE_ERROR", message: err.message },
 				localize("files-upload-failed", { file: file.name }),
 			);
 		}
