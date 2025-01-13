@@ -24,6 +24,9 @@ run *args:
 test *args:
     cargo nextest run {{ args }}
 
+watch-test *args:
+    bacon nextest {{ args }}
+
 fmt:
     cargo fmt
 
