@@ -14,3 +14,6 @@ fmt:
 clippy:
     cargo clippy --all-targets --all-features
 
+build-docker-image tag:
+    nix build .#docker-image
+    ./result -t {{ tag }} | docker load

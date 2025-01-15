@@ -28,6 +28,7 @@
           packages = rec {
             default = oxidrive;
             oxidrive = pkgs.callPackage ./. { };
+            docker-image = pkgs.callPackage ./nix/docker-image.nix { };
           };
 
           devShells.default = pkgs.mkShell {
@@ -36,6 +37,7 @@
             packages = with pkgs; [
               bacon
               bruno-cli
+              cosign
               cargo-machete
               cargo-mutants
               cargo-nextest
