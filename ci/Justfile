@@ -1,7 +1,6 @@
 default:
     @just --list --unsorted | grep -v '  default'
 
-
 test:
     cargo nextest run --profile=ci
 
@@ -14,6 +13,13 @@ fmt:
 clippy:
     cargo clippy --all-targets --all-features
 
-build-docker-image tag:
-    nix build .#docker-image
-    ./result -t {{ tag }} | docker load
+build-and-push-image image tag:
+    #!/usr/bin/sh
+    nix build .#oci-image
+    ./result > archive.tar.gz
+
+    commit="$(git rev-parse --short HEAD)"
+    src="docker-archive:./archive.tar.gz"
+
+    skopeo copy "$src" "docker://{{ image }}:$commit"
+    skopeo copy "$src" "docker://{{ image }}:{{ tag }}"

@@ -55,6 +55,8 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - run: nix flake check
+
       - name: Run tests
         run: nix develop --command just ci/test
         env:
@@ -82,6 +84,8 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - run: nix flake check
+
       - name: Check formatting
         run: nix develop --command just ci/fmt
 
@@ -95,6 +99,8 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - run: nix flake check
+
       - name: Check for issues
         run: nix develop --command just ci/clippy
 
@@ -108,6 +114,8 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - run: nix flake check
+
       - name: Configure SQLite database
         run: echo "DATABASE_URL=sqlite://$(mktemp -d)/oxidrive.db" >> $GITHUB_ENV
       - run: nix develop --command cargo build

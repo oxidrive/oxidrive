@@ -10,7 +10,7 @@
     };
   };
 
-  outputs = inputs @ { flake-parts, rust-overlay, ... }:
+  outputs = inputs @ { self, flake-parts, rust-overlay, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } rec {
       imports = [
       ];
@@ -28,7 +28,11 @@
           packages = rec {
             default = oxidrive;
             oxidrive = pkgs.callPackage ./. { };
-            docker-image = pkgs.callPackage ./nix/docker-image.nix { };
+            oci-image = pkgs.callPackage ./nix/oci-image.nix {
+              inherit pkgs oxidrive;
+
+              revision = self.rev or self.dirtyRev or null;
+            };
           };
 
           devShells.default = pkgs.mkShell {
@@ -44,6 +48,7 @@
               clang
               just
               mold
+              skopeo
               sqlx-cli
               toolchain
               nodejs_20

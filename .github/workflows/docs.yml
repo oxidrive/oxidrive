@@ -37,6 +37,8 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - run: nix flake check
+
       - run: npm ci
       - name: Lint
         run: nix develop --command just docs/lint --reporter=github
@@ -51,6 +53,8 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - run: nix flake check
+
       - run: npm ci
       - name: Lint
         run: nix develop --command just docs/build
