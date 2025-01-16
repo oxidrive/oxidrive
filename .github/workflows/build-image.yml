@@ -39,7 +39,7 @@ jobs:
       - name: Sign image
         if: github.ref == 'refs/heads/main'
         run: |
-          cat ${XDG_RUNTIME_DIR}/containers/auth.json > ~/.docker/config.json
+          cp ${XDG_RUNTIME_DIR}/containers/auth.json ~/.docker/config.json
           nix develop --command cosign sign --yes --key env://COSIGN_PRIVATE_KEY ghcr.io/${{ github.repository }}@${{ steps.build.outputs.digest }}
         env:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}

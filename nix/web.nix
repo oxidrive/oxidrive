@@ -6,11 +6,22 @@
 let
   manifest = lib.importTOML ../Cargo.toml;
   meta = manifest.workspace.package;
+
+  excluded = [
+    "e2e/"
+    "biome.json"
+    "Justfile"
+    "Cargo.toml"
+    "*.rs"
+    "playwright.config.ts"
+  ];
+
+  src = pkgs.nix-gitignore.gitignoreSource excluded (lib.cleanSource ../web);
 in
 buildNpmPackage {
   pname = "oxidrive-web";
   version = meta.version;
-  src = lib.cleanSource ../web;
+  inherit src;
 
   nativeBuildInputs = with pkgs; [
     nodejs_20
