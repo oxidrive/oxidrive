@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
+    collection::jobs::RefreshCollections,
     content_type,
     file::{
         self, ByIdError, ByNameError, DownloadFileError, FileContents, FileId, FileMetadata,
@@ -13,18 +14,26 @@ use futures::{Stream, StreamExt, TryStreamExt};
 use oxidrive_auth::account::{Account, AccountId};
 use oxidrive_paginate::{Paginate, Slice};
 use oxidrive_search::QueryParseError;
+use oxidrive_workers::Dispatch;
 
 #[derive(Clone)]
 pub struct Files {
     metadata: Arc<dyn FileMetadata>,
     contents: Arc<dyn FileContents>,
+
+    refresh_collection: Dispatch<RefreshCollections>,
 }
 
 impl Files {
-    pub fn new(files: Arc<dyn FileMetadata>, contents: Arc<dyn FileContents>) -> Self {
+    pub fn new(
+        files: Arc<dyn FileMetadata>,
+        contents: Arc<dyn FileContents>,
+        refresh_collection: Dispatch<RefreshCollections>,
+    ) -> Self {
         Self {
             metadata: files,
             contents,
+            refresh_collection,
         }
     }
 
@@ -59,7 +68,8 @@ impl Files {
         C: Stream<Item = Result<Bytes, E>> + Unpin + Send,
         E: std::error::Error + Send + Sync + 'static,
     {
-        let (content, content_type) = content_type::detect_from_stream(content).await;
+        let (content, content_type) =
+            content_type::detect_from_stream(&meta.file_name, content).await;
 
         let mut file = match self
             .metadata
@@ -81,6 +91,21 @@ impl Files {
         file.set_size(size);
 
         let file = self.metadata.save(file).await?;
+
+        if let Err(err) = self
+            .refresh_collection
+            .dispatch(RefreshCollections {
+                owner_id: file.owner_id,
+            })
+            .await
+        {
+            tracing::error!(
+                error = %err,
+                account_id = %file.owner_id,
+                file_id = %file.id,
+                "failed to queue RefreshCollections job",
+            );
+        }
 
         Ok(file)
     }

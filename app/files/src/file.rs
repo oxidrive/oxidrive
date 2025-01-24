@@ -1,10 +1,11 @@
 use std::collections::HashMap;
+use std::str::FromStr;
 
 use oxidrive_auth::account::AccountId;
 use oxidrive_domain::make_uuid_type;
 
 mod content;
-mod store;
+pub(crate) mod store;
 
 pub use content::*;
 pub use store::*;
@@ -91,7 +92,7 @@ impl File {
     }
 
     fn default_tags(file: &File) -> Tags {
-        HashMap::from_iter(
+        let mut tags = HashMap::from_iter(
             [
                 tag!("{}:{}", tag::reserved::NAME, file.name),
                 tag!("{}:{}", tag::reserved::CONTENT_TYPE, file.content_type),
@@ -99,7 +100,19 @@ impl File {
             ]
             .into_iter()
             .map(|tag| (tag.key.clone(), tag)),
-        )
+        );
+
+        if let Some(ext) = std::path::PathBuf::from_str(&file.name)
+            .ok()
+            .as_ref()
+            .and_then(|p| p.extension())
+            .and_then(|ext| ext.to_str())
+        {
+            let tag = tag!("{}:{}", tag::reserved::FILE_EXT, ext);
+            tags.insert(tag.key.clone(), tag);
+        }
+
+        tags
     }
 }
 
@@ -176,8 +189,6 @@ mod tests {
             tag!("size:0"),
             tag!("added"),
         ]);
-
-        dbg!(&file.tags);
 
         check!(file.tags.get(NAME) == Some(&name));
         check!(file.tags.get(CONTENT_TYPE) == Some(&content_type));

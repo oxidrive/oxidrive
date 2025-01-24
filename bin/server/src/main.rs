@@ -2,10 +2,11 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
+use oxidrive::ServerModule;
 use oxidrive_auth::{Auth, AuthModule, CreateAccountError};
 use oxidrive_config::Config;
 use oxidrive_database::{self as database, Database, DatabaseModule};
-use oxidrive_files::{self as files, file::FileContents, FilesModule};
+use oxidrive_files::{self as files, FilesModule};
 use oxidrive_telemetry as telemetry;
 use oxidrive_web::{self as web, Server, WebModule};
 
@@ -38,6 +39,7 @@ pub enum Command {
         if_not_exists: bool,
     },
     Server,
+    Worker,
 }
 
 impl Command {
@@ -85,6 +87,9 @@ impl Command {
                 Ok(())
             }
             Command::Server => unreachable!(),
+            Command::Worker => {
+                todo!("workers")
+            }
         }
     }
 }
@@ -135,23 +140,8 @@ fn bootstrap(cfg: FullConfig) -> app::App {
         .add(cfg.server)
         .add(cfg.storage)
         .mount_and_hook(DatabaseModule)
+        .mount_and_hook(ServerModule)
         .mount_and_hook(AuthModule)
         .mount(FilesModule)
         .mount(WebModule)
-        .hook(Startup)
-}
-
-struct Startup;
-
-#[app::async_trait]
-impl app::Hooks for Startup {
-    async fn after_start(&mut self, c: &app::di::Container) -> eyre::Result<()> {
-        let db = c.get::<Database>();
-        let contents = c.get::<Arc<dyn FileContents>>();
-
-        tracing::info!("using database {}", db.display_name());
-        tracing::info!("using storage {}", contents.display_name());
-
-        Ok(())
-    }
 }

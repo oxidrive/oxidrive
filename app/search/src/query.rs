@@ -1,3 +1,5 @@
+use std::{fmt::Display, str::FromStr};
+
 use pest::{iterators::Pairs, Parser};
 use pest_derive::Parser;
 
@@ -114,6 +116,14 @@ pub enum Filter {
     },
 }
 
+impl FromStr for Filter {
+    type Err = QueryParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        parse_query(s)
+    }
+}
+
 impl Filter {
     #[cfg(test)]
     fn tag<S: Into<String>>(key: S, value: Option<S>) -> Self {
@@ -124,10 +134,43 @@ impl Filter {
     }
 }
 
+impl Display for Filter {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::All => "*".fmt(f)?,
+            Self::Tag { key, value } => {
+                write!(f, "{key}")?;
+                if let Some(value) = value {
+                    write!(f, ":{value}")?;
+                }
+            }
+            Self::Op { lhs, op, rhs } => {
+                write!(f, "(")?;
+                lhs.fmt(f)?;
+                write!(f, " {op} ")?;
+                rhs.fmt(f)?;
+                write!(f, ")")?;
+            }
+        }
+
+        Ok(())
+    }
+}
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum Op {
     And,
     Or,
+}
+
+impl Display for Op {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::And => "AND",
+            Self::Or => "OR",
+        }
+        .fmt(f)
+    }
 }
 
 #[cfg(test)]
@@ -138,8 +181,8 @@ mod tests {
     use super::*;
 
     #[rstest]
-    #[case("*", Filter::All)]
-    #[case("", Filter::All)]
+    #[case("*", Filter::All, "*")]
+    #[case("", Filter::All, "*")]
     #[case("test hello:world example", Filter::Op {
         lhs: Box::new(Filter::Op {
             lhs: Box::new(Filter::tag("test", None)),
@@ -148,7 +191,7 @@ mod tests {
         }),
         op: Op::And,
         rhs: Box::new(Filter::tag("example", None)),
-    })]
+    }, "((test AND hello:world) AND example)")]
     #[case("test hello:world OR (a AND b)", Filter::Op {
         lhs: Box::new(Filter::Op {
             lhs: Box::new(Filter::tag("test", None)),
@@ -161,7 +204,7 @@ mod tests {
             op: Op::And,
             rhs: Box::new(Filter::tag("b", None)),
         }),
-    })]
+    }, "((test AND hello:world) OR (a AND b))")]
     #[case("test hello:world OR a AND b", Filter::Op {
         lhs: Box::new(Filter::Op {
             lhs: Box::new(Filter::tag("test", None)),
@@ -174,9 +217,14 @@ mod tests {
             op: Op::And,
             rhs: Box::new(Filter::tag("b", None)),
         }),
-    })]
-    fn it_parses_some_queries(#[case] q: &str, #[case] expected: Filter) {
+    }, "((test AND hello:world) OR (a AND b))")]
+    fn it_parses_some_queries(
+        #[case] q: &str,
+        #[case] expected: Filter,
+        #[case] to_string: String,
+    ) {
         let parsed = parse_query(q).unwrap();
         check!(parsed == expected);
+        check!(parsed.to_string() == to_string);
     }
 }

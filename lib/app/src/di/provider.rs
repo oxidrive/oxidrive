@@ -73,11 +73,22 @@ macro_rules! provider_fn (
 
                 $(
               let $param = c.get_opt::<$param>().cloned().or_else(|| {
+                  let debug_info = if cfg!(debug_assertions) {
+                      std::borrow::Cow::Owned(format!(r#"
+
+DEBUG: the available types are: {:?}
+
+"#, c))
+                  } else {
+                      "".into()
+                  };
+
                   missing.push(format!(
-                      "* could not resolve dependency {0} of {1} (provided by {2}). Make sure the provider for {0} has been added to the Container before {1}",
+                      "* could not resolve dependency {0} of {1} (provided by {2}). Make sure the provider for {0} has been added to the Container before {1}{3}",
                       std::any::type_name::<$param>(),
                       std::any::type_name::<T>(),
                       std::any::type_name::<F>(),
+                      debug_info,
                   ));
                   None
               });

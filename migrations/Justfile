@@ -6,25 +6,37 @@ add name:
       sqlx migrate add -r {{ name }} --source "$dir"; \
     done
 
-run:
+run: run-sqlite run-pg
+
+run-sqlite:
     #!/usr/bin/env bash
     set -e
 
     echo "==== migrating SQLite ===="
-    export DATABASE_URL=sqlite://../local/oxidrive.db
+    export DATABASE_URL=sqlite://../local/oxidrive.db?mode=rwc
     sqlx migrate run --source sqlite;
+
+run-pg:
+    #!/usr/bin/env bash
+    set -e
 
     echo "==== migrating PostgreSQL ===="
     export DATABASE_URL=postgres://oxidrive:oxidrive@localhost:5432/oxidrive
     sqlx migrate run --source postgres;
 
-revert:
+revert: revert-sqlite revert-pg
+
+revert-sqlite:
     #!/usr/bin/env bash
     set -e
 
     echo "==== reverting SQLite ===="
-    export DATABASE_URL=sqlite://../local/oxidrive.db
+    export DATABASE_URL=sqlite://../local/oxidrive.db?mode=rwc
     sqlx migrate revert --source sqlite;
+
+revert-pg:
+    #!/usr/bin/env bash
+    set -e
 
     echo "==== reverting PostgreSQL ===="
     export DATABASE_URL=postgres://oxidrive:oxidrive@localhost:5432/oxidrive

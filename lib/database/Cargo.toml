@@ -7,6 +7,8 @@ edition.workspace = true
 
 [dependencies]
 app = { workspace = true }
+oxidrive-paginate = { workspace = true }
+
 serde = { workspace = true }
 sqlx = { workspace = true, features = ["runtime-tokio"] }
 tracing = { workspace = true }

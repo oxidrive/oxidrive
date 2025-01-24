@@ -9,6 +9,7 @@ use sqlx::{
 use url::Url;
 
 pub mod migrate;
+pub mod paginate;
 
 pub use migrate::migrate;
 

@@ -16,17 +16,20 @@ app = { workspace = true }
 oxidrive-database = { workspace = true }
 oxidrive-domain = { workspace = true }
 oxidrive-paginate = { workspace = true }
+oxidrive-workers = { workspace = true }
 
 async-trait = { workspace = true }
 bytes = { workspace = true }
 futures = { workspace = true }
 infer = { workspace = true }
+mime_guess = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["fs"] }
 tokio-util = { workspace = true, features = ["codec"] }
+tracing = { workspace = true }
 uuid = { workspace = true }
 
 fake = { workspace = true, optional = true }

@@ -1,0 +1,22 @@
+meta {
+  name: Get Collection
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{server}}/api/v1/collections/:collection_id
+  body: none
+  auth: none
+}
+
+params:path {
+  collection_id: {{collection_id}}
+}
+
+body:json {
+  {
+    "name":"BYD",
+    "filter": "byd"
+  }
+}

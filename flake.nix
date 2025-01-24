@@ -32,6 +32,7 @@
               inherit pkgs oxidrive;
 
               revision = self.rev or self.dirtyRev or null;
+              created = builtins.substring 0 8 self.lastModifiedDate;
             };
           };
 

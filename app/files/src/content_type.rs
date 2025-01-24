@@ -12,7 +12,10 @@ static INFER: LazyLock<Infer> = LazyLock::new(|| {
     infer
 });
 
-pub async fn detect_from_stream<S, E>(stream: S) -> (impl Stream<Item = Result<Bytes, E>>, String)
+pub async fn detect_from_stream<S, E>(
+    name: &str,
+    stream: S,
+) -> (impl Stream<Item = Result<Bytes, E>>, String)
 where
     S: Stream<Item = Result<Bytes, E>> + Unpin,
     E: 'static,
@@ -22,27 +25,31 @@ where
     let s = Pin::new(&mut stream);
     let ct = async move {
         let buf = s.peek().await?.as_ref().ok()?;
-        Some(detect(buf))
+        detect(name, buf)
     }
     .await
-    .unwrap_or(DEFAULT_BINARY_TYPE)
-    .to_string();
+    .unwrap_or(DEFAULT_BINARY_TYPE.into());
 
     (stream, ct)
 }
 
-pub fn detect(content: &[u8]) -> &str {
-    match INFER.get(content) {
-        Some(typ) => typ.mime_type(),
-        None => DEFAULT_BINARY_TYPE,
+pub fn detect(name: &str, content: &[u8]) -> Option<String> {
+    if let Some(typ) = INFER.get(content) {
+        return Some(typ.mime_type().into());
     }
+
+    if String::from_utf8(content.to_vec()).is_ok() {
+        let typ = mime_guess::from_path(name).first_or_text_plain();
+        return Some(typ.essence_str().into());
+    }
+
+    None
 }
 
 fn is_svg(buf: &[u8]) -> bool {
     infer::text::is_xml(buf) && {
         let text = String::from_utf8_lossy(buf);
         let second_line = text.trim().lines().nth(1).unwrap();
-        eprintln!("checking whether {text} is an svg: {second_line}");
         second_line.starts_with("<svg")
     }
 }
@@ -55,8 +62,9 @@ mod tests {
     use super::*;
 
     #[rstest]
-    #[case::jpeg("image/jpeg", &[0xFF, 0xD8, 0xFF, 0xAA])]
+    #[case::jpeg("test.jpg", "image/jpeg", &[0xFF, 0xD8, 0xFF, 0xAA])]
     #[case::svg(
+        "test.svg",
         "text/svg",
         br#"
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
@@ -64,7 +72,21 @@ mod tests {
    version="1.1"
 "#
     )]
-    fn it_infers_the_content_type(#[case] expected: &str, #[case] content: &[u8]) {
-        check!(detect(content) == expected);
+    #[case::rust(
+        "test.rs",
+        "text/x-rust",
+        br#"
+use hello_world;
+
+fn main() {}
+"#
+    )]
+    #[case::text("test", "text/plain", b"Hello world!")]
+    fn it_infers_the_content_type(
+        #[case] name: &str,
+        #[case] expected: &str,
+        #[case] content: &[u8],
+    ) {
+        check!(detect(name, content).unwrap() == expected);
     }
 }

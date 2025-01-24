@@ -18,7 +18,8 @@
 			".svelte-kit/*",
 			"dist/*",
 			".astro/*",
-			"src/lib/openapi.ts"
+			"src/lib/openapi.ts",
+			"openapi.json"
 		]
 	},
 	"overrides": [

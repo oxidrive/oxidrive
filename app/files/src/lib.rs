@@ -1,5 +1,6 @@
 use std::{path::PathBuf, sync::Arc};
 
+use collection::CollectionsModule;
 use file::{FileContents, FileMetadata, FsFileContents, PgFileMetadata, SqliteFileMetadata};
 use oxidrive_database::Database;
 use serde::Deserialize;
@@ -8,6 +9,7 @@ pub use file::{ContentStreamError, File, FileId};
 pub use service::*;
 pub use tag::Tag;
 
+pub mod collection;
 mod content_type;
 pub mod file;
 mod service;
@@ -26,6 +28,7 @@ impl app::Module for FilesModule {
     fn mount(self: Box<Self>, c: &mut app::di::Context) {
         c.bind(metadata);
         c.bind(contents);
+        c.mount(CollectionsModule);
         c.bind(Files::new);
     }
 }

@@ -6,6 +6,7 @@ pub mod reserved {
     pub const NAME: &str = "name";
     pub const CONTENT_TYPE: &str = "content_type";
     pub const SIZE: &str = "size";
+    pub const FILE_EXT: &str = "ext";
 }
 
 const RESERVED_KEYWORDS: &[&str] = &["AND", "OR"];

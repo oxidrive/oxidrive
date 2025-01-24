@@ -23,18 +23,20 @@ macro_rules! make_uuid_type {
             }
         }
 
-        #[macro_export]
-        macro_rules! $macro_name {
-            ($uuid:literal) => {{
-                const OUTPUT: $typ = match $typ::try_parse($uuid) {
-                    Ok(u) => u,
-                    Err(_) => panic!("invalid uuid representation"),
-                };
-                OUTPUT
-            }};
-        }
+        pub(crate) mod macros {
+            #[macro_export]
+            macro_rules! $macro_name {
+                ($uuid:literal) => {{
+                    const OUTPUT: $typ = match $typ::try_parse($uuid) {
+                        Ok(u) => u,
+                        Err(_) => panic!("invalid uuid representation"),
+                    };
+                    OUTPUT
+                }};
+            }
 
-        pub(crate) use $macro_name;
+            pub(crate) use $macro_name;
+        }
 
         impl $typ {
             pub fn new() -> Self {
@@ -74,6 +76,12 @@ macro_rules! make_uuid_type {
         impl ::std::convert::From<$typ> for String {
             fn from(value: $typ) -> Self {
                 value.0.into()
+            }
+        }
+
+        impl ::std::convert::From<$typ> for ::uuid::Uuid {
+            fn from(value: $typ) -> Self {
+                value.0
             }
         }
     };

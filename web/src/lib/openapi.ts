@@ -20,6 +20,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/collections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["api::v1::collections::create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collections/{collection_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["api::v1::collections::get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["api::v1::collections::update"];
+        trace?: never;
+    };
     "/api/v1/files": {
         parameters: {
             query?: never;
@@ -116,9 +148,19 @@ export interface components {
             error: string;
             message: string;
         };
+        CollectionData: {
+            files: string[];
+            /** Format: uuid */
+            id: string;
+            name: string;
+        };
         CreateAccount: {
             password: string;
             username: string;
+        };
+        CreateCollection: {
+            filter: string;
+            name: string;
         };
         Cursor: string;
         FileData: {
@@ -143,6 +185,10 @@ export interface components {
             key: string;
             value?: string | null;
         };
+        UpdateCollection: {
+            filter?: string | null;
+            name?: string | null;
+        };
         UpdateTags: {
             tags: string[];
         };
@@ -162,6 +208,22 @@ export interface components {
             };
             content: {
                 "application/json": components["schemas"]["ApiError"];
+            };
+        };
+        CollectionCreated: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CollectionData"];
+            };
+        };
+        CollectionUpdated: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["CollectionData"];
             };
         };
         TagsUpdated: {
@@ -186,14 +248,19 @@ export interface components {
 }
 export type SchemaAccountInfo = components['schemas']['AccountInfo'];
 export type SchemaApiError = components['schemas']['ApiError'];
+export type SchemaCollectionData = components['schemas']['CollectionData'];
 export type SchemaCreateAccount = components['schemas']['CreateAccount'];
+export type SchemaCreateCollection = components['schemas']['CreateCollection'];
 export type SchemaCursor = components['schemas']['Cursor'];
 export type SchemaFileData = components['schemas']['FileData'];
 export type SchemaPageFileData = components['schemas']['Page_FileData'];
 export type SchemaTag = components['schemas']['Tag'];
+export type SchemaUpdateCollection = components['schemas']['UpdateCollection'];
 export type SchemaUpdateTags = components['schemas']['UpdateTags'];
 export type ResponseAccountCreated = components['responses']['AccountCreated'];
 export type ResponseApiError = components['responses']['ApiError'];
+export type ResponseCollectionCreated = components['responses']['CollectionCreated'];
+export type ResponseCollectionUpdated = components['responses']['CollectionUpdated'];
 export type ResponseTagsUpdated = components['responses']['TagsUpdated'];
 export type ResponseUploadCompleted = components['responses']['UploadCompleted'];
 export type $defs = Record<string, never>;
@@ -212,6 +279,65 @@ export interface operations {
         };
         responses: {
             201: components["responses"]["AccountCreated"];
+            "4XX": components["responses"]["ApiError"];
+            "5XX": components["responses"]["ApiError"];
+        };
+    };
+    "api::v1::collections::create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateCollection"];
+            };
+        };
+        responses: {
+            201: components["responses"]["CollectionCreated"];
+            "4XX": components["responses"]["ApiError"];
+            "5XX": components["responses"]["ApiError"];
+        };
+    };
+    "api::v1::collections::get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collection_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CollectionData"];
+                };
+            };
+            "4XX": components["responses"]["ApiError"];
+            "5XX": components["responses"]["ApiError"];
+        };
+    };
+    "api::v1::collections::update": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateCollection"];
+            };
+        };
+        responses: {
+            200: components["responses"]["CollectionUpdated"];
             "4XX": components["responses"]["ApiError"];
             "5XX": components["responses"]["ApiError"];
         };

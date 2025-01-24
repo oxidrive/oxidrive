@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use oxidrive_auth::account::AccountId;
+use oxidrive_database::paginate;
 use oxidrive_paginate::{Paginate, Slice};
 use oxidrive_search::Filter;
 use sqlx::{postgres::types::PgHstore, QueryBuilder};
@@ -144,35 +145,7 @@ where owner_id =
 
         push_search_query(&mut qb, filter);
 
-        let is_forward = paginate.is_forward();
-
-        match paginate {
-            Paginate::Forward { after, first } => {
-                let cursor = if after.is_empty() {
-                    Uuid::nil().to_string()
-                } else {
-                    after
-                };
-
-                qb.push(" and id::text >")
-                    .push_bind(cursor)
-                    .push(" order by lower(name) limit ")
-                    .push_bind(first as i64);
-            }
-
-            Paginate::Backward { before, last } => {
-                let cursor = if before.is_empty() {
-                    Uuid::max().to_string()
-                } else {
-                    before
-                };
-
-                qb.push(" and id::text < ")
-                    .push_bind(cursor)
-                    .push(" order by lower(name) limit ")
-                    .push_bind(last as i64);
-            }
-        }
+        paginate::postgres::push_query(&mut qb, &paginate, "lower(name)");
 
         let files: Vec<PgFile> = qb
             .build_query_as()
@@ -180,14 +153,7 @@ where owner_id =
             .await
             .map_err(SearchError::wrap)?;
 
-        let cursor = files.last().map(|f| f.id.to_string());
-
-        let slice = if is_forward {
-            Slice::new(files, cursor, None)
-        } else {
-            Slice::new(files, None, cursor)
-        }
-        .map(File::from);
+        let slice = paginate::to_slice(files, |f| f.id.to_string(), &paginate).map(File::from);
         Ok(slice)
     }
 }

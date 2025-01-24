@@ -23,6 +23,7 @@ oxidrive-database.path = "lib/database"
 oxidrive-domain.path = "lib/domain"
 oxidrive-paginate.path = "lib/paginate"
 oxidrive-telemetry.path = "lib/telemetry"
+oxidrive-workers.path = "lib/workers"
 
 oxidrive-web-assets.path = "web"
 

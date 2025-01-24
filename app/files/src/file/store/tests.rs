@@ -5,7 +5,7 @@ use oxidrive_auth::{
 };
 use oxidrive_paginate::Paginate;
 
-use crate::{file, FileId};
+use crate::{file, tag, File, FileId};
 
 use super::FileMetadata;
 
@@ -19,8 +19,38 @@ macro_rules! check_file {
     };
 }
 
-const FILE_ID_1: FileId = file::file_id!("019433e9-ffbb-7c8b-af6c-d4cb061fb919");
-const FILE_ID_2: FileId = file::file_id!("019433ea-5976-7982-bedb-760ad14d4c1a");
+pub const FILE_ID_1: FileId = file::macros::file_id!("019433e9-ffbb-7c8b-af6c-d4cb061fb919");
+pub const FILE_ID_2: FileId = file::macros::file_id!("019433ea-5976-7982-bedb-760ad14d4c1a");
+
+pub fn file_1() -> File {
+    let mut file = File {
+        id: FILE_ID_1,
+        owner_id: OWNER_ID,
+        name: "hello.txt".into(),
+        content_type: "text/plain".into(),
+        size: 0,
+        tags: Default::default(),
+    };
+
+    file.tags = File::default_tags(&file);
+    file.add_tag(tag!("file1"));
+    file
+}
+
+pub fn file_2() -> File {
+    let mut file = File {
+        id: FILE_ID_2,
+        owner_id: OWNER_ID,
+        name: "world.txt".into(),
+        content_type: "text/plain".into(),
+        size: 0,
+        tags: Default::default(),
+    };
+
+    file.tags = File::default_tags(&file);
+    file.add_tag(tag!("file2"));
+    file
+}
 
 const OWNER_ID: AccountId = account_id!("0194327d-becc-7ef3-809c-35dd09f62f45");
 

@@ -195,4 +195,4 @@ fn tag_matches(tag: &Tag, key: &String, value: Option<&String>) -> bool {
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

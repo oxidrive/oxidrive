@@ -42,6 +42,99 @@
         }
       }
     },
+    "/api/v1/collections": {
+      "post": {
+        "tags": [
+          "collections"
+        ],
+        "operationId": "api::v1::collections::create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCollection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/CollectionCreated"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
+    "/api/v1/collections/{collection_id}": {
+      "get": {
+        "tags": [
+          "files"
+        ],
+        "operationId": "api::v1::collections::get",
+        "parameters": [
+          {
+            "name": "collection_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionData"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "collections"
+        ],
+        "operationId": "api::v1::collections::update",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCollection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/CollectionUpdated"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
     "/api/v1/files": {
       "get": {
         "tags": [
@@ -291,6 +384,30 @@
           }
         }
       },
+      "CollectionData": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "files"
+        ],
+        "properties": {
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
       "CreateAccount": {
         "type": "object",
         "required": [
@@ -302,6 +419,21 @@
             "type": "string"
           },
           "username": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateCollection": {
+        "type": "object",
+        "required": [
+          "name",
+          "filter"
+        ],
+        "properties": {
+          "filter": {
+            "type": "string"
+          },
+          "name": {
             "type": "string"
           }
         }
@@ -419,6 +551,23 @@
           }
         }
       },
+      "UpdateCollection": {
+        "type": "object",
+        "properties": {
+          "filter": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "UpdateTags": {
         "type": "object",
         "required": [
@@ -451,6 +600,26 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/ApiError"
+            }
+          }
+        }
+      },
+      "CollectionCreated": {
+        "description": "",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CollectionData"
+            }
+          }
+        }
+      },
+      "CollectionUpdated": {
+        "description": "",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/CollectionData"
             }
           }
         }

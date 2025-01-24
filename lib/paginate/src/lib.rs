@@ -16,6 +16,14 @@ impl<T> Slice<T> {
         }
     }
 
+    pub fn empty() -> Self {
+        Self {
+            items: Default::default(),
+            next: None,
+            previous: None,
+        }
+    }
+
     pub fn map<O, Mapper: Fn(T) -> O>(self, mapper: Mapper) -> Slice<O> {
         Slice {
             items: self.items.into_iter().map(mapper).collect(),

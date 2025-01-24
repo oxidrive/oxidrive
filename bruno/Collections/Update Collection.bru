@@ -1,0 +1,22 @@
+meta {
+  name: Update Collection
+  type: http
+  seq: 3
+}
+
+patch {
+  url: {{server}}/api/v1/collections/:collection_id
+  body: json
+  auth: none
+}
+
+params:path {
+  collection_id: {{collection_id}}
+}
+
+body:json {
+  {
+    "name":"PDFs",
+    "filter": "pdf"
+  }
+}
