@@ -43,6 +43,30 @@
       }
     },
     "/api/v1/collections": {
+      "get": {
+        "tags": [
+          "collections"
+        ],
+        "operationId": "api::v1::collections::list",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_CollectionData"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      },
       "post": {
         "tags": [
           "collections"
@@ -469,6 +493,61 @@
             "items": {
               "$ref": "#/components/schemas/Tag"
             }
+          }
+        }
+      },
+      "Page_CollectionData": {
+        "type": "object",
+        "required": [
+          "items"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "files"
+              ],
+              "properties": {
+                "files": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "next": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Cursor"
+              }
+            ]
+          },
+          "previous": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Cursor"
+              }
+            ]
           }
         }
       },

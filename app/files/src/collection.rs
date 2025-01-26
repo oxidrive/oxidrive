@@ -1,7 +1,7 @@
 use std::{collections::HashSet, sync::Arc};
 
 use jobs::JobsModule;
-use oxidrive_auth::account::AccountId;
+use oxidrive_accounts::account::AccountId;
 use oxidrive_database::Database;
 use oxidrive_domain::make_uuid_type;
 use oxidrive_search::Filter;
@@ -52,7 +52,7 @@ impl Collection {
 #[cfg(any(test, feature = "fixtures"))]
 pub mod fixtures {
     use fake::Fake;
-    use oxidrive_auth::account::{fixtures::account, Account};
+    use oxidrive_accounts::account::{fixtures::account, Account};
     use rstest::fixture;
 
     use super::*;

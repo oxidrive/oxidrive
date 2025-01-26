@@ -9,7 +9,7 @@ use axum_extra::extract::{
     cookie::{Cookie, Expiration, Key},
     SignedCookieJar,
 };
-use oxidrive_auth::account::{Account, AccountId};
+use oxidrive_accounts::account::{Account, AccountId};
 
 use crate::state::AppState;
 

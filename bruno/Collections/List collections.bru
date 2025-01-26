@@ -1,0 +1,20 @@
+meta {
+  name: List collections
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{server}}/api/v1/collections
+  body: none
+  auth: none
+}
+
+vars:post-response {
+  collection_id: res.body.items[0].id
+}
+
+assert {
+  res.body.items.length: gte 1
+  res.status: eq 200
+}

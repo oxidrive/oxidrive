@@ -1,0 +1,10 @@
+entity Account {
+    id: String,
+};
+
+entity Workspace {    
+    owner: Account,
+};
+
+namespace Account {
+}

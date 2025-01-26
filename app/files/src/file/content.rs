@@ -3,7 +3,7 @@ use std::{borrow::Cow, collections::HashMap, sync::Arc};
 use async_trait::async_trait;
 use bytes::{Bytes, BytesMut};
 use futures::{stream::BoxStream, StreamExt, TryStreamExt};
-use oxidrive_auth::account::AccountId;
+use oxidrive_accounts::account::AccountId;
 use oxidrive_domain::make_error_wrapper;
 use tokio::sync::RwLock;
 

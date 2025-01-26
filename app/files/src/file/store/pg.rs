@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use oxidrive_auth::account::AccountId;
+use oxidrive_accounts::account::AccountId;
 use oxidrive_database::paginate;
 use oxidrive_paginate::{Paginate, Slice};
 use oxidrive_search::Filter;
@@ -25,7 +25,7 @@ impl PgFileMetadata {
 
 #[async_trait]
 impl FileMetadata for PgFileMetadata {
-    async fn by_id(&self, owner_id: AccountId, id: FileId) -> Result<Option<File>, ByIdError> {
+    async fn by_id(&self, id: FileId) -> Result<Option<File>, ByIdError> {
         let file: Option<PgFile> = sqlx::query_as(
             r#"
 select
@@ -36,11 +36,9 @@ select
   size,
   tags
 from files
-where owner_id = $1
-  and id = $2
+where id = $1
 "#,
         )
-        .bind(owner_id.as_uuid())
         .bind(id.as_uuid())
         .fetch_optional(&self.pool)
         .await
@@ -49,7 +47,7 @@ where owner_id = $1
         Ok(file.map(File::from))
     }
 
-    async fn by_name(
+    async fn by_owner_and_name(
         &self,
         owner_id: AccountId,
         file_name: &str,

@@ -2,8 +2,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use clap::{Parser, Subcommand};
-use oxidrive::ServerModule;
-use oxidrive_auth::{Auth, AuthModule, CreateAccountError};
+use oxidrive::{PoliciesModule, ServerModule};
+use oxidrive_accounts::{Auth, AuthModule, CreateAccountError};
 use oxidrive_config::Config;
 use oxidrive_database::{self as database, Database, DatabaseModule};
 use oxidrive_files::{self as files, FilesModule};
@@ -139,6 +139,7 @@ fn bootstrap(cfg: FullConfig) -> app::App {
         .add(cfg.database)
         .add(cfg.server)
         .add(cfg.storage)
+        .mount(PoliciesModule)
         .mount_and_hook(DatabaseModule)
         .mount_and_hook(ServerModule)
         .mount_and_hook(AuthModule)

@@ -6,7 +6,8 @@ documentation.workspace = true
 edition.workspace = true
 
 [dependencies]
-oxidrive-auth = { workspace = true }
+oxidrive-accounts = { workspace = true }
+oxidrive-authorization = { workspace = true }
 oxidrive-files = { workspace = true }
     
 app = { workspace = true }

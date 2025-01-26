@@ -130,3 +130,19 @@ jobs:
         with:
           paths: "bruno/results.xml"
 
+  policies:
+    if: github.event.pull_request.draft == false
+    name: Cedar Policies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - run: nix flake check
+
+      - name: Check policy formatting
+        run: nix develop --command just cedar-fmt check
+      - name: Validate policies against schema
+        run: nix develop --command just cedar-validate

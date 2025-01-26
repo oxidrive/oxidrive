@@ -1,0 +1,25 @@
+[package]
+name = "oxidrive-authorization"
+version.workspace = true
+authors.workspace = true
+documentation.workspace = true
+edition.workspace = true
+
+[dependencies]
+app = { workspace = true }
+oxidrive-database = { workspace = true }
+
+async-trait = { workspace = true }
+cedar-policy = { workspace = true }
+miette = { workspace = true, features = ["fancy"] }
+rust-embed = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true, features = ["sync"] }
+tracing = { workspace = true }
+
+[dev-dependencies]
+assert2 = { workspace = true }
+rstest = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

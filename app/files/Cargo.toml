@@ -6,10 +6,11 @@ documentation.workspace = true
 edition.workspace = true
 
 [features]
-fixtures = ["dep:fake", "dep:rstest", "oxidrive-auth/fixtures"]
+fixtures = ["dep:fake", "dep:rstest", "oxidrive-accounts/fixtures"]
 
 [dependencies]
-oxidrive-auth = { workspace = true }
+oxidrive-accounts = { workspace = true }
+oxidrive-authorization = { workspace = true }
 oxidrive-search = { workspace = true }
 
 app = { workspace = true }
@@ -23,6 +24,7 @@ bytes = { workspace = true }
 futures = { workspace = true }
 infer = { workspace = true }
 mime_guess = { workspace = true }
+rust-embed = { workspace = true, features = ["include-exclude"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
 sqlx = { workspace = true }
@@ -36,7 +38,7 @@ fake = { workspace = true, optional = true }
 rstest = { workspace = true, optional = true }
 
 [dev-dependencies]
-oxidrive-auth = { workspace = true, features = ["fixtures"] }
+oxidrive-accounts = { workspace = true, features = ["fixtures"] }
 
 assert2 = { workspace = true }
 fake = { workspace = true }

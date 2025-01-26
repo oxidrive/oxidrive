@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use oxidrive_auth::account::AccountId;
+use oxidrive_accounts::account::AccountId;
 use oxidrive_paginate::Paginate;
 use oxidrive_workers::{Dispatch, DispatchError, Job, Process};
 use serde::{Deserialize, Serialize};

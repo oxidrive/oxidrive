@@ -1,0 +1,16 @@
+entity Collection in Workspace {
+    id: String,
+    owner: Account,
+};
+
+namespace Collection {
+    action get appliesTo {
+        principal: Account,
+        resource: Collection,
+    };
+
+    action update appliesTo {
+        principal: Account,
+        resource: Collection,
+    };
+}

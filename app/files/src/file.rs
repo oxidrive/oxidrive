@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use oxidrive_auth::account::AccountId;
+use oxidrive_accounts::account::AccountId;
 use oxidrive_domain::make_uuid_type;
 
 mod content;
@@ -121,7 +121,7 @@ pub mod fixtures {
     use bytes::Bytes;
     use fake::Fake;
     use futures::Stream;
-    use oxidrive_auth::account::{fixtures::account, Account};
+    use oxidrive_accounts::account::{fixtures::account, Account};
     use rstest::fixture;
 
     use super::*;
@@ -148,7 +148,7 @@ mod tests {
     use assert2::check;
     use fake::Fake;
     use fixtures::file;
-    use oxidrive_auth::account::{fixtures::account, Account};
+    use oxidrive_accounts::account::{fixtures::account, Account};
     use rstest::rstest;
 
     use crate::tag::reserved::*;

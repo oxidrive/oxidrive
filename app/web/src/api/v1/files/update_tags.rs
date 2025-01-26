@@ -4,7 +4,9 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use oxidrive_files::{file::FileId, tag::ParseError, AddTagsError, Files};
+use oxidrive_accounts::auth::AccountEntity;
+use oxidrive_authorization::Authorizer;
+use oxidrive_files::{auth::FileEntity, file::FileId, tag::ParseError, AddTagsError, Files};
 use serde::Deserialize;
 use utoipa::{ToResponse, ToSchema};
 
@@ -26,18 +28,31 @@ use super::FileData;
 )]
 #[axum::debug_handler(state = AppState)]
 pub async fn handler(
+    State(authorizer): State<Authorizer>,
     State(files): State<Files>,
     CurrentUser(account): CurrentUser,
     Path(file_id): Path<FileId>,
     Json(body): Json<UpdateTags>,
 ) -> ApiResult<TagsUpdated> {
+    let Some(file) = files.metadata().by_id(file_id).await? else {
+        return Err(ApiError::not_found());
+    };
+
+    authorizer
+        .authorize(
+            &AccountEntity::from(&account),
+            "updateTags",
+            &FileEntity::from(&file),
+        )
+        .into_err::<ApiError>()?;
+
     let tags = body
         .tags
         .into_iter()
         .map(oxidrive_files::Tag::parse)
         .collect::<Result<Vec<_>, _>>()?;
 
-    let file = files.update_tags(account.id, file_id, tags).await?;
+    let file = files.update_tags(file, tags).await?;
 
     Ok(TagsUpdated(file.into()))
 }
@@ -65,8 +80,6 @@ impl From<ParseError> for ApiError {
 impl From<AddTagsError> for ApiError {
     fn from(err: AddTagsError) -> Self {
         match err {
-            AddTagsError::LoadFailed(err) => Self::new(err),
-            AddTagsError::FileNotFound => Self::not_found(),
             AddTagsError::SaveFileFailed(err) => Self::new(err),
         }
     }

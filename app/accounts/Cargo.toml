@@ -1,5 +1,5 @@
 [package]
-name = "oxidrive-auth"
+name = "oxidrive-accounts"
 version.workspace = true
 authors.workspace = true
 documentation.workspace = true
@@ -9,13 +9,17 @@ edition.workspace = true
 fixtures = ["dep:fake", "dep:rstest"]
 
 [dependencies]
+oxidrive-authorization = { workspace = true }
+
 app = { workspace = true }
 oxidrive-database = { workspace = true }
 oxidrive-domain = { workspace = true }
 
 argon2 = { workspace = true }
 async-trait = { workspace = true }
+cedar-policy = { workspace = true }
 rand = { workspace = true }
+rust-embed = { workspace = true, features = ["include-exclude"] }
 serde = { workspace = true }
 sqlx = { workspace = true }
 tracing = { workspace = true }

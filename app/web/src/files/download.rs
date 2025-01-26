@@ -8,7 +8,9 @@ use axum::{
 };
 use axum_extra::response::FileStream;
 use futures::Stream;
-use oxidrive_files::{DownloadError, File, Files};
+use oxidrive_accounts::auth::AccountEntity;
+use oxidrive_authorization::Authorizer;
+use oxidrive_files::{auth::FileEntity, file::ByNameError, DownloadError, File, Files};
 use serde::Deserialize;
 use utoipa::ToSchema;
 
@@ -34,12 +36,29 @@ use crate::{
 )]
 #[axum::debug_handler(state = AppState)]
 pub async fn handler(
+    State(authorizer): State<Authorizer>,
     State(files): State<Files>,
     CurrentUser(account): CurrentUser,
     Path(file_name): Path<String>,
     Query(DownloadQuery { force }): Query<DownloadQuery>,
 ) -> ApiResult<impl IntoResponse> {
-    let Some((file, body)) = files.download(&account, &file_name).await? else {
+    let Some(file) = files
+        .metadata()
+        .by_owner_and_name(account.id, &file_name)
+        .await?
+    else {
+        return Err(ApiError::not_found());
+    };
+
+    authorizer
+        .authorize(
+            &AccountEntity::from(&account),
+            "download",
+            &FileEntity::from(&file),
+        )
+        .into_err::<ApiError>()?;
+
+    let Some(body) = files.download(&account, &file).await? else {
         return Err(ApiError::not_found());
     };
 
@@ -84,6 +103,12 @@ where
         let body = FileStream::new(self.body).file_name(self.file.name);
 
         (headers, body).into_response()
+    }
+}
+
+impl From<ByNameError> for ApiError {
+    fn from(err: ByNameError) -> Self {
+        Self::new(err)
     }
 }
 

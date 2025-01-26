@@ -4,12 +4,18 @@ use axum::{
     response::IntoResponse,
     Json,
 };
-use oxidrive_files::collection::{self, CollectionId, Collections, UpdateCollectionError};
+use oxidrive_accounts::auth::AccountEntity;
+use oxidrive_authorization::Authorizer;
+use oxidrive_files::{
+    auth::CollectionEntity,
+    collection::{self, CollectionId, Collections, UpdateCollectionError},
+};
 use serde::Deserialize;
 use utoipa::{ToResponse, ToSchema};
 
 use crate::{
     api::error::{ApiError, ApiResult},
+    session::CurrentUser,
     state::AppState,
 };
 
@@ -24,12 +30,26 @@ use super::CollectionData;
 )]
 #[axum::debug_handler(state = AppState)]
 pub async fn handler(
+    State(authorizer): State<Authorizer>,
     State(collections): State<Collections>,
+    CurrentUser(account): CurrentUser,
     Path(id): Path<CollectionId>,
     Json(UpdateCollection { name, filter }): Json<UpdateCollection>,
 ) -> ApiResult<CollectionUpdated> {
+    let Some(collection) = collections.by_id(id).await? else {
+        return Err(ApiError::not_found());
+    };
+
+    authorizer
+        .authorize(
+            &AccountEntity::from(&account),
+            "get",
+            &CollectionEntity::from(&collection),
+        )
+        .into_err::<ApiError>()?;
+
     let collection = collections
-        .update(id, collection::UpdateCollection { name, filter })
+        .update(collection, collection::UpdateCollection { name, filter })
         .await?;
 
     Ok(CollectionUpdated(collection.into()))
@@ -58,8 +78,6 @@ impl From<UpdateCollectionError> for ApiError {
                 .status(StatusCode::BAD_REQUEST)
                 .error("INVALID_QUERY"),
             UpdateCollectionError::SaveFailed(err) => Self::new(err),
-            UpdateCollectionError::NotFound(_) => Self::new(err).status(StatusCode::NOT_FOUND),
-            UpdateCollectionError::LoadFailed(err) => Self::new(err),
         }
     }
 }

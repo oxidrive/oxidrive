@@ -6,7 +6,7 @@ use std::{
 use async_trait::async_trait;
 use bytes::{Buf, Bytes, BytesMut};
 use futures::{stream::BoxStream, StreamExt, TryStreamExt};
-use oxidrive_auth::account::AccountId;
+use oxidrive_accounts::account::AccountId;
 use tokio::{fs, io::AsyncWriteExt};
 use tokio_util::codec::{BytesCodec, FramedRead};
 

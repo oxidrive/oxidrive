@@ -5,7 +5,7 @@ use axum::{
     Form,
 };
 use axum_extra::extract::cookie::SignedCookieJar;
-use oxidrive_auth::{login::AuthenticationFailed, Auth};
+use oxidrive_accounts::{login::AuthenticationFailed, Auth};
 use serde::Deserialize;
 use url::Url;
 
@@ -104,7 +104,7 @@ impl From<AuthenticationFailed> for ApiError {
         match err {
             AuthenticationFailed::ByUsernameError(err) => Self::new(err),
             AuthenticationFailed::CredentialsError(err) => Self::new(err),
-            AuthenticationFailed::Unauthorized => Self::unauthorized(),
+            AuthenticationFailed::Unauthorized => Self::unauthenticated(),
         }
     }
 }

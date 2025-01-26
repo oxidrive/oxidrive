@@ -9,6 +9,7 @@ use login::Login;
 use oxidrive_database::Database;
 
 pub mod account;
+pub mod auth;
 pub mod login;
 
 mod setup;

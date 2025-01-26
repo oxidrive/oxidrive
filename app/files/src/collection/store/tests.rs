@@ -1,5 +1,5 @@
 use assert2::{assert, check};
-use oxidrive_auth::{account::Account, account_id};
+use oxidrive_accounts::{account::Account, account_id};
 use oxidrive_workers::Process;
 
 use crate::{

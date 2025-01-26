@@ -10,6 +10,7 @@ use crate::state::AppState;
 
 mod create;
 mod get;
+mod list;
 mod update;
 
 #[derive(OpenApi)]
@@ -18,7 +19,7 @@ pub struct CollectionsApi;
 
 pub fn routes() -> OpenApiRouter<AppState> {
     OpenApiRouter::new()
-        .routes(routes!(create::handler))
+        .routes(routes!(create::handler, list::handler))
         .routes(routes!(get::handler, update::handler))
 }
 

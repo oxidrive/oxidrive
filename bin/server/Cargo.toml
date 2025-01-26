@@ -7,7 +7,8 @@ edition.workspace = true
 default-run = "oxidrive"
 
 [dependencies]
-oxidrive-auth = { workspace = true }
+oxidrive-accounts = { workspace = true }
+oxidrive-authorization = { workspace = true }
 oxidrive-files = { workspace = true }
 oxidrive-web = { workspace = true }
 

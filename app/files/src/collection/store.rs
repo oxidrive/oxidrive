@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use async_trait::async_trait;
-use oxidrive_auth::account::AccountId;
+use oxidrive_accounts::account::AccountId;
 use oxidrive_domain::make_error_wrapper;
 use oxidrive_paginate::{Paginate, Slice};
 use tokio::sync::RwLock;

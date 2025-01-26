@@ -1,5 +1,5 @@
 use create::AccountCreated;
-use oxidrive_auth::account::Account;
+use oxidrive_accounts::account::Account;
 use serde::Serialize;
 use utoipa::{OpenApi, ToSchema};
 use utoipa_axum::{router::OpenApiRouter, routes};

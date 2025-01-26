@@ -1,5 +1,5 @@
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Form, Json};
-use oxidrive_auth::{Auth, CreateAccountError};
+use oxidrive_accounts::{Auth, CreateAccountError};
 use serde::Deserialize;
 use utoipa::{ToResponse, ToSchema};
 

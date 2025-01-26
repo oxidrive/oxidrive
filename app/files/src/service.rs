@@ -4,14 +4,14 @@ use crate::{
     collection::jobs::RefreshCollections,
     content_type,
     file::{
-        self, ByIdError, ByNameError, DownloadFileError, FileContents, FileId, FileMetadata,
-        SaveFileError, UploadFileError,
+        self, ByNameError, DownloadFileError, FileContents, FileMetadata, SaveFileError,
+        UploadFileError,
     },
     ContentStreamError, File, Tag,
 };
 use bytes::Bytes;
 use futures::{Stream, StreamExt, TryStreamExt};
-use oxidrive_auth::account::{Account, AccountId};
+use oxidrive_accounts::account::{Account, AccountId};
 use oxidrive_paginate::{Paginate, Slice};
 use oxidrive_search::QueryParseError;
 use oxidrive_workers::Dispatch;
@@ -44,23 +44,16 @@ impl Files {
     pub async fn download(
         &self,
         owner: &Account,
-        file_name: &str,
+        file: &File,
     ) -> Result<
-        Option<(
-            File,
-            impl Stream<Item = Result<Bytes, ContentStreamError>> + 'static,
-        )>,
+        Option<impl Stream<Item = Result<Bytes, ContentStreamError>> + 'static>,
         DownloadError,
     > {
-        let Some(file) = self.metadata.by_name(owner.id, file_name).await? else {
+        let Some(body) = self.contents.download(owner.id, &file.name).await? else {
             return Ok(None);
         };
 
-        let Some(body) = self.contents.download(owner.id, file_name).await? else {
-            return Ok(None);
-        };
-
-        Ok(Some((file, body)))
+        Ok(Some(body))
     }
 
     pub async fn upload<C, E>(&self, meta: UploadMetadata, content: C) -> Result<File, UploadError>
@@ -73,7 +66,7 @@ impl Files {
 
         let mut file = match self
             .metadata
-            .by_name(meta.owner_id, &meta.file_name)
+            .by_owner_and_name(meta.owner_id, &meta.file_name)
             .await?
         {
             Some(mut file) => {
@@ -110,19 +103,10 @@ impl Files {
         Ok(file)
     }
 
-    pub async fn update_tags<I>(
-        &self,
-        owner_id: AccountId,
-        file_id: FileId,
-        tags: I,
-    ) -> Result<File, AddTagsError>
+    pub async fn update_tags<I>(&self, mut file: File, tags: I) -> Result<File, AddTagsError>
     where
         I: IntoIterator<Item = Tag>,
     {
-        let Some(mut file) = self.metadata.by_id(owner_id, file_id).await? else {
-            return Err(AddTagsError::FileNotFound);
-        };
-
         file.set_tags(tags);
 
         let file = self.metadata.save(file).await?;
@@ -144,8 +128,6 @@ impl Files {
 
 #[derive(Debug, thiserror::Error)]
 pub enum DownloadError {
-    #[error("failed to load file by name")]
-    LoadFailed(#[from] ByNameError),
     #[error(transparent)]
     DownloadFailed(#[from] DownloadFileError),
 }
@@ -167,10 +149,6 @@ pub enum UploadError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum AddTagsError {
-    #[error("failed to load file by id")]
-    LoadFailed(#[from] ByIdError),
-    #[error("file does not exist")]
-    FileNotFound,
     #[error("failed to save file")]
     SaveFileFailed(#[from] SaveFileError),
 }

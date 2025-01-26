@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use oxidrive_auth::account::AccountId;
+use oxidrive_accounts::account::AccountId;
 use oxidrive_paginate::{Paginate, Slice};
 use oxidrive_search::QueryParseError;
 use oxidrive_workers::Dispatch;
@@ -61,13 +61,9 @@ impl Collections {
 
     pub async fn update(
         &self,
-        id: CollectionId,
+        mut collection: Collection,
         data: UpdateCollection,
     ) -> Result<Collection, UpdateCollectionError> {
-        let Some(mut collection) = self.collections.by_id(id).await? else {
-            return Err(UpdateCollectionError::NotFound(id));
-        };
-
         if let Some(name) = data.name {
             collection.name = name;
         }
@@ -109,10 +105,6 @@ pub struct UpdateCollection {
 
 #[derive(Debug, thiserror::Error)]
 pub enum UpdateCollectionError {
-    #[error("no collection found by id {0})")]
-    NotFound(CollectionId),
-    #[error(transparent)]
-    LoadFailed(#[from] ByIdError),
     #[error(transparent)]
     FilterParse(#[from] QueryParseError),
     #[error(transparent)]

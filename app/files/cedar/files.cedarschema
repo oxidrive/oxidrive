@@ -1,0 +1,21 @@
+entity File in Workspace {
+    id: String,
+    owner: Account,
+};
+
+namespace File {
+    action get appliesTo {
+        principal: Account,
+        resource: File,
+    };
+
+    action download appliesTo {
+        principal: Account,
+        resource: File,
+    };
+
+    action updateTags appliesTo {
+        principal: Account,
+        resource: File,
+    };
+}

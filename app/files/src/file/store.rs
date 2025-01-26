@@ -1,7 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use async_trait::async_trait;
-use oxidrive_auth::account::AccountId;
+use oxidrive_accounts::account::AccountId;
 use oxidrive_domain::make_error_wrapper;
 use oxidrive_paginate::{Paginate, Slice};
 use oxidrive_search::Filter;
@@ -36,9 +36,9 @@ pub trait FileMetadata: Send + Sync + 'static {
             .map_err(AllOwnedByError::wrap)
     }
 
-    async fn by_id(&self, owner_id: AccountId, id: FileId) -> Result<Option<File>, ByIdError>;
+    async fn by_id(&self, id: FileId) -> Result<Option<File>, ByIdError>;
 
-    async fn by_name(
+    async fn by_owner_and_name(
         &self,
         owner_id: AccountId,
         file_name: &str,
@@ -80,12 +80,12 @@ impl FileMetadata for InMemoryFileMetadata {
             .map_err(AllOwnedByError::wrap)
     }
 
-    async fn by_id(&self, owner_id: AccountId, id: FileId) -> Result<Option<File>, ByIdError> {
+    async fn by_id(&self, id: FileId) -> Result<Option<File>, ByIdError> {
         let inner = self.inner.read().await;
-        Ok(inner.get(&id).filter(|f| f.owner_id == owner_id).cloned())
+        Ok(inner.get(&id).cloned())
     }
 
-    async fn by_name(
+    async fn by_owner_and_name(
         &self,
         owner_id: AccountId,
         file_name: &str,

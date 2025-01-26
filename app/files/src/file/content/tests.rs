@@ -7,7 +7,7 @@ use crate::file;
 use super::FileContents;
 
 async fn upload_and_download_a_file<S: FileContents>(store: S) {
-    let owner = oxidrive_auth::account::fixtures::account();
+    let owner = oxidrive_accounts::account::fixtures::account();
     let file = file::fixtures::file(owner);
     let content = file::fixtures::content("hello world").boxed();
 

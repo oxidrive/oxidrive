@@ -14,7 +14,7 @@ pub fn init(cfg: &Config) {
     let env_filter = EnvFilter::try_from_env("OXIDRIVE_LOG")
         .or_else(|_| EnvFilter::try_from_default_env())
         .or_else(|_| EnvFilter::try_new(&cfg.log))
-        .unwrap();
+        .unwrap_or_else(|err| panic!("invalid logging filter: {err} ({err:?})"));
 
     tracing_subscriber::registry()
         .with(env_filter)

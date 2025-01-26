@@ -29,6 +29,27 @@ pre-commit:
             glob: "*.rs"
             run: cargo clippy --fix --allow-dirty --allow-staged
       
+    - name: "cedar"
+      group:
+        piped: true
+        jobs:
+          - name: "format"
+            glob: "*.cedar"
+            run: |
+              for file in {staged_files}; do
+                cedar format -p "$file" --write
+              done
+          - name: "validate"
+            glob: "*.{cedar,cedarschema}"
+            run: |
+              schema=$(mktemp XXXXX.cedarschema --tmpdir)
+              find . -name "*.cedarschema" -exec sh -c "cat {} >> $schema" \;
+              
+              for file in $(echo {staged_files}); do
+                if [[ "$file" == *.cedar ]]; then
+                  cedar validate -s "$schema" -p "$file" --deny-warnings
+                fi
+              done
 
     # nixpkgs-fmt:
     #   glob: "*.nix"

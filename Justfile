@@ -27,7 +27,7 @@ test *args:
 watch-test *args:
     bacon nextest {{ args }}
 
-fmt:
+fmt: cedar-fmt
     cargo fmt
 
 clippy:
@@ -48,3 +48,16 @@ generate-openapi-types *args:
 
 generate-openapi: generate-openapi-schema generate-openapi-types
 
+cedar-fmt mode="write":
+    for file in $(find . -name "*.cedar"); do \
+      cedar format -p "$file" --{{ mode }}; \
+    done
+
+cedar-validate:
+    #!/usr/bin/env sh
+    schema=$(mktemp XXXXX.cedarschema --tmpdir)
+    find . -name "*.cedarschema" -exec sh -c "cat {} >> $schema" \;
+
+    for file in $(find . -name "*.cedar"); do
+      cedar validate -s "$schema" -p "$file" --deny-warnings
+    done

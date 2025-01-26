@@ -46,6 +46,7 @@
               cargo-machete
               cargo-mutants
               cargo-nextest
+              cedar
               clang
               just
               mold

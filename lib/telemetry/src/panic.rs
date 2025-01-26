@@ -24,10 +24,16 @@ fn log_with_tracing(
     stack: std::backtrace::Backtrace,
     location: &Location<'_>,
 ) {
+    let message = info
+        .payload()
+        .downcast_ref::<String>()
+        .cloned()
+        .unwrap_or_else(|| info.to_string());
+
     tracing::error!(target: TARGET,
         panic = true,
         error.kind = "Panic",
-        error.message = %info,
+        error.message = message,
         error.stack = %stack,
         error.column = location.column(),
         error.line = location.line(),
@@ -41,8 +47,14 @@ fn log_with_eprintln(
     stack: std::backtrace::Backtrace,
     location: &Location<'_>,
 ) {
+    let message = info
+        .payload()
+        .downcast_ref::<String>()
+        .cloned()
+        .unwrap_or_else(|| info.to_string());
+
     let line = JsonLine {
-        error: &format!("{info}"),
+        error: &message,
         stack: &format!("{stack}"),
         line: location.line(),
         column: location.column(),

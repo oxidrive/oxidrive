@@ -4,6 +4,7 @@ use std::{
 };
 
 use axum::{http::StatusCode, response::IntoResponse, Json};
+use oxidrive_authorization::Authorized;
 use serde::Serialize;
 use utoipa::{openapi::Content, ToResponse, ToSchema};
 
@@ -44,9 +45,18 @@ impl ApiError {
         }
     }
 
-    pub fn unauthorized() -> Self {
+    pub fn unauthenticated() -> Self {
         Self {
             status: StatusCode::UNAUTHORIZED,
+            message: "authentication required".into(),
+            error: Some("UNAUTHENTICATED".into()),
+            details: HashMap::default(),
+        }
+    }
+
+    pub fn unauthorized() -> Self {
+        Self {
+            status: StatusCode::FORBIDDEN,
             message: "access denied".into(),
             error: Some("UNAUTHORIZED".into()),
             details: HashMap::default(),
@@ -119,5 +129,11 @@ impl<'r> ToResponse<'r> for ApiError {
                 .build()
                 .into(),
         )
+    }
+}
+
+impl From<Authorized> for ApiError {
+    fn from(_: Authorized) -> Self {
+        Self::unauthorized()
     }
 }

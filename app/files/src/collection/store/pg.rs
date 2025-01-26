@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 use async_trait::async_trait;
-use oxidrive_auth::account::AccountId;
+use oxidrive_accounts::account::AccountId;
 use oxidrive_database::paginate;
 use oxidrive_paginate::{Paginate, Slice};
 use sqlx::{Executor, Postgres, QueryBuilder};

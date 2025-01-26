@@ -9,6 +9,7 @@ pub use file::{ContentStreamError, File, FileId};
 pub use service::*;
 pub use tag::Tag;
 
+pub mod auth;
 pub mod collection;
 mod content_type;
 pub mod file;

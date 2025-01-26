@@ -27,7 +27,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        get?: never;
+        get: operations["api::v1::collections::list"];
         put?: never;
         post: operations["api::v1::collections::create"];
         delete?: never;
@@ -170,6 +170,16 @@ export interface components {
             size: number;
             tags: components["schemas"]["Tag"][];
         };
+        Page_CollectionData: {
+            items: {
+                files: string[];
+                /** Format: uuid */
+                id: string;
+                name: string;
+            }[];
+            next?: null | components["schemas"]["Cursor"];
+            previous?: null | components["schemas"]["Cursor"];
+        };
         Page_FileData: {
             items: {
                 content_type: string;
@@ -253,6 +263,7 @@ export type SchemaCreateAccount = components['schemas']['CreateAccount'];
 export type SchemaCreateCollection = components['schemas']['CreateCollection'];
 export type SchemaCursor = components['schemas']['Cursor'];
 export type SchemaFileData = components['schemas']['FileData'];
+export type SchemaPageCollectionData = components['schemas']['Page_CollectionData'];
 export type SchemaPageFileData = components['schemas']['Page_FileData'];
 export type SchemaTag = components['schemas']['Tag'];
 export type SchemaUpdateCollection = components['schemas']['UpdateCollection'];
@@ -279,6 +290,27 @@ export interface operations {
         };
         responses: {
             201: components["responses"]["AccountCreated"];
+            "4XX": components["responses"]["ApiError"];
+            "5XX": components["responses"]["ApiError"];
+        };
+    };
+    "api::v1::collections::list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Page_CollectionData"];
+                };
+            };
             "4XX": components["responses"]["ApiError"];
             "5XX": components["responses"]["ApiError"];
         };

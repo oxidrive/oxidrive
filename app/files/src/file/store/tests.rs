@@ -1,5 +1,5 @@
 use assert2::check;
-use oxidrive_auth::{
+use oxidrive_accounts::{
     account::{Account, AccountId},
     account_id,
 };
@@ -90,7 +90,7 @@ async fn store_and_load_file_by_id<S: FileMetadata>(store: S) {
     let stored = store.save(file.clone()).await.unwrap();
     check_file!(file, stored);
 
-    let loaded = store.by_id(owner.id, file.id).await.unwrap().unwrap();
+    let loaded = store.by_id(file.id).await.unwrap().unwrap();
     check_file!(file, loaded);
 }
 
@@ -102,7 +102,11 @@ async fn store_and_load_file_by_name<S: FileMetadata>(store: S) {
     let stored = store.save(file.clone()).await.unwrap();
     check_file!(file, stored);
 
-    let loaded = store.by_name(owner.id, &file.name).await.unwrap().unwrap();
+    let loaded = store
+        .by_owner_and_name(owner.id, &file.name)
+        .await
+        .unwrap()
+        .unwrap();
     check_file!(file, loaded);
 }
 
