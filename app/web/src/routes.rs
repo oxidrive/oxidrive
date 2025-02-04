@@ -10,12 +10,13 @@ use mime_guess::{
     mime::{APPLICATION_JSON, HTML, STAR, TEXT},
     Mime,
 };
+use tower_http::catch_panic::CatchPanicLayer;
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::{
-    api::{self, ApiDoc},
+    api::{self, error::handle_panic, ApiDoc},
     auth, files,
     state::AppState,
     ui, Config,
@@ -39,6 +40,7 @@ pub fn routes(cfg: &Config) -> Router<AppState> {
         .nest("/auth", auth::routes(cfg))
         .nest("/ui", ui::routes(cfg))
         .merge(SwaggerUi::new("/api/docs").url("/api/openapi.json", api))
+        .layer(CatchPanicLayer::custom(handle_panic))
 }
 
 #[axum::debug_handler]

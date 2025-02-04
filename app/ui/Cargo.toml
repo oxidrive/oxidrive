@@ -1,12 +1,10 @@
 [package]
-name = "oxidrive-web-assets"
+name = "oxidrive-ui"
 version.workspace = true
 authors.workspace = true
 documentation.workspace = true
 edition.workspace = true
 
-[features]
-build-assets = []
-
 [dependencies]
-rust-embed = { workspace = true }
+tracing = { workspace = true }
+vite-rs = { workspace = true }

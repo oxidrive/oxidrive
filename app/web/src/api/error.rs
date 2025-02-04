@@ -1,4 +1,5 @@
 use std::{
+    any::Any,
     collections::HashMap,
     fmt::{Debug, Display},
 };
@@ -136,4 +137,16 @@ impl From<Authorized> for ApiError {
     fn from(_: Authorized) -> Self {
         Self::unauthorized()
     }
+}
+
+pub fn handle_panic(err: Box<dyn Any + Send + 'static>) -> axum::response::Response {
+    let details = if let Some(s) = err.downcast_ref::<String>() {
+        s.clone()
+    } else if let Some(s) = err.downcast_ref::<&str>() {
+        s.to_string()
+    } else {
+        "Unknown panic message".to_string()
+    };
+
+    ApiError::new(details).error("UNEXPECTED").into_response()
 }

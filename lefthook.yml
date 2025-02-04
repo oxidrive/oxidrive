@@ -16,7 +16,7 @@ pre-commit:
           - name: biome-lint
             run: npx --no @biomejs/biome lint --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
           - name: check-types
-            run: just web/check
+            run: just check-node
 
     - name: "rust"
       group:
@@ -73,9 +73,9 @@ pre-commit:
         jobs:
         - name: openapi-schema
           glob: '*.rs'
-          run: just generate-openapi-schema
+          run: just openapi-generate-schema
 
         - name: openapi-types
           glob: openapi.json
-          run: just generate-openapi-types --check
-          fail_text: rerun 'just generate-openapi' and commit the updated files
+          run: just openapi-generate-types --check
+          fail_text: rerun 'just openapi-generate' and commit the updated files

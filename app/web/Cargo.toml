@@ -9,14 +9,19 @@ edition.workspace = true
 oxidrive-accounts = { workspace = true }
 oxidrive-authorization = { workspace = true }
 oxidrive-files = { workspace = true }
-    
+oxidrive-ui = { workspace = true }
+
 app = { workspace = true }
 oxidrive-paginate = { workspace = true }
 
-oxidrive-web-assets = { workspace = true }
-
 axum = { workspace = true, features = ["macros", "multipart"] }
-axum-extra = { workspace = true, features = ["typed-header", "cookie", "cookie-signed", "file-stream", "query"] }
+axum-extra = { workspace = true, features = [
+    "cookie",
+    "cookie-signed",
+    "file-stream",
+    "query",
+    "typed-header",
+] }
 base64 = { workspace = true }
 bytesize = { workspace = true, features = ["serde"] }
 futures = { workspace = true }
@@ -26,7 +31,11 @@ serde_json = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true, features = ["net"] }
 tower = { workspace = true, features = ["util"] }
-tower-http = { workspace = true, features = ["cors", "set-header"] }
+tower-http = { workspace = true, features = [
+    "catch-panic",
+    "cors",
+    "set-header",
+] }
 tower-surf = { workspace = true, features = ["axum"] }
 tracing = { workspace = true }
 url = { workspace = true }

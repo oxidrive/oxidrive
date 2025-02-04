@@ -2,7 +2,7 @@
 
 resolver = "2"
 
-members = ["app/*", "bin/*", "lib/*", "tools/*", "web"]
+members = ["app/*", "bin/*", "lib/*", "tools/*"]
 
 [workspace.package]
 version = "0.1.0"
@@ -17,6 +17,7 @@ oxidrive-authorization.path = "app/authorization"
 oxidrive-files.path = "app/files"
 oxidrive-search.path = "app/search"
 oxidrive-web.path = "app/web"
+oxidrive-ui.path = "app/ui"
 
 app.path = "lib/app"
 oxidrive-config.path = "lib/config"
@@ -26,7 +27,6 @@ oxidrive-paginate.path = "lib/paginate"
 oxidrive-telemetry.path = "lib/telemetry"
 oxidrive-workers.path = "lib/workers"
 
-oxidrive-web-assets.path = "web"
 
 # crates.io
 async-trait = "0.1"
@@ -80,3 +80,5 @@ utoipa = "5"
 utoipa-axum = "0.1"
 utoipa-swagger-ui = "8"
 uuid = { version = "1", features = ["v7", "serde"] }
+vite-rs = { git = "https://github.com/MatteoJoliveau/vite-rs", branch = "main", default-features = false }
+

@@ -39,7 +39,7 @@ const FilesView = $derived(view === "list" ? FilesList : FilesGrid);
 const { localize } = getFluentContext();
 
 function togglePreview(preview?: SchemaFileData) {
-     console.log(preview);
+	console.log(preview);
 	pushState("", { preview });
 }
 

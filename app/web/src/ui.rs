@@ -1,9 +1,9 @@
 use axum::{
-    http::{header, StatusCode, Uri},
+    http::{header, HeaderMap, StatusCode, Uri},
     response::{Html, IntoResponse, Response},
     Router,
 };
-use oxidrive_web_assets::Assets;
+use oxidrive_ui::Assets;
 
 use crate::{state::AppState, Config};
 
@@ -22,10 +22,26 @@ async fn static_handler(uri: Uri) -> impl IntoResponse {
     }
 
     match Assets::get(path) {
-        Some(content) => {
-            let mime = mime_guess::from_path(path).first_or_octet_stream();
+        Some(asset) => {
+            let mut headers = HeaderMap::with_capacity(3);
 
-            ([(header::CONTENT_TYPE, mime.as_ref())], content.data).into_response()
+            headers.insert(
+                header::CONTENT_TYPE,
+                header::HeaderValue::from_str(&asset.content_type).unwrap(),
+            );
+            headers.insert(
+                header::CONTENT_LENGTH,
+                header::HeaderValue::from_str(&asset.content_length.to_string()).unwrap(),
+            );
+
+            if let Some(last_modified) = asset.last_modified {
+                headers.insert(
+                    header::LAST_MODIFIED,
+                    header::HeaderValue::from_str(&last_modified.to_string()).unwrap(),
+                );
+            }
+
+            (headers, asset.bytes).into_response()
         }
         None => {
             if path.contains('.') {
@@ -39,7 +55,7 @@ async fn static_handler(uri: Uri) -> impl IntoResponse {
 
 fn index_html() -> Response {
     match Assets::get(INDEX_HTML) {
-        Some(content) => Html(content.data).into_response(),
+        Some(asset) => Html(asset.bytes).into_response(),
         None => not_found(),
     }
 }

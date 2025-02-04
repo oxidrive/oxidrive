@@ -13,6 +13,9 @@ use tower_http::cors::CorsLayer;
 use tower_surf::Surf;
 use utoipa::openapi::OpenApi;
 
+#[cfg(debug_assertions)]
+pub use oxidrive_ui::start_dev_server;
+
 mod cors;
 mod paginate;
 mod routes;

@@ -71,10 +71,11 @@ mod tests {
         let processor = TestJobProcessor::new(tx);
 
         let worker = Worker::new(queue.clone(), queue.clone(), processor);
+        let jobs = worker.dispatcher();
 
-        let worker = worker.start();
+        worker.start();
 
-        worker.dispatch(TestJob { a: 2, b: 2 }).await.unwrap();
+        jobs.dispatch(TestJob { a: 2, b: 2 }).await.unwrap();
 
         let result = tokio::time::timeout(timeout, rx.recv())
             .await

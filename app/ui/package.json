@@ -1,5 +1,5 @@
 {
-	"name": "oxidrive-web",
+	"name": "oxidrive-ui",
 	"private": true,
 	"type": "module",
 	"version": "0.1.0",
@@ -8,11 +8,12 @@
 		"start": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
-		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && biome check",
 		"test:unit": "vitest",
 		"test:e2e": "playwright test",
 		"format": "biome check --write .",
-		"lint": "biome ci"
+		"lint": "biome ci",
+		"lint:fix": "biome lint --write ."
 	},
 	"devDependencies": {
 		"@axe-core/playwright": "^4.9.0",

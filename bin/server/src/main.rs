@@ -126,6 +126,9 @@ async fn main() {
 async fn run(c: Arc<app::di::Container>) -> eyre::Result<()> {
     let server = c.get::<Server>();
 
+    #[cfg(debug_assertions)]
+    let _dev = oxidrive_web::start_dev_server();
+
     tracing::info!(
         "oxidrive server listening on http://{}",
         server.local_address()
