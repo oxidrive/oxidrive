@@ -169,12 +169,26 @@
           {
             "name": "search",
             "in": "query",
+            "description": "The OxiQL filter to search files for.\nMutually exclusive with `ids`",
             "required": false,
             "schema": {
               "type": [
                 "string",
                 "null"
               ]
+            }
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "description": "The list of File IDs to load. Non-existent IDs will be ignored.\nMutually exclusive with `search`",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
             }
           }
         ],
@@ -413,6 +427,7 @@
         "required": [
           "id",
           "name",
+          "filter",
           "files"
         ],
         "properties": {
@@ -422,6 +437,9 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "filter": {
+            "type": "string"
           },
           "id": {
             "type": "string",
@@ -509,6 +527,7 @@
               "required": [
                 "id",
                 "name",
+                "filter",
                 "files"
               ],
               "properties": {
@@ -518,6 +537,9 @@
                     "type": "string",
                     "format": "uuid"
                   }
+                },
+                "filter": {
+                  "type": "string"
                 },
                 "id": {
                   "type": "string",

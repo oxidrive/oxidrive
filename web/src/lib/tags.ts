@@ -1,6 +1,6 @@
 import type { SchemaFileData, SchemaTag } from "$lib/openapi";
 
-export const SYSTEM_TAGS = ["name", "content_type", "size"];
+export const SYSTEM_TAGS = ["name", "content_type", "size", "ext"];
 
 export function excludeSystemTags(tag: SchemaTag | string): boolean {
 	const key = typeof tag === "string" ? tag : tag.key;

@@ -2,9 +2,12 @@
 
 WHITESPACE = _{ " " }
 
-reserved_char = _ { ":" | "(" | ")" }
+reserved_char = _ { "*" | ":" | "(" | ")" | "\"" }
 
 char = _{ !reserved_char ~ (LETTER | EMOJI | SYMBOL | PUNCTUATION) }
+
+mod = _ { not }
+    not = { "-" }
 
 op = _{ and | or }
 	and = { "AND" }
@@ -12,10 +15,15 @@ op = _{ and | or }
 
 all = ${ "*" }
 
-key = @{ !op ~ char+ }
-value = @{ !op ~ (char | ":")+ }
+match = ${ "*" }
+text = ${ (char | ":")+ }
 
-tag = ${key ~ ":" ~ value | key }
+key = @{ !op ~ char+ }
+value = @{ !op ~ (match | text)+ }
+
+quoted_value = @{ "\"" ~ value ~ (WHITESPACE? ~ value)* ~ "\"" }
+
+tag = ${ mod? ~ (key ~ ":" ~ value | (key ~ ":" ~ quoted_value) | key) }
 
 tags = { tag+ }
 

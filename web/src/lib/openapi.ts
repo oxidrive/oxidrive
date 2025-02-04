@@ -150,6 +150,7 @@ export interface components {
         };
         CollectionData: {
             files: string[];
+            filter: string;
             /** Format: uuid */
             id: string;
             name: string;
@@ -173,6 +174,7 @@ export interface components {
         Page_CollectionData: {
             items: {
                 files: string[];
+                filter: string;
                 /** Format: uuid */
                 id: string;
                 name: string;
@@ -377,7 +379,12 @@ export interface operations {
     "api::v1::files::list": {
         parameters: {
             query?: {
+                /** @description The OxiQL filter to search files for.
+                 *     Mutually exclusive with `ids` */
                 search?: string | null;
+                /** @description The list of File IDs to load. Non-existent IDs will be ignored.
+                 *     Mutually exclusive with `search` */
+                id?: string[];
             };
             header?: never;
             path?: never;

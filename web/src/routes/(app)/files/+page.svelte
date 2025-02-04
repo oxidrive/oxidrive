@@ -39,6 +39,7 @@ const FilesView = $derived(view === "list" ? FilesList : FilesGrid);
 const { localize } = getFluentContext();
 
 function togglePreview(preview?: SchemaFileData) {
+     console.log(preview);
 	pushState("", { preview });
 }
 
@@ -92,7 +93,7 @@ async function search(ev: Event) {
 
 		// biome-ignore lint/style/noNonNullAssertion: we checked that error is absent, so data cannot also be absent
 		files = data!;
-	}, 300);
+	}, 100);
 }
 </script>
 

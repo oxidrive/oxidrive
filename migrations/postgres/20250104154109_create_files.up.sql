@@ -9,3 +9,5 @@ create table files (
     tags hstore not null default '',
     unique(owner_id, name)
 );
+
+create index idx_files_tags on files using gin (tags);

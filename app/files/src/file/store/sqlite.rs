@@ -12,7 +12,7 @@ use crate::{
     Tag,
 };
 
-use super::{ByIdError, ByNameError, FileMetadata, SaveFileError, SearchError};
+use super::{AllOwnedByInError, ByIdError, ByNameError, FileMetadata, SaveFileError, SearchError};
 
 pub struct SqliteFileMetadata {
     pool: sqlx::SqlitePool,
@@ -26,6 +26,48 @@ impl SqliteFileMetadata {
 
 #[async_trait]
 impl FileMetadata for SqliteFileMetadata {
+    async fn all_owned_by_in(
+        &self,
+        owner_id: AccountId,
+        ids: &[FileId],
+        paginate: Paginate,
+    ) -> Result<Slice<File>, AllOwnedByInError> {
+        let mut qb = QueryBuilder::new(
+            r#"
+select distinct
+  id,
+  owner_id,
+  name,
+  content_type,
+  size,
+  tags
+from files
+where owner_id ="#,
+        );
+
+        qb.push_bind(owner_id.to_string());
+
+        qb.push(" and id in (");
+
+        let mut values = qb.separated(", ");
+        for id in ids {
+            values.push_bind(id.to_string());
+        }
+
+        values.push_unseparated(")");
+
+        paginate::sqlite::push_query(&mut qb, &paginate, "lower(name)");
+
+        let files: Vec<SqliteFile> = qb
+            .build_query_as()
+            .fetch_all(&self.pool)
+            .await
+            .map_err(AllOwnedByInError::wrap)?;
+
+        let slice = paginate::to_slice(files, |f| f.id.to_string(), &paginate).map(File::from);
+        Ok(slice)
+    }
+
     async fn by_id(&self, id: FileId) -> Result<Option<File>, ByIdError> {
         let file: Option<SqliteFile> = sqlx::query_as(
             r#"
@@ -164,14 +206,21 @@ fn traverse_query(qb: &mut QueryBuilder<'_, sqlx::Sqlite>, filter: Filter) {
         Filter::All => {
             qb.push("1=1");
         }
-        Filter::Tag { key, value } => match value {
-            Some(value) => {
+        Filter::Tag { key, values } => {
+            if values.is_empty() {
+                qb.push(format!("tags->>'{key}' is not null"));
+                return;
+            }
+
+            let value = values.to_string().replace('"', "");
+
+            if values.has_matches() {
+                let value = value.replace('*', "%");
+                qb.push(format!("tags->>'{key}' LIKE ")).push_bind(value);
+            } else {
                 qb.push(format!("tags->>'{key}' = ")).push_bind(value);
             }
-            None => {
-                qb.push(format!("tags->>'{key}' is not null"));
-            }
-        },
+        }
         Filter::Op { lhs, op, rhs } => {
             qb.push("(");
             traverse_query(qb, *lhs);
@@ -185,6 +234,13 @@ fn traverse_query(qb: &mut QueryBuilder<'_, sqlx::Sqlite>, filter: Filter) {
             qb.push("(");
             traverse_query(qb, *rhs);
             qb.push(") ");
+        }
+        Filter::Mod { modifier, inner } => {
+            match modifier {
+                oxidrive_search::Mod::Not => qb.push(" not "),
+            };
+
+            traverse_query(qb, *inner);
         }
     }
 }

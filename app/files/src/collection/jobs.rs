@@ -19,18 +19,28 @@ impl app::Module for JobsModule {
         c.bind(
             |queue: Arc<dyn JobQueue>,
              enqueue: Arc<dyn Enqueue>,
-             process: RefreshCollectionWorker| {
-                Worker::new(queue, enqueue, process).start()
-            },
+             process: RefreshCollectionWorker| { Worker::new(queue, enqueue, process) },
         );
+        c.bind(|worker: Worker<RefreshCollectionWorker>| worker.dispatcher());
 
         c.bind(RefreshCollectionsWorker::new);
         c.bind(
             |queue: Arc<dyn JobQueue>,
              enqueue: Arc<dyn Enqueue>,
              process: RefreshCollectionsWorker| {
-                Worker::new(queue, enqueue, process).start()
+                Worker::new(queue, enqueue, process)
             },
         );
+        c.bind(|worker: Worker<RefreshCollectionsWorker>| worker.dispatcher());
+    }
+}
+
+#[app::async_trait]
+impl app::Hooks for JobsModule {
+    async fn after_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+        c.get::<Worker<RefreshCollectionWorker>>().clone().start();
+        c.get::<Worker<RefreshCollectionsWorker>>().clone().start();
+
+        Ok(())
     }
 }

@@ -11,7 +11,8 @@ interface Props {
 	icon: IconDefinition;
 	label: string;
 	multiple?: boolean;
-	onclick: MouseEventHandler<HTMLButtonElement>;
+	onclick?: MouseEventHandler<HTMLButtonElement>;
+	to?: string;
 	children?: Snippet;
 }
 
@@ -21,8 +22,11 @@ const {
 	label,
 	multiple = false,
 	onclick,
+	to,
 	children,
 }: Props = $props();
+
+const tag = $derived(to ? "a" : "button");
 
 const {
 	elements: { trigger, menu, item },
@@ -47,9 +51,17 @@ const {
         {/if}
     </div>
 {:else}
-    <button class="fab {color}" title={label} aria-label={label} {onclick} use:melt={$item}>
+    <svelte:element this={tag}
+                    class="fab {color}"
+                    title={label}
+                    aria-label={label}
+                    role="button"
+                    tabindex="0"
+                    {onclick}
+                    href={to}
+                    use:melt={$item}>
         <FontAwesomeIcon {icon} />
 
         {@render children?.()}
-    </button>
+    </svelte:element>
 {/if}

@@ -147,6 +147,7 @@ mod tests {
     #[case("hello:world", "hello", Some("world"))]
     #[case("hello:world:what", "hello", Some("world:what"))]
     #[case("food:🥐", "food", Some("🥐"))]
+    #[case("hello:oxidrive tests", "hello", Some("oxidrive tests"))]
     fn it_parses_a_valid_tag_string(
         #[case] s: &str,
         #[case] key: &str,

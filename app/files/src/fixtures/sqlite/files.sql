@@ -5,7 +5,7 @@ insert into files (id, owner_id, name, content_type, size, tags) values
         'hello.txt',
         'text/plain',
         0,
-        json('{ "name": "hello.txt", "content_type": "text/plain", "ext": "txt", "file1": {} }')
+        json('{ "name": "hello.txt", "content_type": "text/plain", "ext": "txt", "size": "0", "file1": {} }')
     ),
     (
         '019433ea-5976-7982-bedb-760ad14d4c1a',
@@ -13,6 +13,6 @@ insert into files (id, owner_id, name, content_type, size, tags) values
         'world.txt',
         'text/plain',
         0,
-        json('{ "name": "world.txt", "content_type": "text/plain", "ext": "txt", "file2": {} }')
+        json('{ "name": "world.txt", "content_type": "text/plain", "ext": "txt", "size": "0", "file2": {} }')
     )
 ;

@@ -27,6 +27,7 @@ pub fn routes() -> OpenApiRouter<AppState> {
 struct CollectionData {
     id: Uuid,
     name: String,
+    filter: String,
     files: Vec<Uuid>,
 }
 
@@ -35,6 +36,7 @@ impl From<Collection> for CollectionData {
         Self {
             id: collection.id.as_uuid(),
             files: collection.files().map(|id| id.as_uuid()).collect(),
+            filter: collection.filter().to_string(),
             name: collection.name,
         }
     }

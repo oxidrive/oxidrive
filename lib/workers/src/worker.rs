@@ -38,9 +38,16 @@ where
         self
     }
 
-    pub fn start(self) -> Dispatch<P::Job> {
+    pub fn dispatcher(&self) -> Dispatch<P::Job> {
         let queue = self.enqueuer.clone();
 
+        Dispatch {
+            queue,
+            _jobs: PhantomData,
+        }
+    }
+
+    pub fn start(self) {
         tokio::spawn(async move {
             let worker = std::any::type_name::<P>();
             let job = P::Job::kind();
@@ -56,11 +63,6 @@ where
                 tokio::time::sleep(self.poll_timeout).await;
             }
         });
-
-        Dispatch {
-            queue,
-            _jobs: PhantomData,
-        }
     }
 
     async fn run_batch(&self) -> Result<(), RunError<P::Error>> {

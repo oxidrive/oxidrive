@@ -44,6 +44,7 @@ eyre = "0.6"
 fake = { version = "2.9", features = ["chrono", "uuid"] }
 figment = "0.10"
 futures = "0.3"
+globset = "0.4"
 infer = "0.16"
 miette = "7"
 mime_guess = "2"

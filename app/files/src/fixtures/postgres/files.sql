@@ -5,7 +5,7 @@ insert into files (id, owner_id, name, content_type, size, tags) values
         'hello.txt',
         'text/plain',
         0,
-        'name => hello.txt, content_type => text/plain, file1 => null'::hstore
+        'name => hello.txt, content_type => text/plain, file1 => null, size => 0, ext => txt'::hstore
     ),
     (
         '019433ea-5976-7982-bedb-760ad14d4c1a',
@@ -13,6 +13,6 @@ insert into files (id, owner_id, name, content_type, size, tags) values
         'world.txt',
         'text/plain',
         0,
-        'name => world.txt, content_type => text/plain, file2 => null'::hstore
+        'name => world.txt, content_type => text/plain, file2 => null, size => 0, ext => txt'::hstore
     )
 ;

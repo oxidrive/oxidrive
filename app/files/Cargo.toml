@@ -22,6 +22,7 @@ oxidrive-workers = { workspace = true }
 async-trait = { workspace = true }
 bytes = { workspace = true }
 futures = { workspace = true }
+globset = { workspace = true }
 infer = { workspace = true }
 mime_guess = { workspace = true }
 rust-embed = { workspace = true, features = ["include-exclude"] }

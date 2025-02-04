@@ -42,7 +42,7 @@ function formatSize(size: number): string {
             <input class="checkbox" type="checkbox" />
             <div class="info">
                 <span class="header">
-                    <button onclick={() => onpreview(file)} class="name truncate">
+                    <button onclick={() => onpreview($state.snapshot(file))} class="name truncate">
                         {file.name}
                     </button>
 

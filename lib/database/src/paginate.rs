@@ -71,7 +71,7 @@ pub mod sqlite {
             Paginate::Forward { after, first } => {
                 let limit = *first as i64;
 
-                qb.push(" and id >");
+                qb.push(" and id > ");
 
                 if after.is_empty() {
                     qb.push_bind(Uuid::nil().to_string());

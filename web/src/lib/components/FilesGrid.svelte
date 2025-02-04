@@ -34,7 +34,7 @@ const { ondelete, onpreview, files }: Props = $props();
 
 
             <div class="footer">
-                <button onclick={() => onpreview(file)}>
+                <button onclick={() => onpreview($state.snapshot(file))}>
                     {file.name}
                 </button>
                 <FileActions {file} {ondelete} />

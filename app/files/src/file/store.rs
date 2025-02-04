@@ -1,10 +1,11 @@
 use std::{collections::HashMap, sync::Arc};
 
 use async_trait::async_trait;
+use globset::Glob;
 use oxidrive_accounts::account::AccountId;
 use oxidrive_domain::make_error_wrapper;
 use oxidrive_paginate::{Paginate, Slice};
-use oxidrive_search::Filter;
+use oxidrive_search::{Filter, Values};
 use tokio::sync::RwLock;
 use uuid::Uuid;
 
@@ -19,6 +20,7 @@ pub use pg::*;
 pub use sqlite::*;
 
 make_error_wrapper!(AllOwnedByError);
+make_error_wrapper!(AllOwnedByInError);
 make_error_wrapper!(ByIdError);
 make_error_wrapper!(ByNameError);
 make_error_wrapper!(SaveFileError);
@@ -35,6 +37,13 @@ pub trait FileMetadata: Send + Sync + 'static {
             .await
             .map_err(AllOwnedByError::wrap)
     }
+
+    async fn all_owned_by_in(
+        &self,
+        owner_id: AccountId,
+        ids: &[FileId],
+        paginate: Paginate,
+    ) -> Result<Slice<File>, AllOwnedByInError>;
 
     async fn by_id(&self, id: FileId) -> Result<Option<File>, ByIdError>;
 
@@ -70,14 +79,19 @@ impl<const N: usize> From<[File; N]> for InMemoryFileMetadata {
 
 #[async_trait]
 impl FileMetadata for InMemoryFileMetadata {
-    async fn all_owned_by(
+    async fn all_owned_by_in(
         &self,
         owner_id: AccountId,
-        paginate: Paginate,
-    ) -> Result<Slice<File>, AllOwnedByError> {
-        self.search(owner_id, Filter::All, paginate)
-            .await
-            .map_err(AllOwnedByError::wrap)
+        ids: &[FileId],
+        params: Paginate,
+    ) -> Result<Slice<File>, AllOwnedByInError> {
+        let inner = self.inner.read().await;
+
+        let files = inner
+            .values()
+            .filter(|f| f.owner_id == owner_id && ids.contains(&f.id));
+
+        Ok(paginate(files, params))
     }
 
     async fn by_id(&self, id: FileId) -> Result<Option<File>, ByIdError> {
@@ -107,54 +121,17 @@ impl FileMetadata for InMemoryFileMetadata {
         &self,
         owner_id: AccountId,
         filter: Filter,
-        paginate: Paginate,
+        params: Paginate,
     ) -> Result<Slice<File>, SearchError> {
         let inner = self.inner.read().await;
         let mut filter = traverse(|_| true, filter);
 
-        let (id, limit, is_forward) = match paginate {
-            Paginate::Forward { after, first } => (
-                if after.is_empty() {
-                    Uuid::nil().to_string()
-                } else {
-                    after
-                },
-                first,
-                true,
-            ),
-            Paginate::Backward { before, last } => (
-                if before.is_empty() {
-                    Uuid::max().to_string()
-                } else {
-                    before
-                },
-                last,
-                false,
-            ),
-        };
-
-        let files: Vec<File> = inner
+        let files = inner
             .values()
             .filter(|f| f.owner_id == owner_id)
-            .filter(|file| filter(&file.tags))
-            .filter(|f| {
-                if is_forward {
-                    f.id.to_string() > id
-                } else {
-                    f.id.to_string() < id
-                }
-            })
-            .take(limit)
-            .cloned()
-            .collect();
+            .filter(|file| filter(&file.tags));
 
-        if is_forward {
-            let next = files.last().map(|f| f.id.to_string());
-            Ok(Slice::new(files, next, None))
-        } else {
-            let previous = files.first().map(|f| f.id.to_string());
-            Ok(Slice::new(files, None, previous))
-        }
+        Ok(paginate(files, params))
     }
 }
 
@@ -166,11 +143,8 @@ where
 {
     match filter {
         Filter::All => Box::new(current),
-        Filter::Tag { key, value } => Box::new(move |tags| {
-            current(tags)
-                && tags
-                    .values()
-                    .any(|tag| tag_matches(tag, &key, value.as_ref()))
+        Filter::Tag { key, values } => Box::new(move |tags| {
+            current(tags) && tags.values().any(|tag| tag_matches(tag, &key, &values))
         }),
         Filter::Op { lhs, op, rhs } => {
             let mut lhs = traverse(current.clone(), *lhs);
@@ -180,18 +154,85 @@ where
                 oxidrive_search::Op::Or => lhs(tags) || rhs(tags),
             })
         }
+        Filter::Mod { modifier, inner } => {
+            let mut inner = traverse(current, *inner);
+            Box::new(move |tags| match modifier {
+                oxidrive_search::Mod::Not => !inner(tags),
+            })
+        }
     }
 }
 
-fn tag_matches(tag: &Tag, key: &String, value: Option<&String>) -> bool {
+fn tag_matches(tag: &Tag, key: &String, values: &Values) -> bool {
     let key_matches = &tag.key == key;
-    let value_matches = match (tag.value.as_ref(), value) {
-        (_, None) => true,
-        (None, Some(_)) => false,
-        (Some(v1), Some(v2)) => v1 == v2,
+
+    // we only want to match on the key
+    if values.is_empty() {
+        return key_matches;
+    }
+
+    // the tag is key-only, so any value match is a failure
+    if tag.value.is_none() {
+        return false;
+    }
+
+    let value = tag.value.as_ref().unwrap();
+    let values_str = values.to_string();
+
+    // we match on the value itself, without globs
+    if !values.has_matches() {
+        return key_matches && value == &values_str;
+    }
+
+    let glob = Glob::new(&values_str).unwrap().compile_matcher();
+
+    key_matches && glob.is_match(value)
+}
+
+fn paginate<'a, I>(files: I, params: Paginate) -> Slice<File>
+where
+    I: Iterator<Item = &'a File>,
+{
+    let (id, limit, is_forward) = match params {
+        Paginate::Forward { after, first } => (
+            if after.is_empty() {
+                Uuid::nil().to_string()
+            } else {
+                after
+            },
+            first,
+            true,
+        ),
+        Paginate::Backward { before, last } => (
+            if before.is_empty() {
+                Uuid::max().to_string()
+            } else {
+                before
+            },
+            last,
+            false,
+        ),
     };
 
-    key_matches && value_matches
+    let files: Vec<File> = files
+        .filter(|f| {
+            if is_forward {
+                f.id.to_string() > id
+            } else {
+                f.id.to_string() < id
+            }
+        })
+        .take(limit)
+        .cloned()
+        .collect();
+
+    if is_forward {
+        let next = files.last().map(|f| f.id.to_string());
+        Slice::new(files, next, None)
+    } else {
+        let previous = files.first().map(|f| f.id.to_string());
+        Slice::new(files, None, previous)
+    }
 }
 
 #[cfg(test)]

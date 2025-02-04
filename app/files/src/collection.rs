@@ -47,6 +47,10 @@ impl Collection {
     {
         self.files.extend(files);
     }
+
+    pub fn filter(&self) -> &Filter {
+        &self.filter
+    }
 }
 
 #[cfg(any(test, feature = "fixtures"))]
@@ -79,5 +83,23 @@ fn store(database: Database) -> Arc<dyn CollectionStore> {
     match database {
         Database::Sqlite(pool) => Arc::new(SqliteCollectionStore::new(pool)),
         Database::Pg(pool) => Arc::new(PgCollectionStore::new(pool)),
+    }
+}
+
+#[app::async_trait]
+impl app::Hooks for CollectionsModule {
+    async fn before_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+        JobsModule.before_start(c).await?;
+        Ok(())
+    }
+
+    async fn after_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+        JobsModule.after_start(c).await?;
+        Ok(())
+    }
+
+    async fn on_shutdown(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+        JobsModule.on_shutdown(c).await?;
+        Ok(())
     }
 }

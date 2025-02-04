@@ -34,3 +34,9 @@
     accent-color: var(--oxi-primary-500);
     transform: scale(1.2);
 }
+
+.field .error {
+    font-size: var(--oxi-text-sm-font-size);
+    line-height: var(--oxi-text-sm-line-height);
+    color: var(--oxi-danger-500);
+}

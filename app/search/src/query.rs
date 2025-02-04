@@ -78,15 +78,40 @@ fn parse_filter(mut pairs: Pairs<Rule>) -> Filter {
 }
 
 fn parse_tag(mut pairs: Pairs<Rule>) -> Filter {
-    let key = pairs.next().unwrap().as_str().into();
+    let pair = pairs.next().unwrap();
 
-    let value = if pairs.peek().is_some_and(|p| p.as_rule() == Rule::value) {
-        pairs.next().map(|p| p.as_str().into())
-    } else {
-        None
+    let key = match pair.as_rule() {
+        Rule::not => return Filter::not(parse_tag(pairs)),
+        Rule::key => pair.as_str().into(),
+        unexpected => unreachable!(
+            "encountered unexpected rule {:?}({}) while parsing tag",
+            unexpected,
+            pair.as_str()
+        ),
     };
 
-    Filter::Tag { key, value }
+    let values = if pairs
+        .peek()
+        .is_some_and(|p| matches!(p.as_rule(), Rule::value | Rule::quoted_value))
+    {
+        let value = pairs.next().unwrap();
+
+        value
+            .into_inner()
+            .map(|pair| match pair.as_rule() {
+                Rule::text | Rule::r#match => pair.as_str().into(),
+                unexpected => unreachable!(
+                    "encountered unexpected rule {:?}({}) while parsing tag value",
+                    unexpected,
+                    pair.as_str()
+                ),
+            })
+            .collect()
+    } else {
+        Values::default()
+    };
+
+    Filter::Tag { key, values }
 }
 
 fn parse_tags(mut pairs: Pairs<Rule>) -> Filter {
@@ -107,12 +132,16 @@ pub enum Filter {
     All,
     Tag {
         key: String,
-        value: Option<String>,
+        values: Values,
     },
     Op {
         lhs: Box<Filter>,
         op: Op,
         rhs: Box<Filter>,
+    },
+    Mod {
+        modifier: Mod,
+        inner: Box<Filter>,
     },
 }
 
@@ -125,11 +154,18 @@ impl FromStr for Filter {
 }
 
 impl Filter {
+    fn not(inner: Self) -> Self {
+        Self::Mod {
+            modifier: Mod::Not,
+            inner: Box::new(inner),
+        }
+    }
+
     #[cfg(test)]
-    fn tag<S: Into<String>>(key: S, value: Option<S>) -> Self {
+    fn tag<K: Into<String>, S: Into<Value>, V: IntoIterator<Item = S>>(key: K, value: V) -> Self {
         Self::Tag {
             key: key.into(),
-            value: value.map(Into::into),
+            values: value.into_iter().map(Into::into).collect(),
         }
     }
 }
@@ -138,11 +174,16 @@ impl Display for Filter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::All => "*".fmt(f)?,
-            Self::Tag { key, value } => {
+            Self::Tag { key, values } => {
                 write!(f, "{key}")?;
-                if let Some(value) = value {
-                    write!(f, ":{value}")?;
+
+                if values.is_empty() {
+                    return Ok(());
                 }
+
+                write!(f, ":")?;
+
+                values.fmt(f)?;
             }
             Self::Op { lhs, op, rhs } => {
                 write!(f, "(")?;
@@ -151,9 +192,91 @@ impl Display for Filter {
                 rhs.fmt(f)?;
                 write!(f, ")")?;
             }
+            Self::Mod { modifier, inner } => write!(f, "{modifier}{inner}")?,
         }
 
         Ok(())
+    }
+}
+
+#[derive(Clone, Default, Debug, PartialEq, Eq)]
+pub struct Values(Vec<Value>);
+
+impl Values {
+    pub fn iter(&self) -> impl Iterator<Item = &Value> {
+        self.0.iter()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    pub fn has_matches(&self) -> bool {
+        self.iter().any(|value| value == &Value::Match)
+    }
+}
+
+impl IntoIterator for Values {
+    type Item = Value;
+
+    type IntoIter = std::vec::IntoIter<Value>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl FromIterator<Value> for Values {
+    fn from_iter<T: IntoIterator<Item = Value>>(iter: T) -> Self {
+        Self(iter.into_iter().collect())
+    }
+}
+
+impl Display for Values {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let value = self.0.iter().fold(String::new(), |mut s, value| {
+            match value {
+                Value::Text(value) => {
+                    if !s.ends_with('*') {
+                        s.push(' ')
+                    };
+
+                    s.push_str(value);
+                }
+                Value::Match => s.push('*'),
+            }
+            s
+        });
+
+        let value = value.trim();
+
+        if value.contains(' ') {
+            write!(f, r#""{value}""#)?;
+        } else {
+            write!(f, "{value}")?;
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Value {
+    Text(String),
+    Match,
+}
+
+impl<S> From<S> for Value
+where
+    String: From<S>,
+{
+    fn from(value: S) -> Self {
+        let value = String::from(value);
+
+        match value.as_str() {
+            "*" => Self::Match,
+            _ => Self::Text(value),
+        }
     }
 }
 
@@ -173,6 +296,20 @@ impl Display for Op {
     }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum Mod {
+    Not,
+}
+
+impl Display for Mod {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Not => "-",
+        }
+        .fmt(f)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use assert2::check;
@@ -183,41 +320,75 @@ mod tests {
     #[rstest]
     #[case("*", Filter::All, "*")]
     #[case("", Filter::All, "*")]
+    #[case("-test", Filter::not(Filter::tag("test", None::<String>)), "-test")]
     #[case("test hello:world example", Filter::Op {
         lhs: Box::new(Filter::Op {
-            lhs: Box::new(Filter::tag("test", None)),
+            lhs: Box::new(Filter::tag("test", None::<String>)),
             op: Op::And,
             rhs: Box::new(Filter::tag("hello", Some("world"))),
         }),
         op: Op::And,
-        rhs: Box::new(Filter::tag("example", None)),
+        rhs: Box::new(Filter::tag("example", None::<String>)),
     }, "((test AND hello:world) AND example)")]
     #[case("test hello:world OR (a AND b)", Filter::Op {
         lhs: Box::new(Filter::Op {
-            lhs: Box::new(Filter::tag("test", None)),
+            lhs: Box::new(Filter::tag("test", None::<String>)),
             op: Op::And,
             rhs: Box::new(Filter::tag("hello", Some("world"))),
         }),
         op: Op::Or,
         rhs: Box::new(Filter::Op {
-            lhs: Box::new(Filter::tag("a", None)),
+            lhs: Box::new(Filter::tag("a", None::<String>)),
             op: Op::And,
-            rhs: Box::new(Filter::tag("b", None)),
+            rhs: Box::new(Filter::tag("b", None::<String>)),
         }),
     }, "((test AND hello:world) OR (a AND b))")]
     #[case("test hello:world OR a AND b", Filter::Op {
         lhs: Box::new(Filter::Op {
-            lhs: Box::new(Filter::tag("test", None)),
+            lhs: Box::new(Filter::tag("test", None::<String>)),
             op: Op::And,
             rhs: Box::new(Filter::tag("hello", Some("world"))),
         }),
         op: Op::Or,
         rhs: Box::new(Filter::Op {
-            lhs: Box::new(Filter::tag("a", None)),
+            lhs: Box::new(Filter::tag("a", None::<String>)),
             op: Op::And,
-            rhs: Box::new(Filter::tag("b", None)),
+            rhs: Box::new(Filter::tag("b", None::<String>)),
         }),
     }, "((test AND hello:world) OR (a AND b))")]
+    #[case("test -hello:world OR a AND b", Filter::Op {
+        lhs: Box::new(Filter::Op {
+            lhs: Box::new(Filter::tag("test", None::<String>)),
+            op: Op::And,
+            rhs: Box::new(Filter::not(Filter::tag("hello", Some("world")))),
+        }),
+        op: Op::Or,
+        rhs: Box::new(Filter::Op {
+            lhs: Box::new(Filter::tag("a", None::<String>)),
+            op: Op::And,
+            rhs: Box::new(Filter::tag("b", None::<String>)),
+        }),
+    }, "((test AND -hello:world) OR (a AND b))")]
+    #[case(
+        r#"hello:"test with spaces""#,
+        Filter::tag("hello", ["test", "with", "spaces"]),
+        r#"hello:"test with spaces""#
+    )]
+    #[case(
+        "hello:start*",
+        Filter::tag("hello", ["start".into(), Value::Match]),
+        "hello:start*"
+    )]
+    #[case(
+        "hello:midd*le",
+        Filter::tag("hello", ["midd".into(), Value::Match, "le".into()]),
+        "hello:midd*le"
+    )]
+    #[case(
+        "hello:*end",
+        Filter::tag("hello", [Value::Match, "end".into()]),
+        "hello:*end"
+    )]
     fn it_parses_some_queries(
         #[case] q: &str,
         #[case] expected: Filter,

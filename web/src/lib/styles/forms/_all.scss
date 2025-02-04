@@ -29,3 +29,11 @@
         gap: var(--oxi-size-2xs);
     }
 }
+
+.field {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-evenly;
+    width: 100%;
+    gap: var(--oxi-size-xs);
+}

@@ -25,12 +25,12 @@ impl FsFileContents {
         }
     }
 
-    fn path_for(&self, owner_id: AccountId, file_name: &str) -> PathBuf {
+    fn path_for(&self, owner_id: AccountId, file_name: impl AsRef<Path>) -> PathBuf {
         self.root_dir.join(owner_id.to_string()).join(file_name)
     }
 
     fn path_for_file(&self, file: &File) -> PathBuf {
-        self.path_for(file.owner_id, &file.name)
+        self.path_for(file.owner_id, file.id.to_string())
     }
 }
 

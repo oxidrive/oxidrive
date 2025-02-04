@@ -64,8 +64,10 @@ html {
     }
 }
 
-
-
 .text-center {
     text-align: center;
+}
+
+.title {
+    @extend .text-2xl;
 }

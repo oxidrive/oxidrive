@@ -1,4 +1,4 @@
-use assert2::check;
+use assert2::{check, let_assert};
 use oxidrive_accounts::{
     account::{Account, AccountId},
     account_id,
@@ -10,7 +10,7 @@ use crate::{file, tag, File, FileId};
 use super::FileMetadata;
 
 macro_rules! check_file {
-    ($expected:ident, $actual:ident) => {
+    ($expected:expr, $actual:expr) => {
         check!($expected.id == $actual.id);
         check!($expected.owner_id == $actual.owner_id);
         check!($expected.name == $actual.name);
@@ -61,7 +61,7 @@ fn owner() -> Account {
     }
 }
 
-async fn list_all_files<S: FileMetadata>(store: S) {
+async fn list_all_owned_files<S: FileMetadata>(store: S) {
     let owner = owner();
 
     let forward = store
@@ -80,6 +80,14 @@ async fn list_all_files<S: FileMetadata>(store: S) {
     let backward_ids = backward.items.iter().map(|f| f.id).collect::<Vec<_>>();
 
     check!(forward_ids == backward_ids);
+
+    let files = store
+        .all_owned_by_in(owner.id, &[FILE_ID_1], Paginate::default())
+        .await
+        .unwrap();
+    check!(files.len() == 1);
+    let_assert!(Some(file) = files.items.first());
+    check_file!(file, file_1());
 }
 
 async fn store_and_load_file_by_id<S: FileMetadata>(store: S) {
@@ -117,6 +125,9 @@ const SEARCH_FILES_CASES: &[(&str, &[FileId])] = &[
     ("name:world.txt", &[FILE_ID_2]),
     ("file1", &[FILE_ID_1]),
     ("file2", &[FILE_ID_2]),
+    ("-file1", &[FILE_ID_2]),
+    ("-file2", &[FILE_ID_1]),
+    ("name:*.txt", &[FILE_ID_1, FILE_ID_2]),
 ];
 
 async fn search_files<S: FileMetadata>(store: S) {
@@ -147,13 +158,8 @@ mod inmemory {
 
     #[tokio::test]
     async fn it_lists_all_files() {
-        let owner = owner();
-
-        let store = InMemoryFileMetadata::from([
-            file::fixtures::file(owner.clone()),
-            file::fixtures::file(owner),
-        ]);
-        list_all_files(store).await;
+        let store = InMemoryFileMetadata::from([file_1(), file_2()]);
+        list_all_owned_files(store).await;
     }
 
     #[tokio::test]
@@ -197,7 +203,7 @@ mod pg {
     )]
     async fn it_lists_all_files(pool: sqlx::PgPool) {
         let store = PgFileMetadata::new(pool);
-        list_all_files(store).await;
+        list_all_owned_files(store).await;
     }
 
     #[sqlx::test(
@@ -247,7 +253,7 @@ mod sqlite {
     )]
     async fn it_lists_all_files(pool: sqlx::SqlitePool) {
         let store = SqliteFileMetadata::new(pool);
-        list_all_files(store).await;
+        list_all_owned_files(store).await;
     }
 
     #[sqlx::test(

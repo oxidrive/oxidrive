@@ -16,6 +16,7 @@ pub mod file;
 mod service;
 pub mod tag;
 
+#[derive(Clone)]
 pub struct FilesModule;
 
 #[derive(Clone, Debug, Deserialize)]
@@ -44,5 +45,23 @@ fn metadata(database: Database) -> Arc<dyn FileMetadata> {
 fn contents(cfg: Config) -> Arc<dyn FileContents> {
     match cfg {
         Config::FileSystem { root_folder_path } => Arc::new(FsFileContents::new(root_folder_path)),
+    }
+}
+
+#[app::async_trait]
+impl app::Hooks for FilesModule {
+    async fn before_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+        CollectionsModule.before_start(c).await?;
+        Ok(())
+    }
+
+    async fn after_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+        CollectionsModule.after_start(c).await?;
+        Ok(())
+    }
+
+    async fn on_shutdown(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+        CollectionsModule.on_shutdown(c).await?;
+        Ok(())
     }
 }

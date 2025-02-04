@@ -143,6 +143,6 @@ fn bootstrap(cfg: FullConfig) -> app::App {
         .mount_and_hook(DatabaseModule)
         .mount_and_hook(ServerModule)
         .mount_and_hook(AuthModule)
-        .mount(FilesModule)
+        .mount_and_hook(FilesModule)
         .mount(WebModule)
 }
