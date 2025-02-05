@@ -82,3 +82,7 @@ utoipa-swagger-ui = "8"
 uuid = { version = "1", features = ["v7", "serde"] }
 vite-rs = { git = "https://github.com/MatteoJoliveau/vite-rs", branch = "main", default-features = false }
 
+[profile.release]
+opt-level = 2
+lto = "thin"
+strip = "debuginfo"
