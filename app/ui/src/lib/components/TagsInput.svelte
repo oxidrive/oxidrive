@@ -29,9 +29,8 @@ const {
 	editable: false,
 	addOnPaste: true,
 	add: (tag) => {
-		const t = tag.replaceAll(" ", "");
-		onadd(split(t));
-		return t;
+		onadd(split(tag));
+		return tag;
 	},
 	remove: (tag) => {
 		onremove(split(tag.value));

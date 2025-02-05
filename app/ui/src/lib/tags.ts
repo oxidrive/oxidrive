@@ -22,7 +22,10 @@ export function concat(tag: SchemaTag | string): string {
 export function split(tag: SchemaTag | string): SchemaTag {
 	if (typeof tag !== "string") return tag;
 
-	const [key, value] = tag.split(":");
+	const [key, ...values] = tag.split(":");
+
+	const value = values.length > 0 ? values.join(":") : null;
+
 	return { key, value };
 }
 

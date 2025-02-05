@@ -3,7 +3,6 @@ use oxidrive_accounts::{Auth, CreateAccountError};
 use serde::Deserialize;
 use utoipa::{ToResponse, ToSchema};
 
-
 use super::AccountInfo;
 
 #[utoipa::path(
