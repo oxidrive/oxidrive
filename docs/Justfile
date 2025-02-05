@@ -17,4 +17,4 @@ lint *args: setup
     npm run lint -- {{ args }}
 
 setup:
-    [ -d ./node_modules ] || npm ci
+    [ -d ../node_modules ] || npm ci
