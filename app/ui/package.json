@@ -23,7 +23,7 @@
 		"@nubolab-ffwd/svelte-fluent": "^1.0.3",
 		"@playwright/test": "1.47.0",
 		"@sveltejs/adapter-static": "^3.0.8",
-		"@sveltejs/kit": "^2.5.27",
+		"@sveltejs/kit": "^2.17.1",
 		"@sveltejs/vite-plugin-svelte": "^4.0.0",
 		"@types/node": "^20.12.7",
 		"caniuse-lite": "^1.0.30001614",

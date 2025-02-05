@@ -25,7 +25,7 @@ buildNpmPackage {
 
   nodejs = pkgs.nodejs_20;
 
-  npmDepsHash = "sha256-uhSA8bFjR8Vt15BUmEXlmZMfWHkxnPR+IeL8VjHIkYc=";
+  npmDepsHash = "sha256-/LbAvlIAGrcKt7Cyb9KXWse6nL0EdF9ZQ8HIY9W0RhI=";
   npmFlags = "--workspace app/ui";
 
   installPhase = ''
