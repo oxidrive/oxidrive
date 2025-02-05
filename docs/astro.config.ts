@@ -1,5 +1,6 @@
 import starlight from "@astrojs/starlight";
 import { defineConfig } from "astro/config";
+import starlightOpenAPI, { openAPISidebarGroups } from "starlight-openapi";
 
 // biome-ignore lint/suspicious/noExplicitAny: Starlight does not provide a public type for a single Head element
 function icon(name: string, media: string): any {
@@ -58,6 +59,7 @@ export default defineConfig({
 					label: "Reference",
 					autogenerate: { directory: "reference" },
 				},
+				...openAPISidebarGroups,
 			],
 			defaultLocale: "root",
 			locales: {
@@ -72,6 +74,15 @@ export default defineConfig({
 			components: {
 				SiteTitle: "./src/components/SiteTitle.astro",
 			},
+			plugins: [
+				starlightOpenAPI([
+					{
+						base: "api",
+						label: "Oxidrive API",
+						schema: "../openapi.json",
+					},
+				]),
+			],
 		}),
 	],
 	vite: {
