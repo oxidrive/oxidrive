@@ -17,7 +17,6 @@ use utoipa::ToSchema;
 use crate::{
     api::error::{ApiError, ApiResult},
     session::CurrentUser,
-    state::AppState,
 };
 
 #[utoipa::path(
@@ -34,7 +33,7 @@ use crate::{
     )),
     tags = ["files", "content"],
 )]
-#[axum::debug_handler(state = AppState)]
+#[axum::debug_handler(state = crate::state::AppState)]
 pub async fn handler(
     State(authorizer): State<Authorizer>,
     State(files): State<Files>,

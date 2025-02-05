@@ -3,9 +3,9 @@ use axum::http::StatusCode;
 use axum::response::{Redirect, Response};
 use axum::{http::HeaderMap, response::IntoResponse};
 
-use crate::{session::Session, state::AppState};
+use crate::session::Session;
 
-#[axum::debug_handler(state = AppState)]
+#[axum::debug_handler(state = crate::state::AppState)]
 pub async fn handler(headers: HeaderMap, session: Session) -> Response {
     // TODO: replace with this as soon as a new docs.rs/headers release is cut
     // let referer = headers

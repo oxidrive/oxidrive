@@ -9,7 +9,6 @@ use crate::{
     },
     paginate::{Page, PageParams},
     session::CurrentUser,
-    state::AppState,
 };
 
 #[utoipa::path(
@@ -19,7 +18,7 @@ use crate::{
     responses((status = OK, body = Page<CollectionData>)),
     tag = "collections",
 )]
-#[axum::debug_handler(state = AppState)]
+#[axum::debug_handler(state = crate::state::AppState)]
 pub async fn handler(
     State(collections): State<Collections>,
     CurrentUser(account): CurrentUser,

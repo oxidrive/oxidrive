@@ -16,7 +16,6 @@ use crate::{
         v1::files::FileData,
     },
     session::CurrentUser,
-    state::AppState,
 };
 
 #[utoipa::path(
@@ -27,7 +26,7 @@ use crate::{
     responses((status = 200, body = FileData)),
     tag = "files",
 )]
-#[axum::debug_handler(state = AppState)]
+#[axum::debug_handler(state = crate::state::AppState)]
 pub async fn handler(
     State(authorizer): State<Authorizer>,
     State(files): State<Files>,

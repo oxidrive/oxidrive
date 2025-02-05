@@ -9,9 +9,9 @@ use oxidrive_accounts::{login::AuthenticationFailed, Auth};
 use serde::Deserialize;
 use url::Url;
 
-use crate::{api::error::ApiError, session::Session, state::AppState};
+use crate::{api::error::ApiError, session::Session};
 
-#[axum::debug_handler(state = AppState)]
+#[axum::debug_handler(state = crate::state::AppState)]
 pub async fn handler(
     State(auth): State<Auth>,
     jar: SignedCookieJar,

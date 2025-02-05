@@ -13,7 +13,6 @@ use utoipa::{ToResponse, ToSchema};
 use crate::{
     api::error::{ApiError, ApiResult},
     session::CurrentUser,
-    state::AppState,
 };
 
 use super::FileData;
@@ -26,7 +25,7 @@ use super::FileData;
     responses((status = OK, response = TagsUpdated)),
     tag = "files",
 )]
-#[axum::debug_handler(state = AppState)]
+#[axum::debug_handler(state = crate::state::AppState)]
 pub async fn handler(
     State(authorizer): State<Authorizer>,
     State(files): State<Files>,

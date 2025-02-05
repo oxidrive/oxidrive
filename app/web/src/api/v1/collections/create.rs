@@ -6,7 +6,6 @@ use utoipa::{ToResponse, ToSchema};
 use crate::{
     api::error::{ApiError, ApiResult},
     session::CurrentUser,
-    state::AppState,
 };
 
 use super::CollectionData;
@@ -18,7 +17,7 @@ use super::CollectionData;
     responses((status = CREATED, response = CollectionCreated)),
     tag = "collections",
 )]
-#[axum::debug_handler(state = AppState)]
+#[axum::debug_handler(state = crate::state::AppState)]
 pub async fn handler(
     State(collections): State<Collections>,
     CurrentUser(account): CurrentUser,

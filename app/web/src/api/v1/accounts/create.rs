@@ -3,7 +3,6 @@ use oxidrive_accounts::{Auth, CreateAccountError};
 use serde::Deserialize;
 use utoipa::{ToResponse, ToSchema};
 
-use crate::state::AppState;
 
 use super::AccountInfo;
 
@@ -14,7 +13,7 @@ use super::AccountInfo;
     responses((status = CREATED, response = AccountCreated)),
     tag = "accounts",
 )]
-#[axum::debug_handler(state = AppState)]
+#[axum::debug_handler(state = crate::state::AppState)]
 pub async fn handler(
     State(auth): State<Auth>,
     Form(CreateAccount { username, password }): Form<CreateAccount>,
