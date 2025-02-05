@@ -7,15 +7,18 @@ pre-commit:
   jobs:
     - name: "js"
       group:
-        glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
         jobs:
           - name: biome-check 
+            glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
             run: npx --no @biomejs/biome check --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
           - name: biome-format
+            glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
             run: npx --no @biomejs/biome format --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
           - name: biome-lint
+            glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
             run: npx --no @biomejs/biome lint --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
           - name: check-types
+            glob: "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
             run: just check-node
 
     - name: "rust"
@@ -53,9 +56,9 @@ pre-commit:
 
     - name: nix
       group:
-        glob: "*.nix"
         jobs:
           - name: nix-flake-check
+            glob: "*.nix"
             run: nix flake check
 
     - name: links

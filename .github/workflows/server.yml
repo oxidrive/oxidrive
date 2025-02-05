@@ -60,6 +60,7 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@v7
       - uses: Swatinem/rust-cache@v2
       - run: nix flake check
+      - run: mkdir -p app/ui/build
 
       - name: Run tests
         run: nix develop --command just test-rust
@@ -80,7 +81,7 @@ jobs:
 
   check:
     if: github.event.pull_request.draft == false
-    name: Fmt
+    name: Check
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -122,6 +123,7 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@v7
       - uses: Swatinem/rust-cache@v2
       - run: nix flake check
+      - run: mkdir -p app/ui/build
 
       - name: Check for issues
         run: nix develop --command just lint-rust
