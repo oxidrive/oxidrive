@@ -1,17 +1,8 @@
 default:
     @just --list --unsorted | grep -v '  default'
 
-test:
-    cargo nextest run --profile=ci
-
 test-mutations:
     cargo mutants -vV --in-place --all-features
-
-fmt:
-    cd .. && cargo fmt --check
-
-clippy:
-    cargo clippy --all-targets --all-features
 
 build-and-push-image image tag:
     #!/usr/bin/sh

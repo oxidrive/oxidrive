@@ -21,6 +21,9 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
+  NEXTEST_PROFILE: ci
 
 concurrency:
   group: server-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -55,10 +58,11 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - uses: Swatinem/rust-cache@v2
       - run: nix flake check
 
       - name: Run tests
-        run: nix develop --command just ci/test
+        run: nix develop --command just test-rust
         env:
           DATABASE_URL: 'postgres://oxidrive:oxidrive@localhost:5432/oxidrive?sslmode=disable'
       - name: Test Summary
@@ -74,6 +78,22 @@ jobs:
       #     name: mutants.out
       #     path: mutants.out
 
+  check:
+    if: github.event.pull_request.draft == false
+    name: Fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - uses: Swatinem/rust-cache@v2
+      - run: nix flake check
+
+      - name: Check code
+        run: nix develop --command just check-rust
+
   fmt:
     if: github.event.pull_request.draft == false
     name: Fmt
@@ -84,10 +104,11 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - uses: Swatinem/rust-cache@v2
       - run: nix flake check
 
       - name: Check formatting
-        run: nix develop --command just ci/fmt
+        run: nix develop --command just format-rust --check
 
   clippy:
     if: github.event.pull_request.draft == false
@@ -99,10 +120,11 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - uses: Swatinem/rust-cache@v2
       - run: nix flake check
 
       - name: Check for issues
-        run: nix develop --command just ci/clippy
+        run: nix develop --command just lint-rust
 
   api-test:
     if: github.event.pull_request.draft == false
@@ -114,6 +136,7 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - uses: Swatinem/rust-cache@v2
       - run: nix flake check
 
       - name: Configure SQLite database
@@ -140,9 +163,10 @@ jobs:
         with:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - uses: Swatinem/rust-cache@v2
       - run: nix flake check
 
       - name: Check policy formatting
         run: nix develop --command just format-cedar check
       - name: Validate policies against schema
-        run: nix develop --command just lint-cedar
+        run: nix develop --command just check-cedar

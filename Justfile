@@ -77,8 +77,8 @@ format: format-rust format-node format-cedar
 
 [group('format')]
 [group('rust')]
-format-rust:
-    cargo fmt
+format-rust *args:
+    cargo fmt {{ args }}
 
 [group('format')]
 [group('node')]
