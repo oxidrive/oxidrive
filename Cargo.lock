@@ -2173,6 +2173,7 @@ dependencies = [
 name = "oxidrive-ui"
 version = "0.1.0"
 dependencies = [
+ "rust-embed",
  "tracing",
  "vite-rs",
 ]

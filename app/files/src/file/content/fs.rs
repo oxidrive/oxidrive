@@ -42,11 +42,10 @@ impl FileContents for FsFileContents {
 
     async fn download(
         &self,
-        owner_id: AccountId,
-        file_name: &str,
+        file: &File,
     ) -> Result<Option<BoxStream<'static, Result<Bytes, ContentStreamError>>>, DownloadFileError>
     {
-        let path = self.path_for(owner_id, file_name);
+        let path = self.path_for_file(file);
 
         let file = match fs::File::open(path).await {
             Ok(file) => file,
@@ -122,11 +121,7 @@ mod tests {
 
         tokio::fs::write(&path, b"hello world").await.unwrap();
 
-        let body = contents
-            .download(file.owner_id, &file.name)
-            .await
-            .unwrap()
-            .unwrap();
+        let body = contents.download(&file).await.unwrap().unwrap();
 
         let body: BytesMut = body.try_collect().await.unwrap();
 

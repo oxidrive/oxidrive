@@ -1,4 +1,4 @@
-name: Web
+name: Web UI
 
 on:
   push:
@@ -10,11 +10,11 @@ on:
       - main
     paths:
       - .github/workflows/**
-      - web/**
+      - app/ui/**
   merge_group:
 
 concurrency:
-  group: web-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: web-ui-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -38,7 +38,7 @@ jobs:
             ${{ runner.OS }}-npm-cache-
       - run: npm ci
       - name: Check source code
-        run: nix develop --command just web/check
+        run: nix develop --command just check-node
 
   test:
     if: github.event.pull_request.draft == false
@@ -60,7 +60,7 @@ jobs:
             ${{ runner.OS }}-npm-cache-
       - run: npm ci
       - name: Run tests
-        run: nix develop --command just web/test
+        run: nix develop --command just test-node
 
   lint:
     if: github.event.pull_request.draft == false
@@ -82,4 +82,4 @@ jobs:
             ${{ runner.OS }}-npm-cache-
       - run: npm ci
       - name: Run linter
-        run: nix develop --command just web/lint --reporter=github
+        run: nix develop --command just lint-node --reporter=github

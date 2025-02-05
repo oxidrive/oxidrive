@@ -13,11 +13,7 @@ async fn upload_and_download_a_file<S: FileContents>(store: S) {
 
     store.upload(&file, content).await.unwrap();
 
-    let downloaded = store
-        .download(file.owner_id, &file.name)
-        .await
-        .unwrap()
-        .unwrap();
+    let downloaded = store.download(&file).await.unwrap().unwrap();
 
     let downloaded: BytesMut = downloaded.try_collect().await.unwrap();
     check!(downloaded.freeze() == "hello world");

@@ -3,7 +3,6 @@ use std::{borrow::Cow, collections::HashMap, sync::Arc};
 use async_trait::async_trait;
 use bytes::{Bytes, BytesMut};
 use futures::{stream::BoxStream, StreamExt, TryStreamExt};
-use oxidrive_accounts::account::AccountId;
 use oxidrive_domain::make_error_wrapper;
 use tokio::sync::RwLock;
 
@@ -23,8 +22,7 @@ pub trait FileContents: Send + Sync + 'static {
 
     async fn download(
         &self,
-        owner_id: AccountId,
-        file_name: &str,
+        file: &File,
     ) -> Result<Option<BoxStream<'static, Result<Bytes, ContentStreamError>>>, DownloadFileError>;
 
     async fn upload(
@@ -41,9 +39,9 @@ pub struct InMemoryFileContents {
 
 impl<const N: usize> From<[(String, Bytes); N]> for InMemoryFileContents {
     fn from(contents: [(String, Bytes); N]) -> Self {
-        let accounts = HashMap::from(contents);
+        let contents = HashMap::from(contents);
         Self {
-            inner: Arc::new(RwLock::new(accounts)),
+            inner: Arc::new(RwLock::new(contents)),
         }
     }
 }
@@ -56,12 +54,11 @@ impl FileContents for InMemoryFileContents {
 
     async fn download(
         &self,
-        owner_id: AccountId,
-        file_name: &str,
+        file: &File,
     ) -> Result<Option<BoxStream<'static, Result<Bytes, ContentStreamError>>>, DownloadFileError>
     {
         let inner = self.inner.read().await;
-        let Some(content) = inner.get(&path_for(owner_id, file_name)).cloned() else {
+        let Some(content) = inner.get(&path_for(file)).cloned() else {
             return Ok(None);
         };
 
@@ -80,14 +77,14 @@ impl FileContents for InMemoryFileContents {
         let content: BytesMut = content.try_collect().await.map_err(UploadFileError::wrap)?;
         let size = content.len();
 
-        inner.insert(path_for(file.owner_id, &file.name), content.freeze());
+        inner.insert(path_for(file), content.freeze());
 
         Ok(size)
     }
 }
 
-fn path_for(owner_id: AccountId, file_name: &str) -> String {
-    format!("{owner_id}/{file_name}")
+fn path_for(file: &File) -> String {
+    format!("{}/{}", file.owner_id, file.id)
 }
 
 #[cfg(test)]

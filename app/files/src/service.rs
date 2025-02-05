@@ -11,7 +11,7 @@ use crate::{
 };
 use bytes::Bytes;
 use futures::{Stream, StreamExt, TryStreamExt};
-use oxidrive_accounts::account::{Account, AccountId};
+use oxidrive_accounts::account::AccountId;
 use oxidrive_paginate::{Paginate, Slice};
 use oxidrive_search::QueryParseError;
 use oxidrive_workers::Dispatch;
@@ -43,13 +43,12 @@ impl Files {
 
     pub async fn download(
         &self,
-        owner: &Account,
         file: &File,
     ) -> Result<
         Option<impl Stream<Item = Result<Bytes, ContentStreamError>> + 'static>,
         DownloadError,
     > {
-        let Some(body) = self.contents.download(owner.id, &file.name).await? else {
+        let Some(body) = self.contents.download(file).await? else {
             return Ok(None);
         };
 

@@ -143,6 +143,6 @@ jobs:
       - run: nix flake check
 
       - name: Check policy formatting
-        run: nix develop --command just cedar-fmt check
+        run: nix develop --command just format-cedar check
       - name: Validate policies against schema
-        run: nix develop --command just cedar-validate
+        run: nix develop --command just lint-cedar

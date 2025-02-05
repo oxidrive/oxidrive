@@ -12,14 +12,14 @@ on:
       - .github/workflows/**
       - app/web/src/**
       - tools/generate-openapi/**
-      - web/src/lib/openapi.ts
+      - app/ui/src/lib/openapi.ts
   merge_group:
 
 env:
   CARGO_TERM_COLOR: always
 
 concurrency:
-  group: server-ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: openapi-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -40,7 +40,7 @@ jobs:
       - run: nix flake check
 
       - name: Generate schema
-        run: nix develop --command just generate-openapi-schema
+        run: nix develop --command just openapi-generate-schema
       - name: Check schema didn't change
         run: git diff --exit-code openapi.json
 
@@ -58,4 +58,4 @@ jobs:
       - run: nix flake check
 
       - name: Check formatting
-        run: nix develop --command just generate-openapi-types --check
+        run: nix develop --command just openapi-generate-types --check

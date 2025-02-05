@@ -51,9 +51,12 @@ pre-commit:
                 fi
               done
 
-    # nixpkgs-fmt:
-    #   glob: "*.nix"
-    #   run: nixpkgs-fmt
+    - name: nix
+      group:
+        glob: "*.nix"
+        jobs:
+          - name: nix-flake-check
+            run: nix flake check
 
     - name: links
       glob: "*.md"

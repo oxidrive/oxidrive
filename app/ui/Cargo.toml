@@ -5,6 +5,10 @@ authors.workspace = true
 documentation.workspace = true
 edition.workspace = true
 
+[features]
+skip-assets-build = []
+
 [dependencies]
 tracing = { workspace = true }
+rust-embed = { workspace = true }
 vite-rs = { workspace = true }

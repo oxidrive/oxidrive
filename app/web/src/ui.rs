@@ -3,7 +3,7 @@ use axum::{
     response::{Html, IntoResponse, Response},
     Router,
 };
-use oxidrive_ui::Assets;
+use oxidrive_ui::{AssetFile, Assets};
 
 use crate::{state::AppState, Config};
 
@@ -25,23 +25,26 @@ async fn static_handler(uri: Uri) -> impl IntoResponse {
         Some(asset) => {
             let mut headers = HeaderMap::with_capacity(3);
 
+            let content_type = asset.content_type().map(str::to_string).unwrap_or_else(|| {
+                mime_guess::from_path(path)
+                    .first_or_octet_stream()
+                    .essence_str()
+                    .into()
+            });
+
             headers.insert(
                 header::CONTENT_TYPE,
-                header::HeaderValue::from_str(&asset.content_type).unwrap(),
-            );
-            headers.insert(
-                header::CONTENT_LENGTH,
-                header::HeaderValue::from_str(&asset.content_length.to_string()).unwrap(),
+                header::HeaderValue::from_str(&content_type).unwrap(),
             );
 
-            if let Some(last_modified) = asset.last_modified {
+            if let Some(last_modified) = asset.last_modified() {
                 headers.insert(
                     header::LAST_MODIFIED,
                     header::HeaderValue::from_str(&last_modified.to_string()).unwrap(),
                 );
             }
 
-            (headers, asset.bytes).into_response()
+            (headers, asset.into_data()).into_response()
         }
         None => {
             if path.contains('.') {
@@ -55,7 +58,7 @@ async fn static_handler(uri: Uri) -> impl IntoResponse {
 
 fn index_html() -> Response {
     match Assets::get(INDEX_HTML) {
-        Some(asset) => Html(asset.bytes).into_response(),
+        Some(asset) => Html(asset.into_data()).into_response(),
         None => not_found(),
     }
 }

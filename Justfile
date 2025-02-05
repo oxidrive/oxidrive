@@ -14,6 +14,11 @@ build-debug *args:
     cargo build {{ args }}
 
 [group('build')]
+[group('node')]
+build-ui *args:
+    npm run build --workspace app/ui -- {{ args }}
+
+[group('build')]
 [group('openapi')]
 openapi-generate: openapi-generate-schema openapi-generate-types
 
@@ -97,8 +102,8 @@ lint-rust:
 
 [group('lint')]
 [group('node')]
-lint-node: _npm_install
-    npm run lint --workspace app/ui
+lint-node *args: _npm_install
+    npm run lint --workspace app/ui -- {{ args }}
 
 [group('lint')]
 lint-fix: lint-fix-rust lint-fix-node
@@ -126,7 +131,7 @@ test-rust *args:
 [group('test')]
 [group('node')]
 test-node *args: _npm_install
-    npm run test:unit --run {{ args }} --workspace app/ui
+    npm run test:unit --workspace app/ui -- --run {{ args }}
 
 # === SCAFFOLD === #
 
@@ -157,4 +162,4 @@ oxidrive *args:
     cargo run -p oxidrive -- {{ args }}
 
 _npm_install:
-    @npm ci
+    @[ -d "node_modules" ] || npm ci

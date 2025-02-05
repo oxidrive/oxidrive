@@ -8,31 +8,32 @@ let
   meta = manifest.workspace.package;
 
   excluded = [
+    "docs/"
     "e2e/"
     "biome.json"
-    "Justfile"
     "Cargo.toml"
     "*.rs"
     "playwright.config.ts"
   ];
 
-  src = pkgs.nix-gitignore.gitignoreSource excluded (lib.cleanSource ../web);
+  src = pkgs.nix-gitignore.gitignoreSource excluded (lib.cleanSource ../.);
 in
 buildNpmPackage {
-  pname = "oxidrive-web";
+  pname = "oxidrive-ui-deps";
   version = meta.version;
   inherit src;
 
-  nativeBuildInputs = with pkgs; [
-    nodejs_20
-  ];
+  nodejs = pkgs.nodejs_20;
 
-  npmDepsHash = "sha256-8/zkME4+C3+CfCcFYOJLkEm9q8GKcQPIrxHoOV2GdFw=";
+  npmDepsHash = "sha256-6Tqv6ChRGQOIS9VjDIhTloFM+yjfddzbTm+9ZVSarf8=";
+  npmFlags = "--workspace app/ui";
 
   installPhase = ''
     runHook preInstall
 
-    cp -r build $out
+    mkdir -p $out
+
+    cp -r app/ui/build $out/build
 
     runHook postInstall
   '';

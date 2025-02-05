@@ -58,7 +58,7 @@ pub async fn handler(
         )
         .into_err::<ApiError>()?;
 
-    let Some(body) = files.download(&account, &file).await? else {
+    let Some(body) = files.download(&file).await? else {
         return Err(ApiError::not_found());
     };
 
