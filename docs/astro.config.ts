@@ -78,7 +78,7 @@ export default defineConfig({
 				starlightOpenAPI([
 					{
 						base: "api",
-						label: "Oxidrive API",
+						label: "API Reference",
 						schema: "../openapi.json",
 					},
 				]),

@@ -56,7 +56,7 @@ jobs:
       - run: nix flake check
 
       - run: npm ci
-      - name: Lint
+      - name: Build
         run: nix develop --command just docs/build
       - uses: actions/upload-pages-artifact@v3
         with:

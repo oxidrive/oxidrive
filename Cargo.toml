@@ -9,6 +9,8 @@ version = "0.1.0"
 authors = ["Matteo Joliveau <matteo@matteojoliveau.com>"]
 documentation = "https://oxidrive.github.io/oxidrive"
 edition = "2021"
+license = "AGPL-3.0-only"
+license-file = "LICENSE"
 
 [workspace.dependencies]
 # workspace
