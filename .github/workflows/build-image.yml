@@ -33,7 +33,7 @@ jobs:
         id: build
         run: |
           nix develop --command just ci/build-and-push-image ghcr.io/${{ github.repository }} ${{ inputs.tag }}
-          digest=$(nix develop --command skopeo inspect --format "{{ .Digest }}" "docker-archive:./ci/archive.tar.gz")
+          digest=$(nix develop --command skopeo inspect --format "{{ .Digest }}" "docker://ghcr.io/${{ github.repository }}:${{ inputs.tag }}")
           echo "digest=$digest" >> "$GITHUB_OUTPUT"
 
       - name: Sign image
