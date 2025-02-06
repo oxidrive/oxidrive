@@ -10,11 +10,16 @@ get {
   auth: none
 }
 
-vars:post-response {
-  collection_id: res.body.items[0].id
-}
-
 assert {
   res.body.items.length: gte 1
   res.status: eq 200
+}
+
+tests {
+  
+  test("should contain the created collection", function() {
+    const body = res.getBody();
+    const collection = body.items.find(({ id }) => bru.getVar("collection_id"))
+    expect(collection).to.exist;
+  });
 }

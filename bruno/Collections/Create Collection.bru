@@ -20,3 +20,7 @@ body:json {
 vars:post-response {
   collection_id: res.body.id
 }
+
+assert {
+  res.status: eq 201
+}

@@ -149,5 +149,5 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: '!cancelled()'
         with:
-          name: bruno.html
-          path: bruno/results.html
+          name: bruno-results-${{ matrix.database }}-${{ matrix.storage }}
+          path: bruno/results.*
