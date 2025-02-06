@@ -118,6 +118,8 @@ impl File {
 
 #[cfg(any(test, feature = "fixtures"))]
 pub mod fixtures {
+    use std::convert::Infallible;
+
     use bytes::Bytes;
     use fake::Fake;
     use futures::Stream;
@@ -136,9 +138,7 @@ pub mod fixtures {
     }
 
     #[allow(dead_code)] // this is used in tests and such, but clippy doesn't seem to detect it
-    pub fn content(
-        content: impl Into<Bytes>,
-    ) -> impl Stream<Item = Result<Bytes, ContentStreamError>> {
+    pub fn content(content: impl Into<Bytes>) -> impl Stream<Item = Result<Bytes, Infallible>> {
         futures::stream::once(async move { Ok(content.into()) })
     }
 }
