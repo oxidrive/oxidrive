@@ -38,11 +38,9 @@ impl Database {
         }
     }
 
+    #[inline]
     pub fn display_name(&self) -> impl Display {
-        match self {
-            Self::Sqlite(_) => sqlx::Sqlite::NAME,
-            Self::Pg(_) => sqlx::Postgres::NAME,
-        }
+        self.name()
     }
 }
 

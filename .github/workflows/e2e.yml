@@ -35,7 +35,7 @@ permissions:
 jobs:
   build:
     if: github.event.pull_request.draft == false
-    name: Test
+    name: Build executable
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -138,7 +138,7 @@ jobs:
       - name: Create test account
         run: nix develop --command ./oxidrive create-account test --password test --if-not-exists
       - name: Run Bruno tests
-        run: nix develop --command bru run -r --env local --reporter-junit results.xml --reporter-html results.html --sandbox safe --tests-only
+        run: nix develop --command just bruno/test
 
       - name: Test Summary
         uses: test-summary/action@v2
