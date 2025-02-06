@@ -1,13 +1,12 @@
-use std::{fmt::Display, path::Path};
+use std::fmt::Display;
 
 use bytes::Bytes;
 use futures::{SinkExt, Stream, TryStreamExt};
 
 use super::File;
 
-// mod fs;
-
-// pub use fs::*;
+pub mod fs;
+pub mod s3;
 
 #[derive(Clone)]
 pub struct FileStorage {
@@ -49,7 +48,8 @@ impl FileStorage {
 
         let mut writer = self
             .service
-            .writer(&path_for(file))
+            .writer_with(&path_for(file))
+            .content_type(&file.content_type)
             .await?
             .into_bytes_sink();
 
@@ -76,13 +76,6 @@ impl FileStorage {
     pub fn memory() -> Self {
         Self::new(opendal::services::MemoryConfig::default())
     }
-
-    pub fn file_system(root_dir: impl AsRef<Path>) -> Self {
-        let mut cfg = opendal::services::FsConfig::default();
-        cfg.root = Some(root_dir.as_ref().as_os_str().to_string_lossy().into());
-
-        Self::new(cfg)
-    }
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -98,7 +91,7 @@ pub enum UploadFileError {
 }
 
 fn path_for(file: &File) -> String {
-    format!("/{}/{}", file.owner_id, file.name)
+    format!("{}/{}", file.owner_id, file.id)
 }
 
 #[cfg(test)]

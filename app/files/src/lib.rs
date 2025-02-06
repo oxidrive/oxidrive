@@ -1,4 +1,4 @@
-use std::{path::PathBuf, sync::Arc};
+use std::sync::Arc;
 
 use collection::CollectionsModule;
 use file::{FileMetadata, FileStorage, PgFileMetadata, SqliteFileMetadata};
@@ -23,7 +23,9 @@ pub struct FilesModule;
 #[serde(tag = "provider")]
 pub enum Config {
     #[serde(alias = "fs")]
-    FileSystem { root_folder_path: PathBuf },
+    FileSystem(file::fs::Config),
+    #[serde(alias = "s3")]
+    S3(file::s3::Config),
 }
 
 impl app::Module for FilesModule {
@@ -44,7 +46,8 @@ fn metadata(database: Database) -> Arc<dyn FileMetadata> {
 
 fn contents(cfg: Config) -> FileStorage {
     match cfg {
-        Config::FileSystem { root_folder_path } => FileStorage::file_system(root_folder_path),
+        Config::FileSystem(cfg) => FileStorage::file_system(cfg),
+        Config::S3(cfg) => FileStorage::s3(cfg),
     }
 }
 

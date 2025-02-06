@@ -129,6 +129,11 @@ test-rust *args:
     cargo nextest run {{ args }}
 
 [group('test')]
+[group('rust')]
+test-rust-full *args:
+    cargo nextest run --profile=ci {{ args }}
+
+[group('test')]
 [group('node')]
 test-node *args: _npm_install
     npm run test:unit --workspace app/ui -- --run {{ args }}

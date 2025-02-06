@@ -52,6 +52,21 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
+
+      minio:
+        image: 'bitnami/minio'
+        env:
+          MINIO_ROOT_USER: oxidrive
+          MINIO_ROOT_PASSWORD: oxidrive
+          MINIO_DEFAULT_BUCKETS: oxidrive
+        options: >-
+          --health-cmd "curl http://localhost:9000/minio/health/live"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 9000:9000
+
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v27
@@ -66,6 +81,11 @@ jobs:
         run: nix develop --command just test-rust
         env:
           DATABASE_URL: 'postgres://oxidrive:oxidrive@localhost:5432/oxidrive?sslmode=disable'
+          OXIDRIVE_STORAGE__BUCKET: oxidrive
+          OXIDRIVE_STORAGE__ENDPOINT: http://localhost:9000
+          OXIDRIVE_STORAGE__REGION: local
+          AWS_ACCESS_KEY_ID: oxidrive
+          AWS_SECRET_ACCESS_KEY: oxidrive
       - name: Test Summary
         uses: test-summary/action@v2
         if: '!cancelled()'
@@ -132,6 +152,39 @@ jobs:
     if: github.event.pull_request.draft == false
     name: API Tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        database: [sqlite, postgres]
+        storage: [filesystem, s3]
+    services:
+      postgres:
+        image: ${{ matrix.database == 'postgres' && 'postgres:16-alpine' || '' }}
+        env:
+          POSTGRES_USER: oxidrive
+          POSTGRES_PASSWORD: oxidrive
+          POSTGRES_DB: oxidrive
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      minio:
+        image: ${{ matrix.storage == 's3' && 'bitnami/minio' || '' }}
+        env:
+          MINIO_ROOT_USER: oxidrive
+          MINIO_ROOT_PASSWORD: oxidrive
+          MINIO_DEFAULT_BUCKETS: oxidrive
+        options: >-
+          --health-cmd "curl http://localhost:9000/minio/health/live"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 9000:9000
+
     steps:
       - uses: actions/checkout@v4
       - uses: cachix/install-nix-action@v27
@@ -142,7 +195,29 @@ jobs:
       - run: nix flake check
 
       - name: Configure SQLite database
+        if: ${{ matrix.database == 'sqlite' }}
         run: echo "DATABASE_URL=sqlite://$(mktemp -d)/oxidrive.db" >> $GITHUB_ENV
+
+      - name: Configure PostgreSQL database
+        if: ${{ matrix.database == 'postgres' }}
+        run: echo "DATABASE_URL=postgres://oxidrive:oxidrive@localhost:5432/oxidrive?sslmode=disable" >> $GITHUB_ENV
+
+      - name: Configure FS storage
+        if: ${{ matrix.storage == 'filesystem' }}
+        run: |
+          echo "OXIDRIVE_STORAGE__PROVIDER=fs" >> $GITHUB_ENV
+          echo "OXIDRIVE_STORAGE__ROOT_FOLDER_PATH=$(mktemp -d)" >> $GITHUB_ENV
+
+      - name: Configure S3 storage
+        if: ${{ matrix.storage == 's3' }}
+        run: |
+          echo "OXIDRIVE_STORAGE__PROVIDER=s3" >> $GITHUB_ENV
+          echo "OXIDRIVE_STORAGE__BUCKET=oxidrive" >> $GITHUB_ENV
+          echo "OXIDRIVE_STORAGE__ENDPOINT=http://localhost:9000" >> $GITHUB_ENV
+          echo "OXIDRIVE_STORAGE__REGION=gha" >> $GITHUB_ENV
+          echo "AWS_ACCESS_KEY_ID=oxidrive" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=oxidrive" >> $GITHUB_ENV
+
       - run: nix develop --command cargo build
       - run: nix develop --command target/debug/oxidrive migrate
       - name: Start Oxidrive server
