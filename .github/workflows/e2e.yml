@@ -1,0 +1,153 @@
+name: End-To-End Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+    paths:
+      - .github/workflows/**
+      - .cargo/**
+      - app/**
+      - bin/**
+      - lib/**
+      - migrations/**
+      - Cargo.*
+      - rust-toolchain.toml
+  merge_group:
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  CARGO_PROFILE_TEST_DEBUG: 0
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  build:
+    if: github.event.pull_request.draft == false
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - uses: Swatinem/rust-cache@v2
+      - run: nix flake check
+
+      - name: Compile debug build
+        run: nix develop --command just build-debug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: oxidrive
+          path: target/debug/oxidrive
+        
+
+  api-tests:
+    if: github.event.pull_request.draft == false
+    name: API Tests
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      matrix:
+        database: [sqlite, postgres]
+        storage: [filesystem, s3]
+    services:
+      postgres:
+        image: ${{ matrix.database == 'postgres' && 'postgres:16-alpine' || '' }}
+        env:
+          POSTGRES_USER: oxidrive
+          POSTGRES_PASSWORD: oxidrive
+          POSTGRES_DB: oxidrive
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      minio:
+        image: ${{ matrix.storage == 's3' && 'bitnami/minio' || '' }}
+        env:
+          MINIO_ROOT_USER: oxidrive
+          MINIO_ROOT_PASSWORD: oxidrive
+          MINIO_DEFAULT_BUCKETS: oxidrive
+        options: >-
+          --health-cmd "curl http://localhost:9000/minio/health/live"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 9000:9000
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: DeterminateSystems/magic-nix-cache-action@v7
+      - uses: Swatinem/rust-cache@v2
+      - run: nix flake check
+
+      - name: Configure SQLite database
+        if: ${{ matrix.database == 'sqlite' }}
+        run: echo "DATABASE_URL=sqlite://$(mktemp -d)/oxidrive.db" >> $GITHUB_ENV
+
+      - name: Configure PostgreSQL database
+        if: ${{ matrix.database == 'postgres' }}
+        run: echo "DATABASE_URL=postgres://oxidrive:oxidrive@localhost:5432/oxidrive?sslmode=disable" >> $GITHUB_ENV
+
+      - name: Configure FS storage
+        if: ${{ matrix.storage == 'filesystem' }}
+        run: |
+          echo "OXIDRIVE_STORAGE__PROVIDER=fs" >> $GITHUB_ENV
+          echo "OXIDRIVE_STORAGE__ROOT_FOLDER_PATH=$(mktemp -d)" >> $GITHUB_ENV
+
+      - name: Configure S3 storage
+        if: ${{ matrix.storage == 's3' }}
+        run: |
+          echo "OXIDRIVE_STORAGE__PROVIDER=s3" >> $GITHUB_ENV
+          echo "OXIDRIVE_STORAGE__BUCKET=oxidrive" >> $GITHUB_ENV
+          echo "OXIDRIVE_STORAGE__ENDPOINT=http://localhost:9000" >> $GITHUB_ENV
+          echo "OXIDRIVE_STORAGE__REGION=gha" >> $GITHUB_ENV
+          echo "AWS_ACCESS_KEY_ID=oxidrive" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=oxidrive" >> $GITHUB_ENV
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: oxidrive
+      - run: chmod +x ./oxidrive
+
+      - run: nix develop --command ./oxidrive migrate
+      - name: Start Oxidrive server
+        run: nix develop --command bash -c './oxidrive server &'
+
+      - name: Create test account
+        run: nix develop --command ./oxidrive create-account test --password test --if-not-exists
+      - name: Run Bruno tests
+        run: nix develop --command bru run -r --env local --reporter-junit results.xml --reporter-html results.html --sandbox safe --tests-only
+
+      - name: Test Summary
+        uses: test-summary/action@v2
+        if: '!cancelled()'
+        with:
+          paths: "bruno/results.xml"
+
+      - uses: actions/upload-artifact@v4
+        if: '!cancelled()'
+        with:
+          name: bruno.html
+          path: bruno/results.html
