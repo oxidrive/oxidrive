@@ -60,21 +60,68 @@ mod inmemory {
 }
 
 mod fs {
+    use file::fs;
+    use rstest::{fixture, rstest};
+
     use super::*;
 
-    #[tokio::test]
-    async fn it_uploads_and_downloads_a_file() {
+    #[fixture]
+    fn storage() -> FileStorage {
         let root_dir = tempfile::tempdir().unwrap();
 
-        let store = FileStorage::file_system(root_dir);
-        upload_and_download_a_file(store).await;
+        FileStorage::file_system(fs::Config {
+            root_folder_path: root_dir.into_path(),
+        })
     }
 
     #[tokio::test]
-    async fn it_does_not_download_a_file_that_does_not_exist() {
-        let root_dir = tempfile::tempdir().unwrap();
+    #[rstest]
+    async fn it_uploads_and_downloads_a_file(storage: FileStorage) {
+        upload_and_download_a_file(storage).await;
+    }
 
-        let store = FileStorage::file_system(root_dir);
-        download_a_file_that_does_not_exist(store).await;
+    #[tokio::test]
+    #[rstest]
+    async fn it_does_not_download_a_file_that_does_not_exist(storage: FileStorage) {
+        download_a_file_that_does_not_exist(storage).await;
+    }
+}
+
+mod s3 {
+    use file::s3::{self, UrlStyle};
+    use rstest::{fixture, rstest};
+    use uuid::Uuid;
+
+    use super::*;
+
+    fn env(name: &str) -> String {
+        std::env::var(name).unwrap_or_else(|_| panic!("{name} not set"))
+    }
+
+    #[fixture]
+    fn storage() -> FileStorage {
+        let cfg = s3::Config {
+            bucket: env("OXIDRIVE_STORAGE__BUCKET"),
+            prefix: Some(format!("test-{}", Uuid::new_v4())),
+            endpoint: Some(env("OXIDRIVE_STORAGE__ENDPOINT")),
+            region: Some(env("OXIDRIVE_STORAGE__REGION")),
+            url_style: UrlStyle::Path,
+            storage_class: None,
+            credentials: None,
+        };
+
+        FileStorage::s3(cfg)
+    }
+
+    #[tokio::test]
+    #[rstest]
+    async fn it_uploads_and_downloads_a_file(storage: FileStorage) {
+        upload_and_download_a_file(storage).await;
+    }
+
+    #[tokio::test]
+    #[rstest]
+    async fn it_does_not_download_a_file_that_does_not_exist(storage: FileStorage) {
+        download_a_file_that_does_not_exist(storage).await;
     }
 }

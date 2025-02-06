@@ -10,5 +10,19 @@ services:
     volumes:
       - postgres:/var/lib/postgresql/data
 
+  minio:
+    image: quay.io/minio/minio
+    entrypoint: sh
+    command: -c 'mkdir -p /data/oxidrive && minio server /data --console-address ":9001"'
+    environment:
+      MINIO_ROOT_USER: oxidrive
+      MINIO_ROOT_PASSWORD: oxidrive
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio:/data
+
 volumes:
   postgres: {}
+  minio: {}
