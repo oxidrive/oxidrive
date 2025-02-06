@@ -1,8 +1,5 @@
 default:
     @just --list --unsorted | grep -v '  default'
 
-test: setup
-    bru run -r --env local --reporter-junit results.xml
-
-setup:
-    cargo run -p oxidrive -- create-account test --password test --if-not-exists
+test:
+    bru run -r --env local --reporter-junit results.xml --reporter-html results.html --sandbox safe --tests-only

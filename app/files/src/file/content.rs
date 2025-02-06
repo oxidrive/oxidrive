@@ -15,7 +15,7 @@ pub struct FileStorage {
 
 impl FileStorage {
     pub fn display_name(&self) -> impl Display {
-        self.service.info().name().to_string()
+        self.service.info().scheme()
     }
 
     pub async fn download(
