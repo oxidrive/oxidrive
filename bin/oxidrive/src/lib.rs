@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use oxidrive_accounts::auth::{AccountsAuthPolicies, AccountsAuthSchemas};
 use oxidrive_authorization::{
     cedar::{policies::CompoundPolicyLoader, schema::CompoundSchemaLoader},
@@ -8,7 +6,7 @@ use oxidrive_authorization::{
 use oxidrive_database::Database;
 use oxidrive_files::{
     auth::{FilesAuthPolicies, FilesAuthSchemas},
-    file::FileContents,
+    file::FileStorage,
 };
 use worker::{job_enqueue, job_queue};
 
@@ -28,7 +26,7 @@ impl app::Module for ServerModule {
 impl app::Hooks for ServerModule {
     async fn after_start(&mut self, c: &app::di::Container) -> eyre::Result<()> {
         let db = c.get::<Database>();
-        let contents = c.get::<Arc<dyn FileContents>>();
+        let contents = c.get::<FileStorage>();
 
         tracing::info!("using database {}", db.display_name());
         tracing::info!("using storage {}", contents.display_name());

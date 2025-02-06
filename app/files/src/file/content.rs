@@ -1,90 +1,104 @@
-use std::{borrow::Cow, collections::HashMap, sync::Arc};
+use std::{fmt::Display, path::Path};
 
-use async_trait::async_trait;
-use bytes::{Bytes, BytesMut};
-use futures::{stream::BoxStream, StreamExt, TryStreamExt};
-use oxidrive_domain::make_error_wrapper;
-use tokio::sync::RwLock;
+use bytes::Bytes;
+use futures::{SinkExt, Stream, TryStreamExt};
 
 use super::File;
 
-mod fs;
+// mod fs;
 
-pub use fs::*;
+// pub use fs::*;
 
-make_error_wrapper!(ContentStreamError);
-make_error_wrapper!(DownloadFileError);
-make_error_wrapper!(UploadFileError);
-
-#[async_trait]
-pub trait FileContents: Send + Sync + 'static {
-    fn display_name(&self) -> Cow<'static, str>;
-
-    async fn download(
-        &self,
-        file: &File,
-    ) -> Result<Option<BoxStream<'static, Result<Bytes, ContentStreamError>>>, DownloadFileError>;
-
-    async fn upload(
-        &self,
-        file: &File,
-        content: BoxStream<'_, Result<Bytes, ContentStreamError>>,
-    ) -> Result<usize, UploadFileError>;
+#[derive(Clone)]
+pub struct FileStorage {
+    service: opendal::Operator,
 }
 
-#[derive(Clone, Default)]
-pub struct InMemoryFileContents {
-    inner: Arc<RwLock<HashMap<String, Bytes>>>,
-}
-
-impl<const N: usize> From<[(String, Bytes); N]> for InMemoryFileContents {
-    fn from(contents: [(String, Bytes); N]) -> Self {
-        let contents = HashMap::from(contents);
-        Self {
-            inner: Arc::new(RwLock::new(contents)),
-        }
-    }
-}
-
-#[async_trait]
-impl FileContents for InMemoryFileContents {
-    fn display_name(&self) -> Cow<'static, str> {
-        "InMemory".into()
+impl FileStorage {
+    pub fn display_name(&self) -> impl Display {
+        self.service.info().name().to_string()
     }
 
-    async fn download(
+    pub async fn download(
         &self,
         file: &File,
-    ) -> Result<Option<BoxStream<'static, Result<Bytes, ContentStreamError>>>, DownloadFileError>
+    ) -> Result<Option<impl Stream<Item = Result<Bytes, impl std::error::Error>>>, DownloadFileError>
     {
-        let inner = self.inner.read().await;
-        let Some(content) = inner.get(&path_for(file)).cloned() else {
-            return Ok(None);
-        };
+        let path = path_for(file);
 
-        Ok(Some(
-            futures::stream::once(async move { Ok(content) }).boxed(),
-        ))
+        if !self.service.exists(&path).await? {
+            return Ok(None);
+        }
+
+        let reader = self.service.reader(&path).await?;
+
+        reader
+            .into_bytes_stream(..)
+            .await
+            .map(Some)
+            .map_err(DownloadFileError)
     }
 
-    async fn upload(
+    pub async fn upload(
         &self,
         file: &File,
-        content: BoxStream<'_, Result<Bytes, ContentStreamError>>,
+        content: impl Stream<Item = Result<Bytes, impl std::error::Error + Send + Sync + 'static>>
+            + Unpin,
     ) -> Result<usize, UploadFileError> {
-        let mut inner = self.inner.write().await;
+        let mut size = 0;
 
-        let content: BytesMut = content.try_collect().await.map_err(UploadFileError::wrap)?;
-        let size = content.len();
+        let mut writer = self
+            .service
+            .writer(&path_for(file))
+            .await?
+            .into_bytes_sink();
 
-        inner.insert(path_for(file), content.freeze());
+        let mut content = content
+            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err))
+            .inspect_ok(|bytes| {
+                size += bytes.len();
+            });
+
+        writer.send_all(&mut content).await?;
+        writer.close().await?;
 
         Ok(size)
     }
 }
 
+impl FileStorage {
+    fn new(cfg: impl opendal::Configurator) -> Self {
+        let service = opendal::Operator::from_config(cfg).unwrap().finish();
+
+        Self { service }
+    }
+
+    pub fn memory() -> Self {
+        Self::new(opendal::services::MemoryConfig::default())
+    }
+
+    pub fn file_system(root_dir: impl AsRef<Path>) -> Self {
+        let mut cfg = opendal::services::FsConfig::default();
+        cfg.root = Some(root_dir.as_ref().as_os_str().to_string_lossy().into());
+
+        Self::new(cfg)
+    }
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error(transparent)]
+pub struct DownloadFileError(#[from] opendal::Error);
+
+#[derive(Debug, thiserror::Error)]
+pub enum UploadFileError {
+    #[error(transparent)]
+    ServiceError(#[from] opendal::Error),
+    #[error("failed to write content to storage: {0}")]
+    WriteFailed(#[from] std::io::Error),
+}
+
 fn path_for(file: &File) -> String {
-    format!("{}/{}", file.owner_id, file.id)
+    format!("/{}/{}", file.owner_id, file.name)
 }
 
 #[cfg(test)]

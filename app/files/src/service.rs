@@ -4,13 +4,13 @@ use crate::{
     collection::jobs::RefreshCollections,
     content_type,
     file::{
-        self, ByNameError, DownloadFileError, FileContents, FileMetadata, SaveFileError,
+        self, ByNameError, DownloadFileError, FileMetadata, FileStorage, SaveFileError,
         UploadFileError,
     },
-    ContentStreamError, File, Tag,
+    File, Tag,
 };
 use bytes::Bytes;
-use futures::{Stream, StreamExt, TryStreamExt};
+use futures::Stream;
 use oxidrive_accounts::account::AccountId;
 use oxidrive_paginate::{Paginate, Slice};
 use oxidrive_search::QueryParseError;
@@ -19,7 +19,7 @@ use oxidrive_workers::Dispatch;
 #[derive(Clone)]
 pub struct Files {
     metadata: Arc<dyn FileMetadata>,
-    contents: Arc<dyn FileContents>,
+    storage: FileStorage,
 
     refresh_collection: Dispatch<RefreshCollections>,
 }
@@ -27,12 +27,12 @@ pub struct Files {
 impl Files {
     pub fn new(
         files: Arc<dyn FileMetadata>,
-        contents: Arc<dyn FileContents>,
+        storage: FileStorage,
         refresh_collection: Dispatch<RefreshCollections>,
     ) -> Self {
         Self {
             metadata: files,
-            contents,
+            storage,
             refresh_collection,
         }
     }
@@ -45,14 +45,10 @@ impl Files {
         &self,
         file: &File,
     ) -> Result<
-        Option<impl Stream<Item = Result<Bytes, ContentStreamError>> + 'static>,
+        Option<impl Stream<Item = Result<Bytes, impl std::error::Error>> + 'static>,
         DownloadError,
     > {
-        let Some(body) = self.contents.download(file).await? else {
-            return Ok(None);
-        };
-
-        Ok(Some(body))
+        Ok(self.storage.download(file).await?)
     }
 
     pub async fn upload<C, E>(&self, meta: UploadMetadata, content: C) -> Result<File, UploadError>
@@ -75,10 +71,7 @@ impl Files {
             None => File::new(meta.owner_id, meta.file_name, content_type),
         };
 
-        let size = self
-            .contents
-            .upload(&file, content.map_err(ContentStreamError::wrap).boxed())
-            .await?;
+        let size = self.storage.upload(&file, content).await?;
 
         file.set_size(size);
 

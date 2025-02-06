@@ -1,11 +1,11 @@
 use std::{path::PathBuf, sync::Arc};
 
 use collection::CollectionsModule;
-use file::{FileContents, FileMetadata, FsFileContents, PgFileMetadata, SqliteFileMetadata};
+use file::{FileMetadata, FileStorage, PgFileMetadata, SqliteFileMetadata};
 use oxidrive_database::Database;
 use serde::Deserialize;
 
-pub use file::{ContentStreamError, File, FileId};
+pub use file::{File, FileId};
 pub use service::*;
 pub use tag::Tag;
 
@@ -42,9 +42,9 @@ fn metadata(database: Database) -> Arc<dyn FileMetadata> {
     }
 }
 
-fn contents(cfg: Config) -> Arc<dyn FileContents> {
+fn contents(cfg: Config) -> FileStorage {
     match cfg {
-        Config::FileSystem { root_folder_path } => Arc::new(FsFileContents::new(root_folder_path)),
+        Config::FileSystem { root_folder_path } => FileStorage::file_system(root_folder_path),
     }
 }
 
