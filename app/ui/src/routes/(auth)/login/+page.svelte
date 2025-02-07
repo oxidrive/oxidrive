@@ -20,7 +20,7 @@ let { data }: Props = $props();
     <p>{data.error}</p>
 {/if}
 
-<form class="form" action="/auth/session?redirect_to=/ui" method="post">
+<form class="form" action="/auth/session?redirect_to={data.redirect_to}" method="post">
     <div class="fieldset inputs">
         <Localized id="login-form-username" >
             {#snippet children({ text })}

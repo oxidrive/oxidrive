@@ -1,10 +1,9 @@
-use std::net::{IpAddr, Ipv6Addr, SocketAddr};
+use std::net::{IpAddr, Ipv6Addr};
 
 use bytesize::ByteSize;
 use cors::CorsConfig;
 use serde::Deserialize;
 use state::AppState;
-use tokio::net::TcpListener;
 use tower::{
     layer::util::Identity,
     util::{option_layer, Either},
@@ -16,9 +15,13 @@ use utoipa::openapi::OpenApi;
 #[cfg(debug_assertions)]
 pub use oxidrive_ui::start_dev_server;
 
+pub use server::Server;
+
 mod cors;
+mod headers;
 mod paginate;
 mod routes;
+mod server;
 mod session;
 mod state;
 
@@ -26,36 +29,6 @@ mod api;
 mod auth;
 mod files;
 mod ui;
-
-#[derive(Clone)]
-pub struct Server {
-    addr: SocketAddr,
-    state: AppState,
-    cfg: Config,
-}
-
-impl Server {
-    fn new(cfg: Config, state: AppState) -> Self {
-        Self {
-            addr: SocketAddr::new(cfg.host, cfg.port),
-            state,
-            cfg,
-        }
-    }
-
-    pub fn local_address(&self) -> SocketAddr {
-        self.addr
-    }
-
-    pub async fn run(&self) -> std::io::Result<()> {
-        let listener = TcpListener::bind(self.addr).await?;
-        axum::serve(
-            listener,
-            routes::routes(&self.cfg).with_state(self.state.clone()),
-        )
-        .await
-    }
-}
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Config {

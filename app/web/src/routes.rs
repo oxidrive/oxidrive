@@ -1,14 +1,8 @@
-use std::str::FromStr;
-
 use axum::{
-    http::{HeaderMap, StatusCode},
+    http::StatusCode,
     response::{IntoResponse, Redirect},
     routing::get,
     Router,
-};
-use mime_guess::{
-    mime::{APPLICATION_JSON, HTML, STAR, TEXT},
-    Mime,
 };
 use tower_http::catch_panic::CatchPanicLayer;
 use utoipa::OpenApi;
@@ -16,8 +10,14 @@ use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::{
-    api::{self, error::handle_panic, ApiDoc},
+    api::{
+        self,
+        error::{handle_panic, ApiError},
+        ApiDoc,
+    },
     auth, files,
+    headers::Accept,
+    session::CurrentUser,
     state::AppState,
     ui, Config,
 };
@@ -32,65 +32,57 @@ pub fn openapi_router(cfg: &Config) -> OpenApiRouter<AppState> {
     router
 }
 
-pub fn routes(cfg: &Config) -> Router<AppState> {
+pub fn routes(cfg: &Config, state: AppState) -> Router {
     let (router, api) = openapi_router(cfg).split_for_parts();
 
     router
         .route("/", get(root))
         .nest("/auth", auth::routes(cfg))
         .nest("/ui", ui::routes(cfg))
-        .merge(SwaggerUi::new("/api/docs").url("/api/openapi.json", api))
+        .merge(swagger_ui(state.clone(), api))
         .layer(CatchPanicLayer::custom(handle_panic))
+        .with_state(state)
 }
 
 #[axum::debug_handler]
-async fn root(headers: HeaderMap) -> impl IntoResponse {
-    let header = headers
-        .get("accept")
-        .and_then(|h| h.to_str().ok())
-        .unwrap_or(APPLICATION_JSON.essence_str());
+async fn root(accept: Option<Accept>) -> impl IntoResponse {
+    let accept = accept.unwrap_or_else(Accept::json);
 
-    let accept = AcceptHeader::from_str(header).unwrap_or_default();
-
-    if accept.contains(|accept| {
-        matches!(
-            (accept.type_(), accept.subtype()),
-            (_, HTML) | (TEXT, STAR) | (STAR, STAR)
-        )
-    }) {
+    if accept.accepts_html() {
         return Redirect::permanent("/ui").into_response();
     }
 
-    tracing::warn!("unexpected accept header: {header}");
+    tracing::warn!("unexpected accept header: {accept}");
     StatusCode::NOT_IMPLEMENTED.into_response()
 }
 
-#[derive(Debug, Default)]
-struct AcceptHeader {
-    types: Vec<Mime>,
+fn swagger_ui(state: AppState, api: utoipa::openapi::OpenApi) -> Router<AppState> {
+    let router: Router<AppState> = SwaggerUi::new("/api/docs")
+        .url("/api/openapi.json", api)
+        .into();
+
+    router.layer(axum::middleware::from_fn_with_state(
+        state,
+        require_authentication,
+    ))
 }
 
-impl AcceptHeader {
-    fn contains<F>(&self, predicate: F) -> bool
-    where
-        F: FnMut(&Mime) -> bool,
-    {
-        self.types.iter().any(predicate)
+#[axum::debug_middleware(state = crate::state::AppState)]
+async fn require_authentication(
+    current_user: Option<CurrentUser>,
+    accept: Option<Accept>,
+    request: axum::extract::Request,
+    next: axum::middleware::Next,
+) -> axum::response::Response {
+    if current_user.is_some() {
+        return next.run(request).await;
     }
-}
 
-impl FromStr for AcceptHeader {
-    type Err = mime_guess::mime::FromStrError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let items = s.chars().filter(|c| *c == ',').count();
-        let mut types = Vec::with_capacity(items);
-
-        for typ in s.split(',') {
-            let mime = Mime::from_str(typ.trim())?;
-            types.push(mime);
-        }
-
-        Ok(Self { types })
+    let accept = accept.unwrap_or_else(Accept::json);
+    if accept.accepts_html() {
+        return Redirect::temporary(&format!("/ui/login?redirect_to={}", request.uri()))
+            .into_response();
     }
+
+    ApiError::unauthenticated().into_response()
 }

@@ -1,8 +1,8 @@
 use std::fmt::Display;
 
 use axum::{
-    extract::{FromRef, FromRequestParts},
-    http::{request::Parts, StatusCode},
+    extract::{FromRef, FromRequestParts, OptionalFromRequestParts},
+    http::request::Parts,
     response::IntoResponseParts,
 };
 use axum_extra::extract::{
@@ -11,7 +11,7 @@ use axum_extra::extract::{
 };
 use oxidrive_accounts::account::{Account, AccountId};
 
-use crate::state::AppState;
+use crate::{api::error::ApiError, state::AppState};
 
 pub const SESSION_COOKIE: &str = "oxidrive_session";
 
@@ -108,41 +108,80 @@ where
     S: Send + Sync,
     Key: FromRef<S>,
 {
-    type Rejection = StatusCode;
+    type Rejection = ApiError;
 
     async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        let jar = SignedCookieJar::<Key>::from_request_parts(parts, state)
-            .await
-            .map_err(|_| StatusCode::UNAUTHORIZED)?;
-
-        let Some(cookie) = jar.get(SESSION_COOKIE) else {
-            return Err(StatusCode::UNAUTHORIZED);
-        };
-
-        let data = SessionData::try_from(cookie.value().to_string())
-            .map_err(|_| StatusCode::UNAUTHORIZED)?;
-        Ok(Session::create(data, jar))
+        <Self as OptionalFromRequestParts<S>>::from_request_parts(parts, state)
+            .await?
+            .ok_or_else(ApiError::unauthenticated)
     }
 }
 
+impl<S> OptionalFromRequestParts<S> for Session
+where
+    S: Send + Sync,
+    Key: FromRef<S>,
+{
+    type Rejection = ApiError;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &S,
+    ) -> Result<Option<Self>, Self::Rejection> {
+        let jar = SignedCookieJar::<Key>::from_request_parts(parts, state)
+            .await
+            .unwrap_or_else(|_| unreachable!("SignedCookieJar::from_request_parts is infallible"));
+
+        let Some(cookie) = jar.get(SESSION_COOKIE) else {
+            return Ok(None);
+        };
+
+        let data = SessionData::try_from(cookie.value().to_string())
+            .map_err(|_| ApiError::unauthenticated())?;
+        Ok(Some(Session::create(data, jar)))
+    }
+}
+
+#[derive(Debug)]
 pub struct CurrentUser(pub Account);
 
 impl FromRequestParts<AppState> for CurrentUser {
-    type Rejection = StatusCode;
+    type Rejection = ApiError;
 
     async fn from_request_parts(
         parts: &mut Parts,
         state: &AppState,
     ) -> Result<Self, Self::Rejection> {
-        let session = Session::from_request_parts(parts, state).await?;
+        <Self as OptionalFromRequestParts<AppState>>::from_request_parts(parts, state)
+            .await?
+            .ok_or_else(ApiError::unauthenticated)
+    }
+}
 
-        let account = state
+impl OptionalFromRequestParts<AppState> for CurrentUser {
+    type Rejection = ApiError;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Option<Self>, Self::Rejection> {
+        let Some(session) =
+            <Session as OptionalFromRequestParts<AppState>>::from_request_parts(parts, state)
+                .await?
+        else {
+            return Ok(None);
+        };
+
+        let Some(account) = state
             .auth
             .accounts()
             .by_id(session.data.account_id)
             .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?
-            .ok_or(StatusCode::UNAUTHORIZED)?;
-        Ok(Self(account))
+            .map_err(ApiError::new)?
+        else {
+            return Ok(None);
+        };
+
+        Ok(Some(Self(account)))
     }
 }
