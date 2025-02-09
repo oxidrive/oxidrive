@@ -50,6 +50,8 @@
               clang
               just
               mold
+              openapi-changes
+              openapi-generator-cli
               skopeo
               sqlx-cli
               toolchain

@@ -26,6 +26,7 @@ openapi-generate: openapi-generate-schema openapi-generate-types
 [group('openapi')]
 openapi-generate-schema:
     cargo run --bin generate-openapi
+    openapi-generator-cli validate -i openapi.json
 
 [group('build')]
 [group('openapi')]
