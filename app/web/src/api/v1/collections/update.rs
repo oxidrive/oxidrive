@@ -24,6 +24,7 @@ use super::CollectionData;
     patch,
     path = "/{collection_id}",
     operation_id = "update",
+    params(("collection_id" = String, Path, format = "uuid")),
     responses((status = OK, response = CollectionUpdated)),
     tag = "collections",
 )]

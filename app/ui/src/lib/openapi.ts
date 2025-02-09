@@ -362,7 +362,9 @@ export interface operations {
         parameters: {
             query?: never;
             header?: never;
-            path?: never;
+            path: {
+                collection_id: string;
+            };
             cookie?: never;
         };
         requestBody: {
