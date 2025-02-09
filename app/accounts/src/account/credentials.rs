@@ -34,6 +34,10 @@ impl Credentials {
         Ok(())
     }
 
+    pub fn replace(&mut self, credentials: impl Into<Creds>) {
+        let _ = self.add(credentials);
+    }
+
     pub fn verify(&self, credentials: VerifyCreds) -> Result<(), InvalidCredentials> {
         if !self.creds.values().any(|creds| creds.matches(&credentials)) {
             return Err(InvalidCredentials);

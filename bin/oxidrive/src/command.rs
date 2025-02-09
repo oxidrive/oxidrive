@@ -1,5 +1,5 @@
 use clap::Subcommand;
-use oxidrive_accounts::Auth;
+use oxidrive_accounts::AccountService;
 use oxidrive_database::Database;
 
 mod account;
@@ -18,7 +18,7 @@ impl Command {
         match self {
             Command::Migrate => oxidrive_database::migrate(c.get::<Database>()).await,
             Command::CreateDefaultAdmin => {
-                let auth = c.get::<Auth>();
+                let auth = c.get::<AccountService>();
                 let admin = auth.upsert_initial_admin(true).await?.unwrap();
 
                 let out = serde_json::to_string_pretty(&serde_json::json!({

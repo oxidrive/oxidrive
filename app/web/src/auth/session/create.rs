@@ -5,7 +5,7 @@ use axum::{
     Form,
 };
 use axum_extra::extract::cookie::SignedCookieJar;
-use oxidrive_accounts::{login::AuthenticationFailed, Auth};
+use oxidrive_accounts::{login::AuthenticationFailed, AccountService};
 use serde::Deserialize;
 use url::Url;
 
@@ -13,7 +13,7 @@ use crate::{api::error::ApiError, session::Session};
 
 #[axum::debug_handler(state = crate::state::AppState)]
 pub async fn handler(
-    State(auth): State<Auth>,
+    State(auth): State<AccountService>,
     jar: SignedCookieJar,
     Query(query): Query<CreateQuery>,
     headers: HeaderMap,

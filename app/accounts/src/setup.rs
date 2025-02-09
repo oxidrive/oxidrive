@@ -1,11 +1,11 @@
 use crate::{
     account::{Account, Credentials, Password},
-    Auth,
+    AccountService,
 };
 
 const DEFAULT_ADMIN_USERNAME: &str = "admin";
 
-impl Auth {
+impl AccountService {
     pub async fn upsert_initial_admin(
         &self,
         force: bool,

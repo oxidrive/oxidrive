@@ -1,5 +1,5 @@
 use axum::{extract::State, http::StatusCode, response::IntoResponse, Form, Json};
-use oxidrive_accounts::{Auth, CreateAccountError};
+use oxidrive_accounts::{AccountService, CreateAccountError};
 use serde::Deserialize;
 use utoipa::{ToResponse, ToSchema};
 
@@ -14,7 +14,7 @@ use super::AccountInfo;
 )]
 #[axum::debug_handler(state = crate::state::AppState)]
 pub async fn handler(
-    State(auth): State<Auth>,
+    State(auth): State<AccountService>,
     Form(CreateAccount { username, password }): Form<CreateAccount>,
 ) -> Result<AccountCreated, CreateError> {
     let account = auth.create_account(&username, &password).await?;

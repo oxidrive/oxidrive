@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use account::{
-    Account, AccountCredentials, Accounts, AddError, ByUsernameError, Credentials, HashError,
-    Password, PgAccountCredentials, PgAccounts, SaveAccountError, SaveCredentialsError,
+    Account, AccountCredentials, Accounts, ByUsernameError, Credentials, ForAccountError,
+    HashError, Password, PgAccountCredentials, PgAccounts, SaveAccountError, SaveCredentialsError,
     SqliteAccountCredentials, SqliteAccounts,
 };
 use login::Login;
@@ -15,13 +15,13 @@ pub mod login;
 mod setup;
 
 #[derive(Clone)]
-pub struct Auth {
+pub struct AccountService {
     accounts: Arc<dyn Accounts>,
     credentials: Arc<dyn AccountCredentials>,
     login: Login,
 }
 
-impl Auth {
+impl AccountService {
     pub fn new(accounts: Arc<dyn Accounts>, credentials: Arc<dyn AccountCredentials>) -> Self {
         Self {
             login: Login {
@@ -54,9 +54,24 @@ impl Auth {
         let account = self.accounts.save(account).await?;
 
         let mut credentials = Credentials::new(account.id);
-        match credentials.add(Password::hash(password)?) {
-            Ok(_) | Err(AddError::AlreadyPresent) => {}
-        }
+        credentials.add(Password::hash(password)?).unwrap();
+
+        self.credentials.save(credentials).await?;
+
+        Ok(account)
+    }
+
+    pub async fn change_password(
+        &self,
+        username: &str,
+        password: &str,
+    ) -> Result<Account, ChangePasswordError> {
+        let Some(account) = self.accounts.by_username(username).await? else {
+            return Err(ChangePasswordError::NotExists);
+        };
+
+        let mut credentials = self.credentials.for_account(account.id).await?;
+        credentials.replace(Password::hash(password)?);
 
         self.credentials.save(credentials).await?;
 
@@ -78,14 +93,28 @@ pub enum CreateAccountError {
     SaveCredentials(#[from] SaveCredentialsError),
 }
 
-#[derive(Copy, Clone)]
-pub struct AuthModule;
+#[derive(Debug, thiserror::Error)]
+pub enum ChangePasswordError {
+    #[error(transparent)]
+    LoadAccount(#[from] ByUsernameError),
+    #[error("account does not exists")]
+    NotExists,
+    #[error(transparent)]
+    LoadCredentials(#[from] ForAccountError),
+    #[error(transparent)]
+    InvalidPassword(#[from] HashError),
+    #[error(transparent)]
+    SaveCredentials(#[from] SaveCredentialsError),
+}
 
-impl app::Module for AuthModule {
+#[derive(Copy, Clone)]
+pub struct AccountsModule;
+
+impl app::Module for AccountsModule {
     fn mount(self: Box<Self>, c: &mut app::di::Context) {
         c.bind(accounts);
         c.bind(credentials);
-        c.bind(Auth::new);
+        c.bind(AccountService::new);
     }
 }
 
@@ -104,9 +133,9 @@ fn credentials(database: Database) -> Arc<dyn AccountCredentials> {
 }
 
 #[app::async_trait]
-impl app::Hooks for AuthModule {
+impl app::Hooks for AccountsModule {
     async fn after_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
-        let auth = c.get::<Auth>();
+        let auth = c.get::<AccountService>();
 
         if let Some(admin) = auth.upsert_initial_admin(false).await? {
             tracing::warn!(

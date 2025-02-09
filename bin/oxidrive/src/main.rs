@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use clap::Parser;
 use oxidrive::{command::Command, PoliciesModule, ServerModule};
-use oxidrive_accounts::AuthModule;
+use oxidrive_accounts::AccountsModule;
 use oxidrive_config::Config;
 use oxidrive_database::{self as database, DatabaseModule};
 use oxidrive_files::{self as files, FilesModule};
@@ -77,7 +77,7 @@ fn bootstrap(cfg: FullConfig) -> app::App {
         .mount(PoliciesModule)
         .mount_and_hook(DatabaseModule)
         .mount_and_hook(ServerModule)
-        .mount_and_hook(AuthModule)
+        .mount_and_hook(AccountsModule)
         .mount_and_hook(FilesModule)
         .mount(WebModule)
 }
