@@ -35,7 +35,9 @@ impl Credentials {
     }
 
     pub fn replace(&mut self, credentials: impl Into<Creds>) {
-        let _ = self.add(credentials);
+        let creds = credentials.into();
+        let id = creds.id();
+        self.creds.insert(id.into(), creds);
     }
 
     pub fn verify(&self, credentials: VerifyCreds) -> Result<(), InvalidCredentials> {
@@ -103,7 +105,7 @@ impl Password {
         Ok(Self { password_hash })
     }
 
-    pub fn verify(&self, password: impl AsRef<[u8]>) -> bool {
+    pub fn verify(&self, password: impl AsRef<[u8]> + Debug) -> bool {
         use argon2::{Argon2, PasswordHash};
 
         let hash = PasswordHash::new(&self.password_hash).unwrap();
@@ -179,5 +181,24 @@ mod tests {
         empty
             .verify(VerifyCreds::Password("wrong password".into()))
             .unwrap_err();
+    }
+
+    #[rstest]
+    fn it_replaces_a_credential(mut empty: Credentials, password: String) {
+        empty
+            .add(Password::hash(password.clone()).unwrap())
+            .unwrap();
+
+        empty
+            .verify(VerifyCreds::Password(password.clone()))
+            .unwrap();
+
+        empty.replace(Password::hash("changed").unwrap());
+
+        empty
+            .verify(VerifyCreds::Password("changed".into()))
+            .unwrap();
+
+        empty.verify(VerifyCreds::Password(password)).unwrap_err();
     }
 }

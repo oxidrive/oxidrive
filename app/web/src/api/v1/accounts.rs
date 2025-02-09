@@ -7,6 +7,8 @@ use uuid::Uuid;
 
 use crate::state::AppState;
 
+mod me;
+
 mod create;
 
 #[derive(OpenApi)]
@@ -14,7 +16,9 @@ mod create;
 pub struct AccountsApi;
 
 pub fn routes() -> OpenApiRouter<AppState> {
-    OpenApiRouter::new().routes(routes!(create::handler))
+    OpenApiRouter::new()
+        .routes(routes!(create::handler))
+        .nest("/me", me::routes())
 }
 
 #[derive(Debug, Serialize, ToSchema)]

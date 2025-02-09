@@ -22,7 +22,7 @@ use super::CollectionData;
     operation_id = "get",
     params(("collection_id" = String, Path, format = "uuid")),
     responses((status = 200, body = CollectionData)),
-    tag = "files",
+    tag = "collections",
 )]
 #[axum::debug_handler(state = crate::state::AppState)]
 pub async fn handler(

@@ -22,6 +22,14 @@ struct Args {
     )]
     config_file: PathBuf,
 
+    #[cfg(debug_assertions)]
+    #[arg(
+        long,
+        env = "OXIDRIVE_DISABLE_VITE_DEV_SERVER",
+        default_value = "false"
+    )]
+    disable_vite_dev_server: bool,
+
     #[command(subcommand)]
     command: Command,
 }
@@ -44,7 +52,11 @@ async fn main() {
     let app = bootstrap(cfg);
 
     match args.command {
-        Command::Server => app.run(run).await,
+        Command::Server => {
+            let _guard = oxidrive_web::start_dev_server(args.disable_vite_dev_server);
+
+            app.run(run).await
+        }
         cmd => {
             let name = app.name.clone();
             let c = app.init();
@@ -57,9 +69,6 @@ async fn main() {
 
 async fn run(c: Arc<app::di::Container>) -> eyre::Result<()> {
     let server = c.get::<Server>();
-
-    #[cfg(debug_assertions)]
-    let _dev = oxidrive_web::start_dev_server();
 
     tracing::info!(
         "oxidrive server listening on http://{}",

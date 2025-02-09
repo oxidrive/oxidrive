@@ -6,8 +6,15 @@ meta {
 
 post {
   url: {{server}}/api/v1/accounts
-  body: formUrlEncoded
+  body: json
   auth: none
+}
+
+body:json {
+  {
+    "username": "{{createUsername}}",
+    "password": "{{password}}"
+  }
 }
 
 body:form-urlencoded {

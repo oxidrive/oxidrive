@@ -107,7 +107,11 @@ async fn change_password(
             .wrap_err("failed to read password from stdin")?,
     };
 
-    let account = accounts.change_password(username, password).await?;
+    let Some(account) = accounts.accounts().by_username(username).await? else {
+        app::eyre::bail!("no account found by username {username}");
+    };
+
+    accounts.change_password(&account, password).await?;
 
     tracing::info!(id=%account.id, username, "account password changed");
 

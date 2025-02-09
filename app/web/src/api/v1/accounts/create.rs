@@ -1,7 +1,9 @@
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Form, Json};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
 use oxidrive_accounts::{AccountService, CreateAccountError};
 use serde::Deserialize;
 use utoipa::{ToResponse, ToSchema};
+
+use crate::api::error::{ApiError, ApiResult};
 
 use super::AccountInfo;
 
@@ -14,10 +16,10 @@ use super::AccountInfo;
 )]
 #[axum::debug_handler(state = crate::state::AppState)]
 pub async fn handler(
-    State(auth): State<AccountService>,
-    Form(CreateAccount { username, password }): Form<CreateAccount>,
-) -> Result<AccountCreated, CreateError> {
-    let account = auth.create_account(&username, &password).await?;
+    State(accounts): State<AccountService>,
+    Json(CreateAccount { username, password }): Json<CreateAccount>,
+) -> ApiResult<AccountCreated> {
+    let account = accounts.create_account(&username, &password).await?;
     Ok(AccountCreated(account.into()))
 }
 
@@ -37,28 +39,18 @@ impl IntoResponse for AccountCreated {
     }
 }
 
-#[derive(Debug, thiserror::Error)]
-#[error(transparent)]
-pub struct CreateError(#[from] CreateAccountError);
-
-impl IntoResponse for CreateError {
-    fn into_response(self) -> axum::response::Response {
-        match self.0 {
-            CreateAccountError::Load(err) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
-            }
-            CreateAccountError::AlreadyExists => {
-                (StatusCode::CONFLICT, format!("{}", self.0)).into_response()
-            }
-            CreateAccountError::SaveAccount(err) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
-            }
-            CreateAccountError::InvalidPassword(err) => {
-                (StatusCode::BAD_REQUEST, format!("{err}")).into_response()
-            }
-            CreateAccountError::SaveCredentials(err) => {
-                (StatusCode::INTERNAL_SERVER_ERROR, format!("{err}")).into_response()
-            }
+impl From<CreateAccountError> for ApiError {
+    fn from(err: CreateAccountError) -> Self {
+        match err {
+            CreateAccountError::Load(err) => Self::new(err),
+            CreateAccountError::AlreadyExists => Self::new("account already exists")
+                .error("ALREADY_EXISTS")
+                .status(StatusCode::CONFLICT),
+            CreateAccountError::SaveAccount(err) => Self::new(err),
+            CreateAccountError::InvalidPassword(err) => Self::new(err)
+                .error("INVALID_PASSWORD")
+                .status(StatusCode::BAD_REQUEST),
+            CreateAccountError::SaveCredentials(err) => Self::new(err),
         }
     }
 }

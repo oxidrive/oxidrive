@@ -63,19 +63,15 @@ impl AccountService {
 
     pub async fn change_password(
         &self,
-        username: &str,
+        account: &Account,
         password: &str,
-    ) -> Result<Account, ChangePasswordError> {
-        let Some(account) = self.accounts.by_username(username).await? else {
-            return Err(ChangePasswordError::NotExists);
-        };
-
+    ) -> Result<(), ChangePasswordError> {
         let mut credentials = self.credentials.for_account(account.id).await?;
         credentials.replace(Password::hash(password)?);
 
         self.credentials.save(credentials).await?;
 
-        Ok(account)
+        Ok(())
     }
 }
 
@@ -95,10 +91,6 @@ pub enum CreateAccountError {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ChangePasswordError {
-    #[error(transparent)]
-    LoadAccount(#[from] ByUsernameError),
-    #[error("account does not exists")]
-    NotExists,
     #[error(transparent)]
     LoadCredentials(#[from] ForAccountError),
     #[error(transparent)]

@@ -59,12 +59,17 @@ pub trait AssetFile {
 }
 
 #[cfg(all(not(feature = "skip-assets-build"), debug_assertions))]
-pub fn start_dev_server() -> Option<vite_rs::ViteProcess> {
+pub fn start_dev_server(disable: bool) -> Option<vite_rs::ViteProcess> {
+    if disable {
+        tracing::warn!("vite dev server disabled");
+        return None;
+    }
+
     tracing::info!("vite dev server started");
     Assets::start_dev_server()
 }
 
 #[cfg(all(feature = "skip-assets-build", debug_assertions))]
-pub fn start_dev_server() -> Option<vite_rs::ViteProcess> {
+pub fn start_dev_server(_disable: bool) -> Option<vite_rs::ViteProcess> {
     None
 }

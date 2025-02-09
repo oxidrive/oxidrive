@@ -20,6 +20,38 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/accounts/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["api::v1::accounts::me::get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/accounts/me/password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["api::v1::accounts::me::password::change"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/collections": {
         parameters: {
             query?: never;
@@ -201,6 +233,9 @@ export interface components {
             filter?: string | null;
             name?: string | null;
         };
+        UpdatePassword: {
+            password: string;
+        };
         UpdateTags: {
             tags: string[];
         };
@@ -269,6 +304,7 @@ export type SchemaPageCollectionData = components['schemas']['Page_CollectionDat
 export type SchemaPageFileData = components['schemas']['Page_FileData'];
 export type SchemaTag = components['schemas']['Tag'];
 export type SchemaUpdateCollection = components['schemas']['UpdateCollection'];
+export type SchemaUpdatePassword = components['schemas']['UpdatePassword'];
 export type SchemaUpdateTags = components['schemas']['UpdateTags'];
 export type ResponseAccountCreated = components['responses']['AccountCreated'];
 export type ResponseApiError = components['responses']['ApiError'];
@@ -287,11 +323,55 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/x-www-form-urlencoded": components["schemas"]["CreateAccount"];
+                "application/json": components["schemas"]["CreateAccount"];
             };
         };
         responses: {
             201: components["responses"]["AccountCreated"];
+            "4XX": components["responses"]["ApiError"];
+            "5XX": components["responses"]["ApiError"];
+        };
+    };
+    "api::v1::accounts::me::get": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountInfo"];
+                };
+            };
+            "4XX": components["responses"]["ApiError"];
+            "5XX": components["responses"]["ApiError"];
+        };
+    };
+    "api::v1::accounts::me::password::change": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePassword"];
+            };
+        };
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
             "4XX": components["responses"]["ApiError"];
             "5XX": components["responses"]["ApiError"];
         };

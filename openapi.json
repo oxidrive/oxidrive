@@ -22,7 +22,7 @@
         "operationId": "api::v1::accounts::create",
         "requestBody": {
           "content": {
-            "application/x-www-form-urlencoded": {
+            "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/CreateAccount"
               }
@@ -33,6 +33,61 @@
         "responses": {
           "201": {
             "$ref": "#/components/responses/AccountCreated"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/me": {
+      "get": {
+        "tags": [
+          "accounts"
+        ],
+        "operationId": "api::v1::accounts::me::get",
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountInfo"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
+    "/api/v1/accounts/me/password": {
+      "put": {
+        "tags": [
+          "accounts"
+        ],
+        "operationId": "api::v1::accounts::me::password::change",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePassword"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
           },
           "4XX": {
             "$ref": "#/components/responses/ApiError"
@@ -99,7 +154,7 @@
     "/api/v1/collections/{collection_id}": {
       "get": {
         "tags": [
-          "files"
+          "collections"
         ],
         "operationId": "api::v1::collections::get",
         "parameters": [
@@ -678,6 +733,17 @@
               "string",
               "null"
             ]
+          }
+        }
+      },
+      "UpdatePassword": {
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "properties": {
+          "password": {
+            "type": "string"
           }
         }
       },

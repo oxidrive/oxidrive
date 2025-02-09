@@ -23,7 +23,7 @@ impl Login {
         let credentials = self.credentials.for_account(account.id).await?;
 
         credentials
-            .verify(VerifyCreds::Password(password.into()))
+            .verify(VerifyCreds::Password(dbg!(password.into())))
             .map_err(|_| AuthenticationFailed::Unauthorized)?;
 
         Ok(account)
