@@ -10,6 +10,7 @@ use oxidrive_files::{
 };
 use worker::{job_enqueue, job_queue};
 
+pub mod command;
 pub mod worker;
 
 #[derive(Clone)]

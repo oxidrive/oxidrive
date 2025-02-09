@@ -1,11 +1,11 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use clap::{Parser, Subcommand};
-use oxidrive::{PoliciesModule, ServerModule};
-use oxidrive_accounts::{Auth, AuthModule, CreateAccountError};
+use clap::Parser;
+use oxidrive::{command::Command, PoliciesModule, ServerModule};
+use oxidrive_accounts::AuthModule;
 use oxidrive_config::Config;
-use oxidrive_database::{self as database, Database, DatabaseModule};
+use oxidrive_database::{self as database, DatabaseModule};
 use oxidrive_files::{self as files, FilesModule};
 use oxidrive_telemetry as telemetry;
 use oxidrive_web::{self as web, Server, WebModule};
@@ -24,74 +24,6 @@ struct Args {
 
     #[command(subcommand)]
     command: Command,
-}
-
-#[derive(Debug, Subcommand)]
-pub enum Command {
-    Migrate,
-    CreateDefaultAdmin,
-    CreateAccount {
-        username: String,
-        #[arg(short, long, env = "OXIDRIVE_CREATE_ACCOUNT_PASSWORD")]
-        password: String,
-        #[arg(long, env = "OXIDRIVE_CREATE_ACCOUNT_IF_NOT_EXISTS")]
-        /// Don't error out if the account already exists
-        if_not_exists: bool,
-    },
-    Server,
-    Worker,
-}
-
-impl Command {
-    pub async fn run(&self, c: &app::di::Container) -> eyre::Result<()> {
-        match self {
-            Command::Migrate => oxidrive_database::migrate(c.get::<Database>()).await,
-            Command::CreateDefaultAdmin => {
-                let auth = c.get::<Auth>();
-                let admin = auth.upsert_initial_admin(true).await?.unwrap();
-
-                let out = serde_json::to_string_pretty(&serde_json::json!({
-                    "username": admin.username,
-                    "password": admin.password,
-                }))?;
-
-                println!();
-                println!("{out}");
-                println!();
-
-                Ok(())
-            }
-            Command::CreateAccount {
-                username,
-                password,
-                if_not_exists,
-            } => {
-                let auth = c.get::<Auth>();
-                let result = auth.create_account(username, password).await;
-
-                let account = if *if_not_exists {
-                    match result {
-                        Ok(account) => account,
-                        Err(CreateAccountError::AlreadyExists) => {
-                            tracing::info!(username, "account already exists");
-                            return Ok(());
-                        }
-                        err => err?,
-                    }
-                } else {
-                    result?
-                };
-
-                tracing::info!(id=%account.id, username, "account created");
-
-                Ok(())
-            }
-            Command::Server => unreachable!(),
-            Command::Worker => {
-                todo!("workers")
-            }
-        }
-    }
 }
 
 #[tokio::main]

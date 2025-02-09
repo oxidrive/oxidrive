@@ -136,7 +136,7 @@ jobs:
         run: nix develop --command bash -c './oxidrive server &'
 
       - name: Create test account
-        run: nix develop --command ./oxidrive create-account test --password test --if-not-exists
+        run: nix develop --command ./oxidrive account create test --password test --if-not-exists
       - name: Run Bruno tests
         run: nix develop --command just bruno/test
 
