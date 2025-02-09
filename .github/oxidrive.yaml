@@ -1,0 +1,10 @@
+telemetry:
+  log: oxidrive::authorizer=trace,info
+
+server:
+  secret_key: 641efbb1aa2683448e56fcefea4caec4d3be478fbb0be4632500ed581eb15df8
+  disable_csrf: true
+  cors:
+    allow_headers: any
+    allow_methods: any
+    allow_origins: any

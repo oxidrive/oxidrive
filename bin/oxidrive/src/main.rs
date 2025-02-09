@@ -53,6 +53,7 @@ async fn main() {
 
     match args.command {
         Command::Server => {
+            #[cfg(debug_assertions)]
             let _guard = oxidrive_web::start_dev_server(args.disable_vite_dev_server);
 
             app.run(run).await
