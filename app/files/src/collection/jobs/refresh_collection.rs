@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
 use oxidrive_paginate::Paginate;
 use oxidrive_workers::{Job, Process};
@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use crate::{
     collection::{ByIdError, CollectionId, CollectionStore, SaveCollectionError},
     file::{FileMetadata, SearchError},
+    FileId,
 };
 
 #[derive(Clone)]
@@ -32,20 +33,31 @@ impl Process for RefreshCollectionWorker {
             return Ok(());
         };
 
-        collection.files.clear();
+        let existing = collection.files.drain().collect::<HashSet<FileId>>();
 
-        let files = self
-            .files
-            .search(
-                collection.owner_id,
-                collection.filter.clone(),
-                Paginate::default(),
-            )
-            .await?;
+        let mut paginate = Paginate::default();
 
-        collection.add(files.into_iter().map(|f| f.id));
+        loop {
+            let files = self
+                .files
+                .search(collection.owner_id, collection.filter.clone(), paginate)
+                .await?;
 
-        // TODO: Paginate
+            if files.is_empty() || files.next.is_none() {
+                break;
+            }
+
+            let next = files.next.clone().unwrap();
+
+            collection.add(files.into_iter().map(|f| f.id));
+
+            paginate = Paginate::after(next);
+        }
+
+        if collection.files == existing {
+            tracing::trace!(collection_id = %collection.id, "collection has not changed, skipping update");
+            return Ok(());
+        }
 
         self.collections.save(collection).await?;
 

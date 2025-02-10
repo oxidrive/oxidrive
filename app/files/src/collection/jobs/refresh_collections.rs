@@ -2,12 +2,12 @@ use std::sync::Arc;
 
 use oxidrive_accounts::account::AccountId;
 use oxidrive_paginate::Paginate;
-use oxidrive_workers::{Dispatch, DispatchError, Job, Process};
+use oxidrive_workers::{Dispatch, DispatchError, Job, Process, Worker};
 use serde::{Deserialize, Serialize};
 
 use crate::collection::{AllOwnedByError, CollectionStore};
 
-use super::refresh_collection::RefreshCollection;
+use super::{refresh_collection::RefreshCollection, RefreshCollectionWorker};
 
 #[derive(Clone)]
 pub struct RefreshCollectionsWorker {
@@ -17,11 +17,11 @@ pub struct RefreshCollectionsWorker {
 
 impl RefreshCollectionsWorker {
     pub fn new(
-        refresh: Dispatch<RefreshCollection>,
+        worker: Worker<RefreshCollectionWorker>,
         collections: Arc<dyn CollectionStore>,
     ) -> Self {
         Self {
-            refresh,
+            refresh: worker.dispatcher(),
             collections,
         }
     }
@@ -33,15 +33,19 @@ impl Process for RefreshCollectionsWorker {
     type Error = RefreshCollectionsError;
 
     async fn process(&self, job: Self::Job) -> Result<(), Self::Error> {
+        let mut paginate = Paginate::default();
+
         loop {
             let collections = self
                 .collections
-                .all_owned_by(job.owner_id, Paginate::default())
+                .all_owned_by(job.owner_id, paginate)
                 .await?;
 
             if collections.is_empty() || collections.next.is_none() {
                 return Ok(());
             }
+
+            let next = collections.next.clone().unwrap();
 
             for collection in collections {
                 self.refresh
@@ -50,6 +54,8 @@ impl Process for RefreshCollectionsWorker {
                     })
                     .await?;
             }
+
+            paginate = Paginate::after(next);
         }
     }
 }

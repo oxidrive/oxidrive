@@ -4,8 +4,8 @@ use std::str::FromStr;
 use oxidrive_accounts::account::AccountId;
 use oxidrive_domain::make_uuid_type;
 
-pub use event::*;
 pub use content::*;
+pub use event::*;
 pub use store::*;
 
 use crate::tag;
