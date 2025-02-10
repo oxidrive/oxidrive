@@ -1,10 +1,9 @@
 use std::sync::Arc;
 
 use crate::{
-    collection::jobs::RefreshCollections,
     content_type,
     file::{
-        self, ByNameError, DownloadFileError, FileMetadata, FileStorage, SaveFileError,
+        self, ByNameError, DownloadFileError, FileEvent, FileMetadata, FileStorage, SaveFileError,
         UploadFileError,
     },
     File, Tag,
@@ -13,27 +12,26 @@ use bytes::Bytes;
 use futures::Stream;
 use oxidrive_accounts::account::AccountId;
 use oxidrive_paginate::{Paginate, Slice};
+use oxidrive_pubsub::Publisher;
 use oxidrive_search::QueryParseError;
-use oxidrive_workers::Dispatch;
 
 #[derive(Clone)]
 pub struct Files {
     metadata: Arc<dyn FileMetadata>,
     storage: FileStorage,
-
-    refresh_collection: Dispatch<RefreshCollections>,
+    publisher: Publisher<FileEvent>,
 }
 
 impl Files {
     pub fn new(
         files: Arc<dyn FileMetadata>,
         storage: FileStorage,
-        refresh_collection: Dispatch<RefreshCollections>,
+        publisher: Publisher<FileEvent>,
     ) -> Self {
         Self {
             metadata: files,
             storage,
-            refresh_collection,
+            publisher,
         }
     }
 
@@ -77,20 +75,7 @@ impl Files {
 
         let file = self.metadata.save(file).await?;
 
-        if let Err(err) = self
-            .refresh_collection
-            .dispatch(RefreshCollections {
-                owner_id: file.owner_id,
-            })
-            .await
-        {
-            tracing::error!(
-                error = %err,
-                account_id = %file.owner_id,
-                file_id = %file.id,
-                "failed to queue RefreshCollections job",
-            );
-        }
+        self.publisher.publish(FileEvent::Changed(file.clone()));
 
         Ok(file)
     }
@@ -102,6 +87,7 @@ impl Files {
         file.set_tags(tags);
 
         let file = self.metadata.save(file).await?;
+        self.publisher.publish(FileEvent::Changed(file.clone()));
 
         Ok(file)
     }

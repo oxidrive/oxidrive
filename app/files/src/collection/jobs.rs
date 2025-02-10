@@ -1,12 +1,18 @@
-use std::sync::Arc;
+use std::{future::Future, sync::Arc};
 
+use futures::StreamExt;
+use oxidrive_pubsub::Publisher;
 use oxidrive_workers::{
     queue::{Enqueue, JobQueue},
-    Worker,
+    Dispatch, Process, Worker,
 };
 
 pub use refresh_collection::*;
 pub use refresh_collections::*;
+
+use crate::file::FileEvent;
+
+use super::CollectionEvent;
 
 mod refresh_collection;
 mod refresh_collections;
@@ -21,7 +27,6 @@ impl app::Module for JobsModule {
              enqueue: Arc<dyn Enqueue>,
              process: RefreshCollectionWorker| { Worker::new(queue, enqueue, process) },
         );
-        c.bind(|worker: Worker<RefreshCollectionWorker>| worker.dispatcher());
 
         c.bind(RefreshCollectionsWorker::new);
         c.bind(
@@ -31,16 +36,80 @@ impl app::Module for JobsModule {
                 Worker::new(queue, enqueue, process)
             },
         );
-        c.bind(|worker: Worker<RefreshCollectionsWorker>| worker.dispatcher());
     }
 }
 
 #[app::async_trait]
 impl app::Hooks for JobsModule {
     async fn after_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
-        c.get::<Worker<RefreshCollectionWorker>>().clone().start();
-        c.get::<Worker<RefreshCollectionsWorker>>().clone().start();
+        start_event_listener::<RefreshCollectionsWorker, FileEvent, _, _>(
+            c,
+            |dispatcher, event| async move {
+                match event {
+                    FileEvent::Changed(file) => {
+                        if let Err(err) = dispatcher
+                            .dispatch(RefreshCollections {
+                                owner_id: file.owner_id,
+                            })
+                            .await
+                        {
+                            tracing::error!(
+                                error = %err,
+                                account_id = %file.owner_id,
+                                file_id = %file.id,
+                                "failed to queue RefreshCollections job",
+                            );
+                        }
+                    }
+                }
+            },
+        );
+
+        start_event_listener::<RefreshCollectionWorker, CollectionEvent, _, _>(
+            c,
+            |dispatcher, event| async move {
+                match event {
+                    CollectionEvent::Changed(collection) => {
+                        if let Err(err) = dispatcher
+                            .dispatch(RefreshCollection {
+                                collection_id: collection.id,
+                            })
+                            .await
+                        {
+                            tracing::error!(
+                                error = %err,
+                                account_id = %collection.owner_id,
+                                collection_id = %collection.id,
+                                "failed to queue RefreshCollection job",
+                            );
+                        }
+                    }
+                }
+            },
+        );
 
         Ok(())
     }
+}
+
+fn start_event_listener<W, E, F, Fut>(c: &app::di::Container, mut handler: F)
+where
+    W: Process,
+    W::Job: Send,
+    E: Clone + Send + 'static,
+    F: FnMut(Dispatch<W::Job>, E) -> Fut + Send + 'static,
+    Fut: Future<Output = ()> + Send,
+{
+    let worker = c.get::<Worker<W>>();
+    let publisher = c.get::<Publisher<E>>();
+    let dispatcher = worker.dispatcher();
+    let mut subscriber = publisher.subscribe();
+
+    worker.clone().start();
+
+    tokio::spawn(async move {
+        while let Some(event) = subscriber.next().await {
+            handler(dispatcher.clone(), event).await
+        }
+    });
 }

@@ -1,8 +1,9 @@
 use std::sync::Arc;
 
 use collection::CollectionsModule;
-use file::{FileMetadata, FileStorage, PgFileMetadata, SqliteFileMetadata};
+use file::{FileEvent, FileMetadata, FileStorage, PgFileMetadata, SqliteFileMetadata};
 use oxidrive_database::Database;
+use oxidrive_pubsub::Publisher;
 use serde::Deserialize;
 
 pub use file::{File, FileId};
@@ -30,6 +31,7 @@ pub enum Config {
 
 impl app::Module for FilesModule {
     fn mount(self: Box<Self>, c: &mut app::di::Context) {
+        c.bind(Publisher::<FileEvent>::new);
         c.bind(metadata);
         c.bind(contents);
         c.mount(CollectionsModule);

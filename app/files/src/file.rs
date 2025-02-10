@@ -4,15 +4,18 @@ use std::str::FromStr;
 use oxidrive_accounts::account::AccountId;
 use oxidrive_domain::make_uuid_type;
 
-mod content;
-pub(crate) mod store;
-
+pub use event::*;
 pub use content::*;
 pub use store::*;
 
 use crate::tag;
 use crate::tag::reserved::SIZE;
 use crate::tag::Tag;
+
+mod event;
+
+mod content;
+pub(crate) mod store;
 
 pub type Tags = HashMap<String, Tag>;
 

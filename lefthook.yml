@@ -30,7 +30,7 @@ pre-commit:
             run: just format-rust
           - name: clippy
             glob: "*.rs"
-            run: just lint-rust-fix
+            run: just lint-fix-rust
       
     - name: "cedar"
       group:

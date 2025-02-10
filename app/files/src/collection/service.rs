@@ -2,28 +2,31 @@ use std::sync::Arc;
 
 use oxidrive_accounts::account::AccountId;
 use oxidrive_paginate::{Paginate, Slice};
+use oxidrive_pubsub::Publisher;
 use oxidrive_search::QueryParseError;
-use oxidrive_workers::Dispatch;
 
 use super::{
-    jobs::RefreshCollection, AllOwnedByError, ByIdError, Collection, CollectionId, CollectionStore,
-    SaveCollectionError,
+    AllOwnedByError, ByIdError, Collection, CollectionId, CollectionStore, SaveCollectionError,
 };
+
+pub use event::*;
+
+mod event;
 
 #[derive(Clone)]
 pub struct Collections {
     collections: Arc<dyn CollectionStore>,
-    refresh: Dispatch<RefreshCollection>,
+    publisher: Publisher<CollectionEvent>,
 }
 
 impl Collections {
     pub fn new(
         collections: Arc<dyn CollectionStore>,
-        refresh: Dispatch<RefreshCollection>,
+        publisher: Publisher<CollectionEvent>,
     ) -> Self {
         Self {
             collections,
-            refresh,
+            publisher,
         }
     }
 
@@ -45,12 +48,8 @@ impl Collections {
         let collection = Collection::new(owner_id, name, filter);
         let collection = self.collections.save(collection).await?;
 
-        let _ = self
-            .refresh
-            .dispatch(RefreshCollection {
-                collection_id: collection.id,
-            })
-            .await;
+        self.publisher
+            .publish(CollectionEvent::Changed(collection.clone()));
 
         Ok(collection)
     }
@@ -74,12 +73,8 @@ impl Collections {
 
         let collection = self.collections.save(collection).await?;
 
-        let _ = self
-            .refresh
-            .dispatch(RefreshCollection {
-                collection_id: collection.id,
-            })
-            .await;
+        self.publisher
+            .publish(CollectionEvent::Changed(collection.clone()));
 
         Ok(collection)
     }

@@ -8,7 +8,6 @@ use crate::{
     Job, Process,
 };
 
-#[derive(Clone)]
 pub struct Worker<P> {
     queue: Arc<dyn JobQueue>,
     enqueuer: Arc<dyn Enqueue>,
@@ -123,6 +122,17 @@ where
         }
 
         Ok(())
+    }
+}
+
+impl<P> Clone for Worker<P> {
+    fn clone(&self) -> Self {
+        Self {
+            queue: self.queue.clone(),
+            enqueuer: self.enqueuer.clone(),
+            processor: self.processor.clone(),
+            poll_timeout: self.poll_timeout,
+        }
     }
 }
 

@@ -2266,6 +2266,7 @@ dependencies = [
  "oxidrive-database",
  "oxidrive-domain",
  "oxidrive-paginate",
+ "oxidrive-pubsub",
  "oxidrive-search",
  "oxidrive-workers",
  "rstest",
@@ -2286,6 +2287,17 @@ name = "oxidrive-paginate"
 version = "0.1.0"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "oxidrive-pubsub"
+version = "0.1.0"
+dependencies = [
+ "futures",
+ "pin-project-lite",
+ "tokio",
+ "tokio-stream",
+ "tracing",
 ]
 
 [[package]]
@@ -3906,6 +3918,7 @@ dependencies = [
  "futures-core",
  "pin-project-lite",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]

@@ -4,6 +4,7 @@ use jobs::JobsModule;
 use oxidrive_accounts::account::AccountId;
 use oxidrive_database::Database;
 use oxidrive_domain::make_uuid_type;
+use oxidrive_pubsub::Publisher;
 use oxidrive_search::Filter;
 
 pub use service::*;
@@ -73,6 +74,7 @@ pub struct CollectionsModule;
 
 impl app::Module for CollectionsModule {
     fn mount(self: Box<Self>, c: &mut app::di::Context) {
+        c.bind(Publisher::<CollectionEvent>::new);
         c.bind(store);
         c.mount(JobsModule);
         c.bind(Collections::new);

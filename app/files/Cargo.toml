@@ -18,6 +18,7 @@ app = { workspace = true }
 oxidrive-database = { workspace = true }
 oxidrive-domain = { workspace = true }
 oxidrive-paginate = { workspace = true }
+oxidrive-pubsub = { workspace = true }
 oxidrive-workers = { workspace = true }
 
 async-trait = { workspace = true }
