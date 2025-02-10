@@ -56,7 +56,6 @@ where
             loop {
                 if let Err(err) = self.run_batch().await {
                     tracing::error!(error = %err, error.details = ?err, "processing failed: {err}");
-                    panic!("{err}");
                 }
 
                 tokio::time::sleep(self.poll_timeout).await;
@@ -174,13 +173,17 @@ impl<J: Job + Serialize> Dispatch<J> {
     pub async fn dispatch(&self, job: J) -> Result<(), DispatchError> {
         let payload = serde_json::to_value(job)?;
 
+        let id = JobId::new();
+
         self.queue
             .queue(QueuedJob {
-                id: JobId::new(),
+                id,
                 kind: J::kind(),
                 payload,
             })
             .await?;
+
+        tracing::trace!(job.id = %id, job.kind = %J::kind(), "dispatched job");
         Ok(())
     }
 }
