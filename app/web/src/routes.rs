@@ -4,7 +4,7 @@ use axum::{
     routing::get,
     Router,
 };
-use tower_http::catch_panic::CatchPanicLayer;
+use tower_http::{catch_panic::CatchPanicLayer, trace::TraceLayer};
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
@@ -41,6 +41,7 @@ pub fn routes(cfg: &Config, state: AppState) -> Router {
         .nest("/ui", ui::routes(cfg))
         .merge(swagger_ui(state.clone(), api))
         .layer(CatchPanicLayer::custom(handle_panic))
+        .layer(TraceLayer::new_for_http())
         .with_state(state)
 }
 

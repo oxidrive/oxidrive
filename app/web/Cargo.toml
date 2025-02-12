@@ -37,6 +37,7 @@ tower-http = { workspace = true, features = [
     "catch-panic",
     "cors",
     "set-header",
+    "trace",
 ] }
 tower-surf = { workspace = true, features = ["axum"] }
 tracing = { workspace = true }
