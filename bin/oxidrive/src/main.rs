@@ -23,12 +23,8 @@ struct Args {
     config_file: PathBuf,
 
     #[cfg(debug_assertions)]
-    #[arg(
-        long,
-        env = "OXIDRIVE_DISABLE_VITE_DEV_SERVER",
-        default_value = "false"
-    )]
-    disable_vite_dev_server: bool,
+    #[arg(long, env = "OXIDRIVE_ENABLE_VITE_DEV_SERVER", default_value = "false")]
+    enable_vite_dev_server: bool,
 
     #[command(subcommand)]
     command: Command,
@@ -54,7 +50,7 @@ async fn main() {
     match args.command {
         Command::Server => {
             #[cfg(debug_assertions)]
-            let _guard = oxidrive_web::start_dev_server(args.disable_vite_dev_server);
+            let _guard = oxidrive_web::start_dev_server(args.enable_vite_dev_server);
 
             app.run(run).await
         }
