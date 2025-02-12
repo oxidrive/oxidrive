@@ -92,10 +92,9 @@ impl OptionalFromRequestParts<AppState> for WebSession {
             return Ok(None);
         };
 
-        let session_id = cookie
-            .value_trimmed()
-            .parse()
-            .map_err(|_| ApiError::unauthenticated())?;
+        let Some(session_id) = cookie.value_trimmed().parse().ok() else {
+            return Ok(None);
+        };
 
         let Some(session) = state
             .accounts
@@ -144,7 +143,7 @@ impl OptionalFromRequestParts<AppState> for CurrentUser {
         let Some(account) = state
             .accounts
             .accounts()
-            .by_id(session.session.account_id)
+            .by_id(session.account_id)
             .await
             .map_err(ApiError::new)?
         else {
