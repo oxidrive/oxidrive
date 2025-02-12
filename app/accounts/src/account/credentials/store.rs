@@ -17,6 +17,7 @@ pub use sqlite::SqliteAccountCredentials;
 make_error_wrapper!(ForAccountError);
 make_error_wrapper!(SaveCredentialsError);
 
+#[mockall::automock]
 #[async_trait]
 pub trait AccountCredentials: Send + Sync + 'static {
     async fn for_account(&self, account_id: AccountId) -> Result<Credentials, ForAccountError>;

@@ -1,6 +1,6 @@
 use oxidrive_domain::make_uuid_type;
 
-mod credentials;
+pub mod credentials;
 mod store;
 
 pub use credentials::*;

@@ -21,7 +21,7 @@ async fn store_and_load_credentials_for_a_user<S: AccountCredentials>(store: S) 
     check!(stored.creds == loaded.creds);
     check!(!loaded.creds.is_empty());
 
-    let credentials = credentials::fixtures::empty(account.clone());
+    let credentials = credentials::fixtures::credentials(account.clone());
 
     let empty = store.save(credentials).await.unwrap();
     check!(empty.account_id == account.id);

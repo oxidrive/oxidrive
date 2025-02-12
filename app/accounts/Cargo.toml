@@ -15,16 +15,19 @@ oxidrive-authorization = { workspace = true }
 app = { workspace = true }
 oxidrive-database = { workspace = true }
 oxidrive-domain = { workspace = true }
+oxidrive-workers = { workspace = true }
 
 argon2 = { workspace = true }
 async-trait = { workspace = true }
 cedar-policy = { workspace = true }
+mockall = { workspace = true }
 rand = { workspace = true }
 rust-embed = { workspace = true, features = ["include-exclude"] }
 serde = { workspace = true }
 sqlx = { workspace = true }
 tracing = { workspace = true }
 thiserror = { workspace = true }
+time = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }
 uuid = { workspace = true }
 

@@ -2,6 +2,7 @@ use serde::{de::DeserializeOwned, Serialize};
 pub use worker::*;
 
 pub mod queue;
+pub mod scheduler;
 mod worker;
 
 pub mod inmemory;

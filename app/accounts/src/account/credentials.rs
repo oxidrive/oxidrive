@@ -151,7 +151,7 @@ pub mod fixtures {
     }
 
     #[fixture]
-    pub fn empty(account: Account) -> Credentials {
+    pub fn credentials(account: Account) -> Credentials {
         Credentials::new(account.id)
     }
 
@@ -171,34 +171,36 @@ mod tests {
     use super::*;
 
     #[rstest]
-    fn it_adds_a_new_credential(mut empty: Credentials, password: String) {
-        empty
+    fn it_adds_a_new_credential(mut credentials: Credentials, password: String) {
+        credentials
             .add(Password::hash(password.clone()).unwrap())
             .unwrap();
 
-        empty.verify(VerifyCreds::Password(password)).unwrap();
+        credentials.verify(VerifyCreds::Password(password)).unwrap();
 
-        empty
+        credentials
             .verify(VerifyCreds::Password("wrong password".into()))
             .unwrap_err();
     }
 
     #[rstest]
-    fn it_replaces_a_credential(mut empty: Credentials, password: String) {
-        empty
+    fn it_replaces_a_credential(mut credentials: Credentials, password: String) {
+        credentials
             .add(Password::hash(password.clone()).unwrap())
             .unwrap();
 
-        empty
+        credentials
             .verify(VerifyCreds::Password(password.clone()))
             .unwrap();
 
-        empty.replace(Password::hash("changed").unwrap());
+        credentials.replace(Password::hash("changed").unwrap());
 
-        empty
+        credentials
             .verify(VerifyCreds::Password("changed".into()))
             .unwrap();
 
-        empty.verify(VerifyCreds::Password(password)).unwrap_err();
+        credentials
+            .verify(VerifyCreds::Password(password))
+            .unwrap_err();
     }
 }

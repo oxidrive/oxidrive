@@ -18,8 +18,8 @@ impl Command {
         match self {
             Command::Migrate => oxidrive_database::migrate(c.get::<Database>()).await,
             Command::CreateDefaultAdmin => {
-                let auth = c.get::<AccountService>();
-                let admin = auth.upsert_initial_admin(true).await?.unwrap();
+                let accounts = c.get::<AccountService>();
+                let admin = accounts.upsert_initial_admin(true).await?.unwrap();
 
                 let out = serde_json::to_string_pretty(&serde_json::json!({
                     "username": admin.username,

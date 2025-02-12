@@ -5,11 +5,11 @@ use axum::{
     Form,
 };
 use axum_extra::extract::cookie::SignedCookieJar;
-use oxidrive_accounts::{login::AuthenticationFailed, AccountService};
+use oxidrive_accounts::{account::VerifyCreds, AccountService};
 use serde::Deserialize;
 use url::Url;
 
-use crate::{api::error::ApiError, session::Session};
+use crate::{api::error::ApiError, session::WebSession};
 
 #[axum::debug_handler(state = crate::state::AppState)]
 pub async fn handler(
@@ -43,16 +43,30 @@ pub async fn handler(
         }
     }
 
-    let account = match creds {
-        SessionCredentials::Password { username, password } => auth
-            .login()
-            .password(&username, &password)
-            .await
-            .map_err(ApiError::from)
-            .map_err(|err| error.wrap(err))?,
+    let (account, creds) = match creds {
+        SessionCredentials::Password { username, password } => {
+            let Some(account) = auth
+                .accounts()
+                .by_username(&username)
+                .await
+                .map_err(ApiError::new)
+                .map_err(|err| error.clone().wrap(err))?
+            else {
+                return Err(error.wrap(ApiError::unauthenticated()));
+            };
+
+            (account, VerifyCreds::Password(password))
+        }
     };
 
-    let session = Session::create(account, jar);
+    let session = auth
+        .sessions()
+        .create(&account, creds)
+        .await
+        .map_err(ApiError::from)
+        .map_err(move |err| error.wrap(err))?;
+
+    let session = WebSession::create(session, jar);
 
     Ok(SessionCreated {
         session,
@@ -82,9 +96,8 @@ pub enum SessionCredentials {
     Password { username: String, password: String },
 }
 
-#[derive(Debug)]
 pub struct SessionCreated {
-    session: Session,
+    session: WebSession,
     redirect_to: Option<Uri>,
 }
 
@@ -99,12 +112,18 @@ impl IntoResponse for SessionCreated {
     }
 }
 
-impl From<AuthenticationFailed> for ApiError {
-    fn from(err: AuthenticationFailed) -> Self {
+impl From<oxidrive_accounts::session::CreateSessionError> for ApiError {
+    fn from(err: oxidrive_accounts::session::CreateSessionError) -> Self {
         match err {
-            AuthenticationFailed::ByUsernameError(err) => Self::new(err),
-            AuthenticationFailed::CredentialsError(err) => Self::new(err),
-            AuthenticationFailed::Unauthorized => Self::unauthenticated(),
+            oxidrive_accounts::session::CreateSessionError::LoadCredentialsFailed(err) => {
+                ApiError::new(err)
+            }
+            oxidrive_accounts::session::CreateSessionError::InvalidCredentials(_) => {
+                ApiError::unauthenticated()
+            }
+            oxidrive_accounts::session::CreateSessionError::SaveSessionFailed(err) => {
+                ApiError::new(err)
+            }
         }
     }
 }

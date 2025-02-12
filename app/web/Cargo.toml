@@ -30,6 +30,7 @@ mime_guess = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+time = { workspace = true, features = ["serde"] }
 tokio = { workspace = true, features = ["net"] }
 tower = { workspace = true, features = ["util"] }
 tower-http = { workspace = true, features = [

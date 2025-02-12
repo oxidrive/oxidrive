@@ -1,132 +1,88 @@
-use std::fmt::Display;
+use std::ops::Deref;
 
 use axum::{
-    extract::{FromRef, FromRequestParts, OptionalFromRequestParts},
+    extract::{FromRequestParts, OptionalFromRequestParts},
     http::request::Parts,
     response::IntoResponseParts,
 };
 use axum_extra::extract::{
-    cookie::{Cookie, Expiration, Key},
+    cookie::{Cookie, Key},
     SignedCookieJar,
 };
-use oxidrive_accounts::account::{Account, AccountId};
+use oxidrive_accounts::{account::Account, session::Session};
 
 use crate::{api::error::ApiError, state::AppState};
 
 pub const SESSION_COOKIE: &str = "oxidrive_session";
 
-#[derive(Debug)]
-pub struct Session {
-    pub data: SessionData,
+pub struct WebSession {
+    session: Session,
 
     jar: SignedCookieJar,
 }
 
-impl Session {
-    pub fn create(data: impl Into<SessionData>, jar: SignedCookieJar) -> Self {
+impl WebSession {
+    pub fn create(session: impl Into<Session>, jar: SignedCookieJar) -> Self {
         Self {
-            data: data.into(),
+            session: session.into(),
             jar,
         }
     }
 
-    pub fn clear(self) -> impl IntoResponseParts {
-        self.jar.remove(self.data.into_cookie())
+    pub fn clear(self) -> SignedCookieJar {
+        let cookie = self.as_cookie();
+        self.jar.remove(cookie)
+    }
+
+    fn as_cookie(&self) -> Cookie<'static> {
+        Cookie::build((SESSION_COOKIE, self.session.id.to_string()))
+            .path("/")
+            .http_only(true)
+            .expires(self.session.expires_at)
+            .build()
     }
 }
 
-impl IntoResponseParts for Session {
+impl Deref for WebSession {
+    type Target = Session;
+
+    fn deref(&self) -> &Self::Target {
+        &self.session
+    }
+}
+
+impl IntoResponseParts for WebSession {
     type Error = <SignedCookieJar as IntoResponseParts>::Error;
 
     fn into_response_parts(
         self,
         res: axum::response::ResponseParts,
     ) -> Result<axum::response::ResponseParts, Self::Error> {
-        let jar = self.jar.add(self.data.into_cookie());
+        let cookie = self.as_cookie();
+        let jar = self.jar.add(cookie);
         jar.into_response_parts(res)
     }
 }
 
-#[derive(Default, Debug)]
-pub struct SessionData {
-    pub account_id: AccountId,
-}
-
-impl SessionData {
-    pub fn into_cookie(self) -> Cookie<'static> {
-        Cookie::build((SESSION_COOKIE, self.to_string()))
-            .path("/")
-            .http_only(true)
-            .expires(Expiration::Session)
-            .build()
-    }
-}
-
-impl From<Account> for SessionData {
-    fn from(account: Account) -> Self {
-        Self {
-            account_id: account.id,
-        }
-    }
-}
-
-impl Display for SessionData {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "account_id={}", self.account_id)
-    }
-}
-
-impl TryFrom<String> for SessionData {
-    type Error = String;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        let mut data = SessionData::default();
-
-        for pairs in value.clone().split('&').map(|s| s.trim()) {
-            let mut pair = pairs.split('=');
-
-            let key = pair.next().ok_or_else(|| value.clone())?;
-            let val = pair.next().ok_or_else(|| value.clone())?;
-
-            match key {
-                "account_id" => {
-                    data.account_id = val.parse().map_err(|_| value.clone())?;
-                }
-
-                _ => {
-                    return Err(value);
-                }
-            }
-        }
-
-        Ok(data)
-    }
-}
-
-impl<S> FromRequestParts<S> for Session
-where
-    S: Send + Sync,
-    Key: FromRef<S>,
-{
+impl FromRequestParts<AppState> for WebSession {
     type Rejection = ApiError;
 
-    async fn from_request_parts(parts: &mut Parts, state: &S) -> Result<Self, Self::Rejection> {
-        <Self as OptionalFromRequestParts<S>>::from_request_parts(parts, state)
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        <Self as OptionalFromRequestParts<AppState>>::from_request_parts(parts, state)
             .await?
             .ok_or_else(ApiError::unauthenticated)
     }
 }
 
-impl<S> OptionalFromRequestParts<S> for Session
-where
-    S: Send + Sync,
-    Key: FromRef<S>,
-{
+impl OptionalFromRequestParts<AppState> for WebSession {
     type Rejection = ApiError;
 
     async fn from_request_parts(
         parts: &mut Parts,
-        state: &S,
+        state: &AppState,
     ) -> Result<Option<Self>, Self::Rejection> {
         let jar = SignedCookieJar::<Key>::from_request_parts(parts, state)
             .await
@@ -136,9 +92,22 @@ where
             return Ok(None);
         };
 
-        let data = SessionData::try_from(cookie.value().to_string())
+        let session_id = cookie
+            .value_trimmed()
+            .parse()
             .map_err(|_| ApiError::unauthenticated())?;
-        Ok(Some(Session::create(data, jar)))
+
+        let Some(session) = state
+            .accounts
+            .sessions()
+            .by_id(session_id)
+            .await
+            .map_err(ApiError::new)?
+        else {
+            return Ok(None);
+        };
+
+        Ok(Some(WebSession::create(session, jar)))
     }
 }
 
@@ -166,16 +135,16 @@ impl OptionalFromRequestParts<AppState> for CurrentUser {
         state: &AppState,
     ) -> Result<Option<Self>, Self::Rejection> {
         let Some(session) =
-            <Session as OptionalFromRequestParts<AppState>>::from_request_parts(parts, state)
+            <WebSession as OptionalFromRequestParts<AppState>>::from_request_parts(parts, state)
                 .await?
         else {
             return Ok(None);
         };
 
         let Some(account) = state
-            .auth
+            .accounts
             .accounts()
-            .by_id(session.data.account_id)
+            .by_id(session.session.account_id)
             .await
             .map_err(ApiError::new)?
         else {

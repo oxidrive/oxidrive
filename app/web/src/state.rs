@@ -8,7 +8,7 @@ use crate::Config;
 
 #[derive(Clone, FromRef)]
 pub struct AppState {
-    pub auth: AccountService,
+    pub accounts: AccountService,
     pub authorizer: Authorizer,
     pub files: Files,
     pub collections: Collections,
@@ -19,13 +19,13 @@ pub struct AppState {
 impl AppState {
     pub fn new(
         cfg: Config,
-        auth: AccountService,
+        accounts: AccountService,
         authorizer: Authorizer,
         files: Files,
         collections: Collections,
     ) -> Self {
         Self {
-            auth,
+            accounts,
             authorizer,
             files,
             collections,

@@ -5,12 +5,12 @@ use account::{
     HashError, Password, PgAccountCredentials, PgAccounts, SaveAccountError, SaveCredentialsError,
     SqliteAccountCredentials, SqliteAccounts,
 };
-use login::Login;
 use oxidrive_database::Database;
+use session::{jobs::JobsModule, Sessions, SessionsModule};
 
 pub mod account;
 pub mod auth;
-pub mod login;
+pub mod session;
 
 mod setup;
 
@@ -18,27 +18,28 @@ mod setup;
 pub struct AccountService {
     accounts: Arc<dyn Accounts>,
     credentials: Arc<dyn AccountCredentials>,
-    login: Login,
+    sessions: Sessions,
 }
 
 impl AccountService {
-    pub fn new(accounts: Arc<dyn Accounts>, credentials: Arc<dyn AccountCredentials>) -> Self {
+    pub fn new(
+        accounts: Arc<dyn Accounts>,
+        credentials: Arc<dyn AccountCredentials>,
+        sessions: Sessions,
+    ) -> Self {
         Self {
-            login: Login {
-                accounts: accounts.clone(),
-                credentials: credentials.clone(),
-            },
             accounts,
             credentials,
+            sessions,
         }
-    }
-
-    pub fn login(&self) -> &Login {
-        &self.login
     }
 
     pub fn accounts(&self) -> &dyn Accounts {
         self.accounts.as_ref()
+    }
+
+    pub fn sessions(&self) -> &Sessions {
+        &self.sessions
     }
 
     pub async fn create_account(
@@ -106,7 +107,9 @@ impl app::Module for AccountsModule {
     fn mount(self: Box<Self>, c: &mut app::di::Context) {
         c.bind(accounts);
         c.bind(credentials);
+        c.mount(SessionsModule);
         c.bind(AccountService::new);
+        c.mount(JobsModule);
     }
 }
 
@@ -127,6 +130,8 @@ fn credentials(database: Database) -> Arc<dyn AccountCredentials> {
 #[app::async_trait]
 impl app::Hooks for AccountsModule {
     async fn after_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+        JobsModule.after_start(c).await?;
+
         let auth = c.get::<AccountService>();
 
         if let Some(admin) = auth.upsert_initial_admin(false).await? {
@@ -137,6 +142,16 @@ impl app::Hooks for AccountsModule {
             );
         }
 
+        Ok(())
+    }
+
+    async fn before_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+        JobsModule.before_start(c).await?;
+        Ok(())
+    }
+
+    async fn on_shutdown(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+        JobsModule.on_shutdown(c).await?;
         Ok(())
     }
 }

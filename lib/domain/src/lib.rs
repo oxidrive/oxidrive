@@ -1,6 +1,10 @@
 #[macro_export]
 macro_rules! make_uuid_type {
     ($typ:ident, $macro_name:ident) => {
+        $crate::make_uuid_type!($typ, $macro_name, now_v7);
+    };
+
+    ($typ:ident, $macro_name:ident, $version:ident) => {
         #[derive(
             Default,
             Debug,
@@ -40,7 +44,7 @@ macro_rules! make_uuid_type {
 
         impl $typ {
             pub fn new() -> Self {
-                Self(::uuid::Uuid::now_v7())
+                Self(::uuid::Uuid::$version())
             }
 
             pub fn as_uuid(&self) -> ::uuid::Uuid {

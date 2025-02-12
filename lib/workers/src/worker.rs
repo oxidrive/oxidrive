@@ -55,7 +55,7 @@ where
 
             loop {
                 if let Err(err) = self.run_batch().await {
-                    tracing::error!(error = %err, error.details = ?err, "processing failed: {err}");
+                    tracing::error!(error = %err, error.details = ?err, "job processing failed");
                 }
 
                 tokio::time::sleep(self.poll_timeout).await;
