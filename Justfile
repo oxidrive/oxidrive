@@ -131,7 +131,7 @@ test-rust *args:
 [group('test')]
 [group('rust')]
 test-rust-full *args:
-    cargo nextest run --profile=ci {{ args }}
+    cargo nextest run --profile=full {{ args }}
 
 [group('test')]
 [group('node')]

@@ -5,7 +5,10 @@ use oxidrive_accounts::{
 };
 use oxidrive_paginate::Paginate;
 
-use crate::{file, tag, File, FileId};
+use crate::{
+    file::{self, macros::file_id},
+    tag, File, FileId,
+};
 
 use super::FileMetadata;
 
@@ -19,8 +22,8 @@ macro_rules! check_file {
     };
 }
 
-pub const FILE_ID_1: FileId = file::macros::file_id!("019433e9-ffbb-7c8b-af6c-d4cb061fb919");
-pub const FILE_ID_2: FileId = file::macros::file_id!("019433ea-5976-7982-bedb-760ad14d4c1a");
+pub const FILE_ID_1: FileId = file_id!("019433e9-ffbb-7c8b-af6c-d4cb061fb919");
+pub const FILE_ID_2: FileId = file_id!("019433ea-5976-7982-bedb-760ad14d4c1a");
 
 pub fn file_1() -> File {
     let mut file = File {
