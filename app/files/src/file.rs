@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::str::FromStr;
 
 use oxidrive_accounts::account::AccountId;
@@ -29,6 +30,7 @@ pub struct File {
     pub content_type: String,
     pub size: usize,
     pub tags: Tags,
+    hash: Option<blake3::Hash>,
 }
 
 impl File {
@@ -47,6 +49,7 @@ impl File {
             content_type,
             size: 0,
             tags: Default::default(),
+            hash: None,
         };
 
         this.tags = Self::default_tags(&this);
@@ -92,6 +95,14 @@ impl File {
 
     pub fn add_tag(&mut self, tag: Tag) {
         self.tags.insert(tag.key.clone(), tag);
+    }
+
+    pub fn hash(&self) -> Option<impl Display> {
+        self.hash
+    }
+
+    pub(crate) fn set_hash(&mut self, hash: blake3::Hash) {
+        self.hash = Some(hash);
     }
 
     fn default_tags(file: &File) -> Tags {

@@ -1,7 +1,7 @@
 meta {
-  name: Download file
+  name: Cached file is not redownloaded
   type: http
-  seq: 3
+  seq: 4
 }
 
 get {
@@ -14,14 +14,14 @@ params:path {
   file_name: goose.jpg
 }
 
-vars:post-response {
-  etag: res.headers.etag
+headers {
+  if-none-match: {{etag}}
 }
 
 assert {
   res.headers["content-type"]: eq image/jpeg
   res.headers["cache-control"]: eq private
   res.headers["content-disposition"]: eq inline
-  res.status: eq 200
-  res.body: isNotEmpty 
+  res.status: eq 304
+  res.body: isEmpty 
 }

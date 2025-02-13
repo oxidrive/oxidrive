@@ -19,6 +19,7 @@ macro_rules! check_file {
         check!($expected.name == $actual.name);
         check!($expected.size == $actual.size);
         check!($expected.tags == $actual.tags);
+        check!($expected.hash == $actual.hash);
     };
 }
 
@@ -33,6 +34,7 @@ pub fn file_1() -> File {
         content_type: "text/plain".into(),
         size: 0,
         tags: Default::default(),
+        hash: Some(blake3::hash(b"hello world")),
     };
 
     file.tags = File::default_tags(&file);
@@ -48,6 +50,7 @@ pub fn file_2() -> File {
         content_type: "text/plain".into(),
         size: 0,
         tags: Default::default(),
+        hash: Some(blake3::hash(b"hello world")),
     };
 
     file.tags = File::default_tags(&file);

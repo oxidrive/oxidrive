@@ -40,7 +40,8 @@ select distinct
   name,
   content_type,
   size,
-  tags
+  tags,
+  hash
 from files
 where owner_id ="#,
         );
@@ -77,7 +78,8 @@ select
   name,
   content_type,
   size,
-  tags
+  tags,
+  hash
 from files
 where id = $1
 "#,
@@ -103,7 +105,8 @@ select
   name,
   content_type,
   size,
-  tags
+  tags,
+  hash
 from files
 where owner_id = $1
   and name = $2
@@ -130,20 +133,23 @@ insert into files (
   name,
   content_type,
   size,
-  tags
+  tags,
+  hash
 ) values (
   $1,
   $2,
   $3,
   $4,
   $5,
-  $6
+  $6,
+  $7
 ) on conflict (id)
 do update set
   name = excluded.name,
   content_type = excluded.content_type,
   size = excluded.size,
-  tags = excluded.tags
+  tags = excluded.tags,
+  hash = excluded.hash
 "#,
         )
         .bind(id)
@@ -152,6 +158,7 @@ do update set
         .bind(&file.content_type)
         .bind(file.size as i64)
         .bind(to_sqlite_tags(file.tags.clone()))
+        .bind(file.hash.as_ref().map(|hash| hash.as_bytes().as_slice()))
         .execute(&self.pool)
         .await
         .map_err(SaveFileError::wrap)?;
@@ -173,7 +180,8 @@ select distinct
   name,
   content_type,
   size,
-  tags
+  tags,
+  hash
 from files
 where owner_id ="#,
         );
@@ -253,6 +261,7 @@ struct SqliteFile {
     content_type: String,
     size: i64,
     tags: SqliteTags,
+    hash: Option<Vec<u8>>,
 }
 
 impl From<SqliteFile> for File {
@@ -274,6 +283,9 @@ impl From<SqliteFile> for File {
                 })
                 .map(Tag::into)
                 .collect(),
+            hash: file
+                .hash
+                .map(|bytes| blake3::Hash::from_bytes(bytes.try_into().unwrap())),
         }
     }
 }

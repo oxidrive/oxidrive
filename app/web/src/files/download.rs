@@ -1,10 +1,13 @@
-use std::marker::PhantomData;
+use std::{collections::HashSet, marker::PhantomData};
 
 use axum::{
     body::Bytes,
     extract::{Path, Query, State},
-    http::header,
-    response::IntoResponse,
+    http::{
+        header::{self, IF_NONE_MATCH},
+        HeaderMap, HeaderValue, StatusCode,
+    },
+    response::{IntoResponse, Response},
 };
 use axum_extra::response::FileStream;
 use futures::Stream;
@@ -40,7 +43,8 @@ pub async fn handler(
     CurrentUser(account): CurrentUser,
     Path(file_name): Path<String>,
     Query(DownloadQuery { force }): Query<DownloadQuery>,
-) -> ApiResult<impl IntoResponse> {
+    headers: HeaderMap,
+) -> ApiResult<Response> {
     let Some(file) = files
         .metadata()
         .by_owner_and_name(account.id, &file_name)
@@ -57,11 +61,17 @@ pub async fn handler(
         )
         .into_err::<ApiError>()?;
 
-    let Some(body) = files.download(&file).await? else {
-        return Err(ApiError::not_found());
+    let body = match etag_matches(&file, headers) {
+        Some(_) => None,
+        None => {
+            let Some(body) = files.download(&file).await? else {
+                return Err(ApiError::not_found());
+            };
+            Some(body)
+        }
     };
 
-    Ok(DownloadResponse { file, force, body })
+    Ok(DownloadResponse { file, force, body }.into_response())
 }
 
 #[derive(ToSchema)]
@@ -78,7 +88,7 @@ pub struct DownloadQuery {
 pub struct DownloadResponse<S> {
     file: File,
     force: bool,
-    body: S,
+    body: Option<S>,
 }
 
 impl<S, E> IntoResponse for DownloadResponse<S>
@@ -86,20 +96,28 @@ where
     S: Stream<Item = Result<Bytes, E>> + Send + 'static,
     E: std::error::Error + Send + Sync + 'static,
 {
-    fn into_response(self) -> axum::response::Response {
+    fn into_response(self) -> Response {
         let content_disposition = if self.force {
             attachment(&self.file)
         } else {
             content_disposition(&self.file)
         };
 
-        let headers = [
+        let mut headers: HeaderMap = HeaderMap::from_iter([
             (header::CONTENT_DISPOSITION, content_disposition),
-            (header::CONTENT_TYPE, self.file.content_type),
-            (header::CACHE_CONTROL, "private".into()),
-        ];
+            (header::CONTENT_TYPE, header_value(&self.file.content_type)),
+            (header::CACHE_CONTROL, HeaderValue::from_static("private")),
+        ]);
 
-        let body = FileStream::new(self.body).file_name(self.file.name);
+        if let Some(hash) = self.file.hash() {
+            headers.insert(header::ETAG, header_value(hash.to_string()));
+        }
+
+        let Some(body) = self.body else {
+            return (StatusCode::NOT_MODIFIED, headers).into_response();
+        };
+
+        let body = FileStream::new(body).file_name(self.file.name);
 
         (headers, body).into_response()
     }
@@ -117,16 +135,16 @@ impl From<DownloadError> for ApiError {
     }
 }
 
-fn content_disposition(file: &File) -> String {
+fn content_disposition(file: &File) -> HeaderValue {
     if can_be_inlined(file) {
-        return "inline".into();
+        return HeaderValue::from_static("inline");
     }
 
     attachment(file)
 }
 
-fn attachment(file: &File) -> String {
-    format!("attachment; filename=\"{}\"", file.name)
+fn attachment(file: &File) -> HeaderValue {
+    header_value(format!("attachment; filename=\"{}\"", file.name))
 }
 
 const INLINEABLE: &[&str] = &["application/pdf", "image/", "video/", "audio/"];
@@ -139,4 +157,30 @@ fn can_be_inlined(file: &File) -> bool {
     }
 
     false
+}
+
+fn header_value(value: impl AsRef<str>) -> HeaderValue {
+    HeaderValue::from_str(value.as_ref()).unwrap()
+}
+
+fn etag_matches(file: &File, headers: HeaderMap) -> Option<()> {
+    let matching_etags = headers.get(IF_NONE_MATCH).and_then(|h| h.to_str().ok())?;
+
+    // * matches anything
+    if matching_etags == "*" {
+        return Some(());
+    }
+
+    let hash = file.hash()?.to_string();
+
+    let matching_etags = matching_etags
+        .split(',')
+        .map(|s| s.trim())
+        .collect::<HashSet<_>>();
+
+    if matching_etags.contains(hash.as_str()) {
+        return Some(());
+    }
+
+    None
 }

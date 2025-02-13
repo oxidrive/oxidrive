@@ -9,7 +9,7 @@ use crate::{
     File, Tag,
 };
 use bytes::Bytes;
-use futures::Stream;
+use futures::{Stream, TryStreamExt};
 use oxidrive_accounts::account::AccountId;
 use oxidrive_paginate::{Paginate, Slice};
 use oxidrive_pubsub::Publisher;
@@ -69,9 +69,15 @@ impl Files {
             None => File::new(meta.owner_id, meta.file_name, content_type),
         };
 
+        let mut hasher = blake3::Hasher::new();
+        let content = content.inspect_ok(|bytes| {
+            hasher.update(bytes);
+        });
+
         let size = self.storage.upload(&file, content).await?;
 
         file.set_size(size);
+        file.set_hash(hasher.finalize());
 
         let file = self.metadata.save(file).await?;
 
