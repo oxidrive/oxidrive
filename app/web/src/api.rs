@@ -4,14 +4,14 @@ use tower_http::set_header::SetResponseHeaderLayer;
 use utoipa::{
     openapi::{
         path::Operation,
-        security::{ApiKey, ApiKeyValue, SecurityScheme},
+        security::{self, SecurityScheme},
         PathItem,
     },
     Modify, OpenApi,
 };
 use utoipa_axum::router::OpenApiRouter;
 
-use crate::{files, session::SESSION_COOKIE, state::AppState, Config};
+use crate::{files, state::AppState, Config};
 
 pub mod error;
 
@@ -50,8 +50,14 @@ impl Modify for SecuritySchemes {
     fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
         if let Some(components) = openapi.components.as_mut() {
             components.add_security_scheme(
-                "session",
-                SecurityScheme::ApiKey(ApiKey::Cookie(ApiKeyValue::new(SESSION_COOKIE))),
+                "pat",
+                SecurityScheme::Http(
+                    security::Http::builder()
+                        .scheme(security::HttpAuthScheme::Bearer)
+                        .bearer_format("Oxidrive Personal Access Token")
+                        .description(Some("An Oxidrive PAT, generated using /api/v1/pats"))
+                        .build(),
+                ),
             );
         }
     }
@@ -70,10 +76,7 @@ impl Modify for PrependOperationPrefix {
                 .join("::");
 
             for op in all_paths(item) {
-                op.operation_id = op
-                    .operation_id
-                    .as_ref()
-                    .map(|id| format!("{}::{id}", prefix));
+                op.operation_id = op.operation_id.as_ref().map(|id| format!("{prefix}::{id}"));
             }
         }
     }

@@ -42,7 +42,7 @@ tower-http = { workspace = true, features = [
 tower-surf = { workspace = true, features = ["axum"] }
 tracing = { workspace = true }
 url = { workspace = true }
-utoipa = { workspace = true, features = ["uuid", "axum_extras"] }
+utoipa = { workspace = true, features = ["uuid", "axum_extras", "time"] }
 utoipa-axum = { workspace = true }
 utoipa-swagger-ui = { workspace = true, features = ["axum", "vendored"] }
 uuid = { workspace = true }

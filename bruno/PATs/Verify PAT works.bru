@@ -1,0 +1,19 @@
+meta {
+  name: Verify PAT works
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{server}}/api/v1/accounts/me
+  body: none
+  auth: bearer
+}
+
+auth:bearer {
+  token: {{pat}}
+}
+
+assert {
+  res.status: eq 200
+}

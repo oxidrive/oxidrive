@@ -6,10 +6,12 @@ use account::{
     SqliteAccountCredentials, SqliteAccounts,
 };
 use oxidrive_database::Database;
+use pat::{PersonalAccessTokens, PersonalAccessTokensModule};
 use session::{jobs::JobsModule, Sessions, SessionsModule};
 
 pub mod account;
 pub mod auth;
+pub mod pat;
 pub mod session;
 
 mod setup;
@@ -19,6 +21,7 @@ pub struct AccountService {
     accounts: Arc<dyn Accounts>,
     credentials: Arc<dyn AccountCredentials>,
     sessions: Sessions,
+    pats: PersonalAccessTokens,
 }
 
 impl AccountService {
@@ -26,11 +29,13 @@ impl AccountService {
         accounts: Arc<dyn Accounts>,
         credentials: Arc<dyn AccountCredentials>,
         sessions: Sessions,
+        pats: PersonalAccessTokens,
     ) -> Self {
         Self {
             accounts,
             credentials,
             sessions,
+            pats,
         }
     }
 
@@ -40,6 +45,10 @@ impl AccountService {
 
     pub fn sessions(&self) -> &Sessions {
         &self.sessions
+    }
+
+    pub fn personal_access_tokens(&self) -> &PersonalAccessTokens {
+        &self.pats
     }
 
     pub async fn create_account(
@@ -108,6 +117,7 @@ impl app::Module for AccountsModule {
         c.bind(accounts);
         c.bind(credentials);
         c.mount(SessionsModule);
+        c.mount(PersonalAccessTokensModule);
         c.bind(AccountService::new);
         c.mount(JobsModule);
     }

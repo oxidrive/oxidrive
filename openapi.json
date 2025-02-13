@@ -356,6 +356,35 @@
         }
       }
     },
+    "/api/v1/pats": {
+      "post": {
+        "tags": [
+          "pats"
+        ],
+        "operationId": "api::v1::pats::create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonalAccessToken"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "$ref": "#/components/responses/PersonalAccessTokenCreated"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
+      }
+    },
     "/files": {
       "post": {
         "tags": [
@@ -547,6 +576,18 @@
           }
         }
       },
+      "CreatePersonalAccessToken": {
+        "type": "object",
+        "properties": {
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "Cursor": {
         "type": "string"
       },
@@ -702,6 +743,25 @@
           }
         }
       },
+      "PersonalAccessTokenData": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "Tag": {
         "type": "object",
         "required": [
@@ -803,6 +863,40 @@
           }
         }
       },
+      "PersonalAccessTokenCreated": {
+        "description": "",
+        "content": {
+          "application/json": {
+            "schema": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/PersonalAccessTokenData"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "token"
+                  ],
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              ]
+            },
+            "examples": {
+              "Token": {
+                "value": {
+                  "token": "oxipat.9mcXeQKqacTb6aCk_N8umw",
+                  "id": "01950018-fbe9-7d93-a2b6-f0d1cac70708",
+                  "expires_at": "2025-02-14T16:16:32.225Z"
+                }
+              }
+            }
+          }
+        }
+      },
       "TagsUpdated": {
         "description": "",
         "content": {
@@ -818,10 +912,11 @@
       }
     },
     "securitySchemes": {
-      "session": {
-        "type": "apiKey",
-        "in": "cookie",
-        "name": "oxidrive_session"
+      "pat": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Oxidrive Personal Access Token",
+        "description": "An Oxidrive PAT, generated using /api/v1/pats"
       }
     }
   }

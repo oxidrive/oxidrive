@@ -5,13 +5,24 @@ use axum::{
     http::request::Parts,
     response::IntoResponseParts,
 };
-use axum_extra::extract::{
-    cookie::{Cookie, Key},
-    SignedCookieJar,
+use axum_extra::{
+    extract::{
+        cookie::{Cookie, Key},
+        SignedCookieJar,
+    },
+    headers::{authorization::Bearer, Authorization},
+    TypedHeader,
 };
-use oxidrive_accounts::{account::Account, session::Session};
+use oxidrive_accounts::{
+    account::{Account, AccountId},
+    pat::PersonalAccessToken,
+    session::Session,
+};
 
-use crate::{api::error::ApiError, state::AppState};
+use crate::{
+    api::error::{ApiError, ApiResult},
+    state::AppState,
+};
 
 pub const SESSION_COOKIE: &str = "oxidrive_session";
 
@@ -111,6 +122,59 @@ impl OptionalFromRequestParts<AppState> for WebSession {
 }
 
 #[derive(Debug)]
+enum BearerToken {
+    Pat(PersonalAccessToken),
+}
+
+impl FromRequestParts<AppState> for BearerToken {
+    type Rejection = ApiError;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Self, Self::Rejection> {
+        <Self as OptionalFromRequestParts<AppState>>::from_request_parts(parts, state)
+            .await?
+            .ok_or_else(ApiError::unauthenticated)
+    }
+}
+
+impl OptionalFromRequestParts<AppState> for BearerToken {
+    type Rejection = ApiError;
+
+    async fn from_request_parts(
+        parts: &mut Parts,
+        state: &AppState,
+    ) -> Result<Option<Self>, Self::Rejection> {
+        let Some(TypedHeader(Authorization(header))) = <TypedHeader<Authorization<Bearer>> as OptionalFromRequestParts<
+            AppState,
+        >>::from_request_parts(parts, state)
+        .await
+        .map_err(ApiError::new)?
+        else {
+            return Ok(None);
+        };
+
+        let token = header
+            .token()
+            .parse()
+            .map_err(|err| ApiError::unauthenticated().message(err))?;
+
+        let Some(token) = state
+            .accounts
+            .personal_access_tokens()
+            .by_token(token)
+            .await
+            .map_err(ApiError::new)?
+        else {
+            return Ok(None);
+        };
+
+        Ok(Some(Self::Pat(token)))
+    }
+}
+
+#[derive(Debug)]
 pub struct CurrentUser(pub Account);
 
 impl FromRequestParts<AppState> for CurrentUser {
@@ -133,17 +197,14 @@ impl OptionalFromRequestParts<AppState> for CurrentUser {
         parts: &mut Parts,
         state: &AppState,
     ) -> Result<Option<Self>, Self::Rejection> {
-        let Some(session) =
-            <WebSession as OptionalFromRequestParts<AppState>>::from_request_parts(parts, state)
-                .await?
-        else {
+        let Some(account_id) = extract_account_id(parts, state).await? else {
             return Ok(None);
         };
 
         let Some(account) = state
             .accounts
             .accounts()
-            .by_id(session.account_id)
+            .by_id(account_id)
             .await
             .map_err(ApiError::new)?
         else {
@@ -152,4 +213,23 @@ impl OptionalFromRequestParts<AppState> for CurrentUser {
 
         Ok(Some(Self(account)))
     }
+}
+
+async fn extract_account_id(parts: &mut Parts, state: &AppState) -> ApiResult<Option<AccountId>> {
+    if let Some(session) =
+        <WebSession as OptionalFromRequestParts<AppState>>::from_request_parts(parts, state).await?
+    {
+        return Ok(Some(session.account_id));
+    }
+
+    if let Some(token) =
+        <BearerToken as OptionalFromRequestParts<AppState>>::from_request_parts(parts, state)
+            .await?
+    {
+        return Ok(Some(match token {
+            BearerToken::Pat(pat) => pat.account_id,
+        }));
+    }
+
+    Ok(None)
 }

@@ -75,8 +75,8 @@ impl ApiError {
         self
     }
 
-    pub fn message(mut self, message: impl Into<String>) -> Self {
-        self.message = message.into();
+    pub fn message(mut self, message: impl ToString) -> Self {
+        self.message = message.to_string();
         self
     }
 

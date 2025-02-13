@@ -132,6 +132,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["api::v1::pats::create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/files": {
         parameters: {
             query?: never;
@@ -195,6 +211,10 @@ export interface components {
             filter: string;
             name: string;
         };
+        CreatePersonalAccessToken: {
+            /** Format: date-time */
+            expires_at?: string | null;
+        };
         Cursor: string;
         FileData: {
             content_type: string;
@@ -224,6 +244,12 @@ export interface components {
             }[];
             next?: null | components["schemas"]["Cursor"];
             previous?: null | components["schemas"]["Cursor"];
+        };
+        PersonalAccessTokenData: {
+            /** Format: date-time */
+            expires_at?: string | null;
+            /** Format: uuid */
+            id: string;
         };
         Tag: {
             key: string;
@@ -273,6 +299,16 @@ export interface components {
                 "application/json": components["schemas"]["CollectionData"];
             };
         };
+        PersonalAccessTokenCreated: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["PersonalAccessTokenData"] & {
+                    token: string;
+                };
+            };
+        };
         TagsUpdated: {
             headers: {
                 [name: string]: unknown;
@@ -298,10 +334,12 @@ export type SchemaApiError = components['schemas']['ApiError'];
 export type SchemaCollectionData = components['schemas']['CollectionData'];
 export type SchemaCreateAccount = components['schemas']['CreateAccount'];
 export type SchemaCreateCollection = components['schemas']['CreateCollection'];
+export type SchemaCreatePersonalAccessToken = components['schemas']['CreatePersonalAccessToken'];
 export type SchemaCursor = components['schemas']['Cursor'];
 export type SchemaFileData = components['schemas']['FileData'];
 export type SchemaPageCollectionData = components['schemas']['Page_CollectionData'];
 export type SchemaPageFileData = components['schemas']['Page_FileData'];
+export type SchemaPersonalAccessTokenData = components['schemas']['PersonalAccessTokenData'];
 export type SchemaTag = components['schemas']['Tag'];
 export type SchemaUpdateCollection = components['schemas']['UpdateCollection'];
 export type SchemaUpdatePassword = components['schemas']['UpdatePassword'];
@@ -310,6 +348,7 @@ export type ResponseAccountCreated = components['responses']['AccountCreated'];
 export type ResponseApiError = components['responses']['ApiError'];
 export type ResponseCollectionCreated = components['responses']['CollectionCreated'];
 export type ResponseCollectionUpdated = components['responses']['CollectionUpdated'];
+export type ResponsePersonalAccessTokenCreated = components['responses']['PersonalAccessTokenCreated'];
 export type ResponseTagsUpdated = components['responses']['TagsUpdated'];
 export type ResponseUploadCompleted = components['responses']['UploadCompleted'];
 export type $defs = Record<string, never>;
@@ -525,6 +564,24 @@ export interface operations {
         };
         responses: {
             200: components["responses"]["TagsUpdated"];
+            "4XX": components["responses"]["ApiError"];
+            "5XX": components["responses"]["ApiError"];
+        };
+    };
+    "api::v1::pats::create": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreatePersonalAccessToken"];
+            };
+        };
+        responses: {
+            201: components["responses"]["PersonalAccessTokenCreated"];
             "4XX": components["responses"]["ApiError"];
             "5XX": components["responses"]["ApiError"];
         };

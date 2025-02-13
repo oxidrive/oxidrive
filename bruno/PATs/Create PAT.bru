@@ -1,0 +1,32 @@
+meta {
+  name: Create PAT
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{server}}/api/v1/pats
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "expires_at": "{{patExpiresAt}}"
+  }
+}
+
+vars:post-response {
+  pat: res.body.token
+}
+
+assert {
+  res.status: eq 201
+  res.body.token: isNotEmpty
+}
+
+script:pre-request {
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 1);
+  bru.setVar("patExpiresAt", expiresAt.toISOString());
+}
