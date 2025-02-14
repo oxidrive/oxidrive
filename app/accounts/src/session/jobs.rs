@@ -53,16 +53,20 @@ impl app::Module for JobsModule {
 
 #[app::async_trait]
 impl app::Hooks for JobsModule {
-    async fn after_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+    async fn after_start(
+        &mut self,
+        ctx: app::context::Context,
+        c: &app::di::Container,
+    ) -> app::eyre::Result<()> {
         let worker = c.get::<Worker<CleanupExpiredSessionsWorker>>();
         let dispatch = worker.dispatcher();
 
-        worker.clone().start();
+        worker.clone().start(ctx.clone());
 
         // TODO: make it configurable
         let every = time::Duration::hours(1).try_into().unwrap();
 
-        Scheduler::new(every, dispatch, CleanupExpiredSessions::default).start();
+        Scheduler::new(every, dispatch, CleanupExpiredSessions::default).start(ctx);
         Ok(())
     }
 }

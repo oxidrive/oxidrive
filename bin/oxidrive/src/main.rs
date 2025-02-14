@@ -48,30 +48,27 @@ async fn main() {
     let app = bootstrap(cfg);
 
     match args.command {
-        Command::Server => {
-            #[cfg(debug_assertions)]
-            let _guard = oxidrive_web::start_dev_server(args.enable_vite_dev_server);
-
-            app.run(run).await
-        }
+        Command::Server => app.run(run).await,
         cmd => {
             let name = app.name.clone();
+            let ctx = app.context();
             let c = app.init();
-            if let Err(err) = cmd.run(&c).await {
+
+            if let Err(err) = cmd.run(ctx, &c).await {
                 ::app::handle_error(&name, &err);
             }
         }
     }
 }
 
-async fn run(c: Arc<app::di::Container>) -> eyre::Result<()> {
+async fn run(ctx: app::context::Context, c: Arc<app::di::Container>) -> eyre::Result<()> {
     let server = c.get::<Server>();
 
     tracing::info!(
         "oxidrive server listening on http://{}",
         server.local_address()
     );
-    server.run().await?;
+    server.run(ctx).await?;
     Ok(())
 }
 
@@ -85,5 +82,5 @@ fn bootstrap(cfg: FullConfig) -> app::App {
         .mount_and_hook(ServerModule)
         .mount_and_hook(AccountsModule)
         .mount_and_hook(FilesModule)
-        .mount(WebModule)
+        .mount_and_hook(WebModule)
 }

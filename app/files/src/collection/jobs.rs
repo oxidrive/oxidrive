@@ -41,8 +41,13 @@ impl app::Module for JobsModule {
 
 #[app::async_trait]
 impl app::Hooks for JobsModule {
-    async fn after_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+    async fn after_start(
+        &mut self,
+        ctx: app::context::Context,
+        c: &app::di::Container,
+    ) -> app::eyre::Result<()> {
         start_event_listener::<RefreshCollectionsWorker, FileEvent, _, _>(
+            ctx.clone(),
             c,
             |dispatcher, event| async move {
                 match event {
@@ -66,6 +71,7 @@ impl app::Hooks for JobsModule {
         );
 
         start_event_listener::<RefreshCollectionWorker, CollectionEvent, _, _>(
+            ctx,
             c,
             |dispatcher, event| async move {
                 match event {
@@ -92,8 +98,11 @@ impl app::Hooks for JobsModule {
     }
 }
 
-fn start_event_listener<W, E, F, Fut>(c: &app::di::Container, mut handler: F)
-where
+fn start_event_listener<W, E, F, Fut>(
+    ctx: app::context::Context,
+    c: &app::di::Container,
+    mut handler: F,
+) where
     W: Process,
     W::Job: Send,
     E: Clone + Send + 'static,
@@ -105,11 +114,18 @@ where
     let dispatcher = worker.dispatcher();
     let mut subscriber = publisher.subscribe();
 
-    worker.clone().start();
+    worker.clone().start(ctx.clone());
 
-    tokio::spawn(async move {
+    let run = async move {
         while let Some(event) = subscriber.next().await {
             handler(dispatcher.clone(), event).await
         }
+    };
+
+    tokio::spawn(async move {
+        tokio::select! {
+            _ = run => {},
+            _ = ctx.cancelled() => {},
+        };
     });
 }

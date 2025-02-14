@@ -2,6 +2,7 @@ use std::net::{IpAddr, Ipv6Addr};
 
 use bytesize::ByteSize;
 use cors::CorsConfig;
+use oxidrive_ui::WebUiModule;
 use serde::Deserialize;
 use state::AppState;
 use tower::{
@@ -11,9 +12,6 @@ use tower::{
 use tower_http::cors::CorsLayer;
 use tower_surf::Surf;
 use utoipa::openapi::OpenApi;
-
-#[cfg(debug_assertions)]
-pub use oxidrive_ui::start_dev_server;
 
 pub use server::Server;
 
@@ -91,6 +89,12 @@ fn default_upload_body_limit() -> ByteSize {
     ByteSize::gb(10)
 }
 
+pub fn openapi_schema() -> OpenApi {
+    let (_, api) = routes::openapi_router(&Config::empty()).split_for_parts();
+    api
+}
+
+#[derive(Clone)]
 pub struct WebModule;
 
 impl app::Module for WebModule {
@@ -100,7 +104,13 @@ impl app::Module for WebModule {
     }
 }
 
-pub fn openapi_schema() -> OpenApi {
-    let (_, api) = routes::openapi_router(&Config::empty()).split_for_parts();
-    api
+#[app::async_trait]
+impl app::Hooks for WebModule {
+    async fn after_start(
+        &mut self,
+        ctx: app::context::Context,
+        c: &app::di::Container,
+    ) -> app::eyre::Result<()> {
+        WebUiModule.after_start(ctx, c).await
+    }
 }

@@ -46,20 +46,29 @@ where
         }
     }
 
-    pub fn start(self) {
+    pub fn start(self, ctx: app::context::Context) {
         tokio::spawn(async move {
             let worker = std::any::type_name::<P>();
             let job = P::Job::kind();
 
             tracing::info!(worker, %job, "starting background worker");
 
-            loop {
-                if let Err(err) = self.run_batch().await {
-                    tracing::error!(error = %err, error.details = ?err, "job processing failed");
-                }
+            let run = async move {
+                loop {
+                    if let Err(err) = self.run_batch().await {
+                        tracing::error!(error = %err, error.details = ?err, "job processing failed");
+                    }
 
-                tokio::time::sleep(self.poll_timeout).await;
+                    tokio::time::sleep(self.poll_timeout).await;
+                }
+            };
+
+            tokio::select! {
+                _ = run => {},
+                _ = ctx.cancelled() => {},
             }
+
+            tracing::info!(worker, %job, "stopping background worker");
         });
     }
 

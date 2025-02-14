@@ -110,6 +110,7 @@ dependencies = [
  "eyre",
  "futures",
  "tokio",
+ "tokio-util",
  "tracing",
 ]
 
@@ -2400,7 +2401,9 @@ dependencies = [
 name = "oxidrive-ui"
 version = "0.1.0"
 dependencies = [
+ "app",
  "rust-embed",
+ "tokio",
  "tracing",
  "vite-rs",
 ]

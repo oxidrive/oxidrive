@@ -7,9 +7,12 @@ edition.workspace = true
 license.workspace = true
 
 [features]
-skip-assets-build = []
+vite-dev-server = ["dep:vite-rs", "dep:tokio"]
 
 [dependencies]
+app = { workspace = true }
+
 tracing = { workspace = true }
 rust-embed = { workspace = true }
-vite-rs = { workspace = true }
+vite-rs = { workspace = true, optional = true }
+tokio = { workspace = true, optional = true, features = ["rt"] }

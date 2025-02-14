@@ -1,12 +1,14 @@
 use std::{borrow::Cow, future::Future, sync::Arc};
 
 use crate::boot::Hooks;
+use crate::context::Context;
 use crate::di::{Container, ContainerBuilder, Module, Provider};
 
 use eyre::WrapErr;
 
 pub struct App {
     pub name: Cow<'static, str>,
+    context: Context,
     container: ContainerBuilder,
     hooks: Vec<Box<dyn Hooks>>,
 }
@@ -15,9 +17,14 @@ impl App {
     pub fn new(name: impl Into<Cow<'static, str>>) -> Self {
         Self {
             name: name.into(),
+            context: Context::root(),
             container: ContainerBuilder::default(),
             hooks: Vec::new(),
         }
+    }
+
+    pub fn context(&self) -> Context {
+        self.context.clone()
     }
 
     pub fn bind<T: Send + Sync + 'static, D>(
@@ -55,24 +62,31 @@ impl App {
 
     pub async fn run<F, Fut>(mut self, run: F)
     where
-        F: FnOnce(Arc<Container>) -> Fut,
+        F: FnOnce(Context, Arc<Container>) -> Fut,
         Fut: Future<Output = eyre::Result<()>>,
     {
         let name = self.name;
+        let ctx = self.context;
 
         let container = Arc::new(self.container.init());
 
         tracing::info!(app = %name, "app starting up");
 
         tracing::debug!(app = %name, "running before_start hooks");
-        run_hooks(self.hooks.iter_mut(), |h| h.before_start(&container)).await;
+        run_hooks(self.hooks.iter_mut(), |h| {
+            h.before_start(ctx.clone(), &container)
+        })
+        .await;
 
         tracing::debug!(app = %name, "running after_start hooks");
-        run_hooks(self.hooks.iter_mut(), |h| h.after_start(&container)).await;
+        run_hooks(self.hooks.iter_mut(), |h| {
+            h.after_start(ctx.clone(), &container)
+        })
+        .await;
 
         tracing::debug!(app = %name, "running app");
         let res = tokio::select! {
-            res = run(container.clone()) => res,
+            res = run(ctx.clone(), container.clone()) => res,
             res = tokio::signal::ctrl_c() => res.wrap_err("failed to listen for SIGINT event"),
         }
         .inspect(|_| {
@@ -82,10 +96,15 @@ impl App {
             handle_error(&name, err);
         });
 
+        ctx.cancel();
+
         let code = res.map(|_| 0).unwrap_or(1);
 
         tracing::debug!(app = %name, "running on_shutdown hooks");
-        run_hooks(self.hooks.iter_mut().rev(), |h| h.on_shutdown(&container)).await;
+        run_hooks(self.hooks.iter_mut().rev(), |h| {
+            h.on_shutdown(ctx.clone(), &container)
+        })
+        .await;
 
         std::process::exit(code);
     }

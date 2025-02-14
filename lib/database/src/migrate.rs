@@ -5,7 +5,7 @@ use crate::Database;
 pub static PG_MIGRATOR: Migrator = sqlx::migrate!("../../migrations/postgres");
 pub static SQLITE_MIGRATOR: Migrator = sqlx::migrate!("../../migrations/sqlite");
 
-pub async fn migrate(db: &Database) -> app::eyre::Result<()> {
+pub async fn migrate(_ctx: app::context::Context, db: &Database) -> app::eyre::Result<()> {
     tracing::debug!("running {} migrations", db.name());
 
     match db {

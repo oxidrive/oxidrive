@@ -139,8 +139,12 @@ fn credentials(database: Database) -> Arc<dyn AccountCredentials> {
 
 #[app::async_trait]
 impl app::Hooks for AccountsModule {
-    async fn after_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
-        JobsModule.after_start(c).await?;
+    async fn after_start(
+        &mut self,
+        ctx: app::context::Context,
+        c: &app::di::Container,
+    ) -> app::eyre::Result<()> {
+        JobsModule.after_start(ctx, c).await?;
 
         let auth = c.get::<AccountService>();
 
@@ -155,13 +159,21 @@ impl app::Hooks for AccountsModule {
         Ok(())
     }
 
-    async fn before_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
-        JobsModule.before_start(c).await?;
+    async fn before_start(
+        &mut self,
+        ctx: app::context::Context,
+        c: &app::di::Container,
+    ) -> app::eyre::Result<()> {
+        JobsModule.before_start(ctx, c).await?;
         Ok(())
     }
 
-    async fn on_shutdown(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
-        JobsModule.on_shutdown(c).await?;
+    async fn on_shutdown(
+        &mut self,
+        ctx: app::context::Context,
+        c: &app::di::Container,
+    ) -> app::eyre::Result<()> {
+        JobsModule.on_shutdown(ctx, c).await?;
         Ok(())
     }
 }

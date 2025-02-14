@@ -36,11 +36,19 @@ openapi-generate-types *args:
 
 [group('run')]
 run *args: _npm_install
-    cargo run --bin oxidrive server {{ args }}
+    cargo run --bin oxidrive {{ args }} server
+
+[group('run')]
+run-dev *args: _npm_install
+    cargo run --bin oxidrive --features vite-dev-server {{ args }} server
 
 [group('run')]
 watch *args: _npm_install
-    bacon run-server -- {{ args }}
+    bacon server -- {{ args }}
+
+[group('run')]
+watch-dev *args: _npm_install
+    bacon dev-server -- {{ args }}
 
 # === CHECK === #
 
@@ -122,6 +130,9 @@ lint-fix-node: _npm_install
 
 [group('test')]
 test: test-rust test-node
+
+[group('test')]
+test-full: test-rust-full test-node
 
 [group('test')]
 [group('rust')]

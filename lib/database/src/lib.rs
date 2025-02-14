@@ -88,15 +88,23 @@ fn database(cfg: Config) -> Database {
 
 #[app::async_trait]
 impl app::Hooks for DatabaseModule {
-    async fn before_start(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+    async fn before_start(
+        &mut self,
+        ctx: app::context::Context,
+        c: &app::di::Container,
+    ) -> app::eyre::Result<()> {
         let db = c.get::<Database>();
 
-        migrate(db).await?;
+        migrate(ctx, db).await?;
 
         Ok(())
     }
 
-    async fn on_shutdown(&mut self, c: &app::di::Container) -> app::eyre::Result<()> {
+    async fn on_shutdown(
+        &mut self,
+        _ctx: app::context::Context,
+        c: &app::di::Container,
+    ) -> app::eyre::Result<()> {
         let db = c.get::<Database>();
 
         match db {

@@ -14,9 +14,13 @@ pub enum Command {
 }
 
 impl Command {
-    pub async fn run(&self, c: &app::di::Container) -> eyre::Result<()> {
+    pub async fn run(
+        &self,
+        ctx: app::context::Context,
+        c: &app::di::Container,
+    ) -> eyre::Result<()> {
         match self {
-            Command::Migrate => oxidrive_database::migrate(c.get::<Database>()).await,
+            Command::Migrate => oxidrive_database::migrate(ctx, c.get::<Database>()).await,
             Command::CreateDefaultAdmin => {
                 let accounts = c.get::<AccountService>();
                 let admin = accounts.upsert_initial_admin(true).await?.unwrap();
@@ -32,7 +36,7 @@ impl Command {
 
                 Ok(())
             }
-            Command::Account(cmd) => cmd.run(c).await,
+            Command::Account(cmd) => cmd.run(ctx, c).await,
             Command::Server => unreachable!(),
             Command::Worker => {
                 todo!("workers")

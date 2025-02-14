@@ -74,7 +74,7 @@ mod tests {
         let worker = Worker::new(queue.clone(), queue.clone(), processor);
         let jobs = worker.dispatcher();
 
-        worker.start();
+        worker.start(app::context::Context::root());
 
         jobs.dispatch(TestJob { a: 2, b: 2 }).await.unwrap();
 

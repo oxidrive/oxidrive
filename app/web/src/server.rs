@@ -24,8 +24,13 @@ impl Server {
         self.addr
     }
 
-    pub async fn run(&self) -> std::io::Result<()> {
+    pub async fn run(&self, ctx: app::context::Context) -> std::io::Result<()> {
         let listener = TcpListener::bind(self.addr).await?;
-        axum::serve(listener, routes::routes(&self.cfg, self.state.clone())).await
+        let server = axum::serve(listener, routes::routes(&self.cfg, self.state.clone()));
+
+        tokio::select! {
+            res = server => res,
+            _ = ctx.cancelled() => Ok(()),
+        }
     }
 }

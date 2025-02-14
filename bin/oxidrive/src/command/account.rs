@@ -11,7 +11,11 @@ pub struct Args {
 }
 
 impl Args {
-    pub async fn run(&self, c: &app::di::Container) -> app::eyre::Result<()> {
+    pub async fn run(
+        &self,
+        _ctx: app::context::Context,
+        c: &app::di::Container,
+    ) -> app::eyre::Result<()> {
         match &self.command {
             Command::Create(args) => create(c, args).await,
             Command::ChangePassword(args) => change_password(c, args).await,

@@ -25,7 +25,11 @@ impl app::Module for ServerModule {
 
 #[app::async_trait]
 impl app::Hooks for ServerModule {
-    async fn after_start(&mut self, c: &app::di::Container) -> eyre::Result<()> {
+    async fn after_start(
+        &mut self,
+        _ctx: app::context::Context,
+        c: &app::di::Container,
+    ) -> eyre::Result<()> {
         let db = c.get::<Database>();
         let contents = c.get::<FileStorage>();
 

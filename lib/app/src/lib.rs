@@ -4,7 +4,9 @@ pub use eyre;
 pub use app::{handle_error, App};
 pub use boot::Hooks;
 pub use di::Module;
+
 pub mod boot;
+pub mod context;
 pub mod di;
 
 mod app;

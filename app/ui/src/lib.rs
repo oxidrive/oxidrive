@@ -1,4 +1,4 @@
-#[cfg(not(feature = "skip-assets-build"))]
+#[cfg(feature = "vite-dev-server")]
 mod vite {
     use crate::AssetFile;
 
@@ -24,7 +24,7 @@ mod vite {
     }
 }
 
-#[cfg(feature = "skip-assets-build")]
+#[cfg(not(feature = "vite-dev-server"))]
 mod embed {
     use crate::AssetFile;
 
@@ -47,10 +47,11 @@ mod embed {
     }
 }
 
-#[cfg(feature = "skip-assets-build")]
-pub use embed::Assets;
-#[cfg(not(feature = "skip-assets-build"))]
+#[cfg(feature = "vite-dev-server")]
 pub use vite::Assets;
+
+#[cfg(not(feature = "vite-dev-server"))]
+pub use embed::Assets;
 
 pub trait AssetFile {
     fn content_type(&self) -> Option<&str>;
@@ -58,18 +59,30 @@ pub trait AssetFile {
     fn into_data(self) -> std::borrow::Cow<'static, [u8]>;
 }
 
-#[cfg(all(not(feature = "skip-assets-build"), debug_assertions))]
-pub fn start_dev_server(enable: bool) -> Option<vite_rs::ViteProcess> {
-    if !enable {
-        tracing::warn!("vite dev server disabled");
-        return None;
-    }
-
-    tracing::info!("vite dev server started");
-    Assets::start_dev_server()
+#[cfg(feature = "vite-dev-server")]
+fn start_dev_server(ctx: app::context::Context) {
+    tokio::spawn(async move {
+        tracing::info!("vite dev server started");
+        let _guard = Assets::start_dev_server();
+        ctx.cancelled().await;
+        Assets::stop_dev_server();
+        tracing::info!("vite dev server stopped");
+    });
 }
 
-#[cfg(all(feature = "skip-assets-build", debug_assertions))]
-pub fn start_dev_server(_enable: bool) -> Option<vite_rs::ViteProcess> {
-    None
+pub struct WebUiModule;
+
+#[app::async_trait]
+#[allow(unused_variables)] // ctx is used if vite-dev-server is enabled
+impl app::Hooks for WebUiModule {
+    async fn after_start(
+        &mut self,
+        ctx: app::context::Context,
+        _c: &app::di::Container,
+    ) -> app::eyre::Result<()> {
+        #[cfg(feature = "vite-dev-server")]
+        start_dev_server(ctx);
+
+        Ok(())
+    }
 }

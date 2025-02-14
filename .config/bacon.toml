@@ -102,15 +102,27 @@ command = ["cargo", "run", "--example"]
 need_stdout = true
 allow_warnings = true
 
-[jobs.run-server]
+[jobs.server]
 command = [
-    "cargo", "run", "-p", "oxidrive", "--", "server"
+    "cargo", "run", "--bin", "oxidrive", "--", "server"
     # put launch parameters for your program behind a `--` separator
 ]
 need_stdout = true
 allow_warnings = true
 background = false
 on_change_strategy = "kill_then_restart"
+kill = ["kill", "-s", "INT"]
+
+[jobs.dev-server]
+command = [
+    "cargo", "run", "--bin", "oxidrive", "--features", "vite-dev-server", "--", "server"
+    # put launch parameters for your program behind a `--` separator
+]
+need_stdout = true
+allow_warnings = true
+background = false
+on_change_strategy = "kill_then_restart"
+kill = ["kill", "-s", "INT"]
 
 # You may define here keybindings that would be specific to
 # a project, for example a shortcut to launch a specific job.
@@ -119,4 +131,5 @@ on_change_strategy = "kill_then_restart"
 [keybindings]
 # alt-m = "job:my-job"
 c = "job:clippy-all" # comment this to have 'c' run clippy on only the default target
-r = "job:run-server"
+r = "job:server"
+alt-r = "job:dev-server"

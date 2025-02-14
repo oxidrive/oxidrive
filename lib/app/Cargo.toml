@@ -9,3 +9,4 @@ eyre.workspace = true
 futures.workspace = true
 tracing.workspace = true
 tokio = { workspace = true, features = ["macros", "signal"] }
+tokio-util = { workspace = true }
