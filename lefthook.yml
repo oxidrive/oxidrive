@@ -5,7 +5,7 @@
 pre-commit:
   parallel: true
   jobs:
-    - name: "js"
+    - name: js
       group:
         jobs:
           - name: biome-check
@@ -21,7 +21,7 @@ pre-commit:
             glob: *js
             run: just check-node
 
-    - name: "rust"
+    - name: rust
       group:
         piped: true
         jobs:
@@ -32,17 +32,17 @@ pre-commit:
             glob: "*.rs"
             run: just lint-fix-rust
       
-    - name: "cedar"
+    - name: cedar
       group:
         piped: true
         jobs:
-          - name: "format"
+          - name: format
             glob: "*.cedar"
             run: |
               for file in {staged_files}; do
                 cedar format -p "$file" --write
               done
-          - name: "validate"
+          - name: validate
             glob: "*.{cedar,cedarschema}"
             run: |
               schema=$(mktemp XXXXX.cedarschema --tmpdir)
@@ -73,15 +73,20 @@ pre-commit:
         - not symlink
       run: typos --write-changes {staged_files}
 
-    - name: "openapi"
+    - name: openapi
       group:
         piped: true
         jobs:
         - name: openapi-schema
-          glob: '*.rs'
+          glob: "*.rs"
           run: just openapi-generate-schema
 
         - name: openapi-types
           glob: openapi.json
           run: just openapi-generate-types --check
           fail_text: rerun 'just openapi-generate' and commit the updated files
+
+    - name: justfiles
+      glob: Justfile
+      run: just check-just
+      fail_text: rerun 'just format-just' and commit the updated files

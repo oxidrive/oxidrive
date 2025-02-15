@@ -41,4 +41,3 @@ revert-pg:
     echo "==== reverting PostgreSQL ===="
     export DATABASE_URL=postgres://oxidrive:oxidrive@localhost:5432/oxidrive
     sqlx migrate revert --source postgres;
-

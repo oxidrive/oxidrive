@@ -1,7 +1,7 @@
-set dotenv-load
+set dotenv-load := true
 
 default:
-    @just --list --unsorted | grep -v '  default'
+    @just --list
 
 # === BUILD === #
 
@@ -53,7 +53,7 @@ watch-dev *args: _npm_install
 # === CHECK === #
 
 [group('check')]
-check: check-rust check-node check-cedar
+check: check-rust check-node check-cedar check-just
 
 [group('check')]
 [group('rust')]
@@ -65,23 +65,31 @@ check-rust:
 check-node:
     npm run check --workspace app/ui
 
-[group('check')]
 [group('cedar')]
+[group('check')]
 check-cedar:
- #!/usr/bin/env sh
-    schema=$(mktemp XXXXX.cedarschema --tmpdir)
-    find . -name "*.cedarschema" -exec sh -c "cat {} >> $schema" \;
+    #!/usr/bin/env sh
+       schema=$(mktemp XXXXX.cedarschema --tmpdir)
+       find . -name "*.cedarschema" -exec sh -c "cat {} >> $schema" \;
 
-    for file in $(find . -name "*.cedar"); do
-      cedar validate -s "$schema" -p "$file" --deny-warnings
-    done
+       for file in $(find . -name "*.cedar"); do
+         cedar validate -s "$schema" -p "$file" --deny-warnings
+       done
 
-# === LINT === #
+[group('check')]
+[group('just')]
+check-just:
+    #!/usr/bin/env sh
+       for file in $(find . -name "Justfile"); do
+         just --unstable --fmt --check --justfile "$file"
+       done
+
+# === FORMAT === #
 
 alias fmt := format
 
 [group('format')]
-format: format-rust format-node format-cedar
+format: format-rust format-node format-cedar format-just
 
 [group('format')]
 [group('rust')]
@@ -93,12 +101,22 @@ format-rust *args:
 format-node: _npm_install
     npm run format --workspace app/ui
 
-[group('format')]
 [group('cedar')]
+[group('format')]
 format-cedar mode="write":
     for file in $(find . -name "*.cedar"); do \
       cedar format -p "$file" --{{ mode }}; \
     done
+
+[group('format')]
+[group('just')]
+format-just:
+    #!/usr/bin/env sh
+       for file in $(find . -name "Justfile"); do
+         just --unstable --fmt --justfile "$file"
+       done
+
+# === LINT === #
 
 [group('lint')]
 lint: lint-rust lint-node
@@ -134,18 +152,18 @@ test: test-rust test-node
 [group('test')]
 test-full: test-rust-full test-node
 
-[group('test')]
 [group('rust')]
+[group('test')]
 test-rust *args:
     cargo nextest run --all-targets --all-features {{ args }}
 
-[group('test')]
 [group('rust')]
+[group('test')]
 test-rust-full *args:
     cargo nextest run --all-targets --all-features --profile=full {{ args }}
 
-[group('test')]
 [group('node')]
+[group('test')]
 test-node *args: _npm_install
     npm run test:unit --workspace app/ui -- --run {{ args }}
 
