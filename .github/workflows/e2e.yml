@@ -47,6 +47,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: nix flake check
 
+        # appease rust-embed who will freak out if this is missing. We're not really going to use it
+      - run: mkdir -p app/ui/build
+
       - name: Compile debug build
         run: nix develop --command just build-debug
 

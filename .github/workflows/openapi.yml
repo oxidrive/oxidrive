@@ -39,6 +39,9 @@ jobs:
       - uses: DeterminateSystems/magic-nix-cache-action@v7
       - run: nix flake check
 
+        # appease rust-embed who will freak out if this is missing. We're not really going to use it
+      - run: mkdir -p app/ui/build
+
       - name: Generate schema
         run: nix develop --command just openapi-generate-schema
       - name: Check schema didn't change

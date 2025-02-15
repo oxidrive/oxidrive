@@ -30,7 +30,6 @@ rustPlatform.buildRustPackage {
   };
 
   cargoBuildFlags = "--bin oxidrive";
-  buildFeatures = [ "skip-assets-build" ];
 
   useNextest = true;
 

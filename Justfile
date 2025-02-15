@@ -58,7 +58,7 @@ check: check-rust check-node check-cedar
 [group('check')]
 [group('rust')]
 check-rust:
-    cargo check
+    cargo check --all-targets --all-features
 
 [group('check')]
 [group('node')]
@@ -137,12 +137,12 @@ test-full: test-rust-full test-node
 [group('test')]
 [group('rust')]
 test-rust *args:
-    cargo nextest run {{ args }}
+    cargo nextest run --all-targets --all-features {{ args }}
 
 [group('test')]
 [group('rust')]
 test-rust-full *args:
-    cargo nextest run --profile=full {{ args }}
+    cargo nextest run --all-targets --all-features --profile=full {{ args }}
 
 [group('test')]
 [group('node')]
