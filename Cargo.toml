@@ -85,8 +85,8 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 url = { version = "2", features = ["serde"] }
 utoipa = "5"
-utoipa-axum = "0.1"
-utoipa-swagger-ui = "8"
+utoipa-axum = "0.2"
+utoipa-swagger-ui = "9"
 uuid = { version = "1", features = ["v7", "serde"] }
 vite-rs = { git = "https://github.com/MatteoJoliveau/vite-rs", branch = "main", default-features = false }
 
