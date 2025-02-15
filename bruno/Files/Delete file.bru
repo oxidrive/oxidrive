@@ -1,0 +1,19 @@
+meta {
+  name: Delete file
+  type: http
+  seq: 9
+}
+
+delete {
+  url: {{server}}/api/v1/files/:id
+  body: none
+  auth: none
+}
+
+params:path {
+  id: {{file_id}}
+}
+
+assert {
+  res.status: eq 200
+}

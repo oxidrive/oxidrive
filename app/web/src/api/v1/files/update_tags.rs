@@ -34,7 +34,7 @@ pub async fn handler(
     Json(body): Json<UpdateTags>,
 ) -> ApiResult<TagsUpdated> {
     let Some(file) = files.metadata().by_id(file_id).await? else {
-        return Err(ApiError::not_found());
+        return Err(ApiError::unauthorized());
     };
 
     authorizer

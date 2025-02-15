@@ -41,7 +41,7 @@ pub fn routes(cfg: &Config, state: AppState) -> Router {
         .nest("/ui", ui::routes(cfg))
         .merge(swagger_ui(state.clone(), api))
         .layer(CatchPanicLayer::custom(handle_panic))
-        .layer(TraceLayer::new_for_http())
+        .layer(TraceLayer::new_for_http().on_failure(()))
         .with_state(state)
 }
 

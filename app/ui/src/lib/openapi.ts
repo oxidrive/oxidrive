@@ -110,7 +110,7 @@ export interface paths {
         get: operations["api::v1::files::get"];
         put?: never;
         post?: never;
-        delete?: never;
+        delete: operations["api::v1::files::delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -299,6 +299,14 @@ export interface components {
                 "application/json": components["schemas"]["CollectionData"];
             };
         };
+        FileDeleted: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["FileData"];
+            };
+        };
         PersonalAccessTokenCreated: {
             headers: {
                 [name: string]: unknown;
@@ -348,6 +356,7 @@ export type ResponseAccountCreated = components['responses']['AccountCreated'];
 export type ResponseApiError = components['responses']['ApiError'];
 export type ResponseCollectionCreated = components['responses']['CollectionCreated'];
 export type ResponseCollectionUpdated = components['responses']['CollectionUpdated'];
+export type ResponseFileDeleted = components['responses']['FileDeleted'];
 export type ResponsePersonalAccessTokenCreated = components['responses']['PersonalAccessTokenCreated'];
 export type ResponseTagsUpdated = components['responses']['TagsUpdated'];
 export type ResponseUploadCompleted = components['responses']['UploadCompleted'];
@@ -544,6 +553,22 @@ export interface operations {
                     "application/json": components["schemas"]["FileData"];
                 };
             };
+            "4XX": components["responses"]["ApiError"];
+            "5XX": components["responses"]["ApiError"];
+        };
+    };
+    "api::v1::files::delete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                file_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["FileDeleted"];
             "4XX": components["responses"]["ApiError"];
             "5XX": components["responses"]["ApiError"];
         };

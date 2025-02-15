@@ -25,7 +25,9 @@ make_error_wrapper!(ByIdError);
 make_error_wrapper!(ByNameError);
 make_error_wrapper!(SaveFileError);
 make_error_wrapper!(SearchError);
+make_error_wrapper!(DeleteFileError);
 
+#[mockall::automock]
 #[async_trait]
 pub trait FileMetadata: Send + Sync + 'static {
     async fn all_owned_by(
@@ -61,6 +63,8 @@ pub trait FileMetadata: Send + Sync + 'static {
         filter: Filter,
         paginate: Paginate,
     ) -> Result<Slice<File>, SearchError>;
+
+    async fn delete(&self, id: FileId) -> Result<(), DeleteFileError>;
 }
 
 #[derive(Clone, Default)]
@@ -132,6 +136,12 @@ impl FileMetadata for InMemoryFileMetadata {
             .filter(|file| filter(&file.tags));
 
         Ok(paginate(files, params))
+    }
+
+    async fn delete(&self, id: FileId) -> Result<(), DeleteFileError> {
+        let mut inner = self.inner.write().await;
+        inner.remove(&id);
+        Ok(())
     }
 }
 

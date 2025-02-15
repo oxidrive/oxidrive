@@ -155,10 +155,20 @@ async fn search_files<S: FileMetadata>(store: S) {
     }
 }
 
-mod inmemory {
-    use file::File;
+async fn delete_file<S: FileMetadata>(store: S) {
+    let_assert!(Some(_) = store.by_id(FILE_ID_1).await.unwrap());
 
-    use crate::{file::InMemoryFileMetadata, tag};
+    store.delete(FILE_ID_1).await.unwrap();
+
+    let_assert!(None = store.by_id(FILE_ID_1).await.unwrap());
+
+    // ensuring FileMetadata::delete is idempotent
+    store.delete(FILE_ID_1).await.unwrap();
+}
+
+mod inmemory {
+
+    use crate::file::InMemoryFileMetadata;
 
     use super::*;
 
@@ -182,14 +192,14 @@ mod inmemory {
 
     #[tokio::test]
     async fn it_searches_files() {
-        let mut file_1 = File::new(OWNER_ID, "hello.txt", "text/plain").tagged(tag!("file1"));
-        file_1.id = FILE_ID_1;
-
-        let mut file_2 = File::new(OWNER_ID, "world.txt", "text/plain").tagged(tag!("file2"));
-        file_2.id = FILE_ID_2;
-
-        let store = InMemoryFileMetadata::from([file_1, file_2]);
+        let store = InMemoryFileMetadata::from([file_1(), file_2()]);
         search_files(store).await;
+    }
+
+    #[tokio::test]
+    async fn it_deletes_a_file() {
+        let store = InMemoryFileMetadata::from([file_1()]);
+        delete_file(store).await;
     }
 }
 
@@ -241,6 +251,18 @@ mod pg {
         let store = PgFileMetadata::new(pool);
         search_files(store).await;
     }
+
+    #[sqlx::test(
+        migrator = "PG_MIGRATOR",
+        fixtures(
+            "../../fixtures/postgres/accounts.sql",
+            "../../fixtures/postgres/files.sql"
+        )
+    )]
+    async fn it_deletes_a_file(pool: sqlx::PgPool) {
+        let store = PgFileMetadata::new(pool);
+        delete_file(store).await;
+    }
 }
 
 mod sqlite {
@@ -290,5 +312,17 @@ mod sqlite {
     async fn it_searches_files(pool: sqlx::SqlitePool) {
         let store = SqliteFileMetadata::new(pool);
         search_files(store).await;
+    }
+
+    #[sqlx::test(
+        migrator = "SQLITE_MIGRATOR",
+        fixtures(
+            "../../fixtures/sqlite/accounts.sql",
+            "../../fixtures/sqlite/files.sql"
+        )
+    )]
+    async fn it_deletes_a_file(pool: sqlx::SqlitePool) {
+        let store = SqliteFileMetadata::new(pool);
+        delete_file(store).await;
     }
 }

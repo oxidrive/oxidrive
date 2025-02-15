@@ -314,6 +314,34 @@
             "$ref": "#/components/responses/ApiError"
           }
         }
+      },
+      "delete": {
+        "tags": [
+          "files"
+        ],
+        "operationId": "api::v1::files::delete",
+        "parameters": [
+          {
+            "name": "file_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/FileDeleted"
+          },
+          "4XX": {
+            "$ref": "#/components/responses/ApiError"
+          },
+          "5XX": {
+            "$ref": "#/components/responses/ApiError"
+          }
+        }
       }
     },
     "/api/v1/files/{file_id}/tags": {
@@ -859,6 +887,16 @@
           "application/json": {
             "schema": {
               "$ref": "#/components/schemas/CollectionData"
+            }
+          }
+        }
+      },
+      "FileDeleted": {
+        "description": "",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/FileData"
             }
           }
         }

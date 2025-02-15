@@ -26,7 +26,7 @@ const { ondelete, file }: Props = $props();
             <i class="fa-solid fa-download"></i>
             <Localized id="files-actions.download" />
         </a>
-        <button class="action" disabled onclick={() => ondelete(file)}>
+        <button class="action" onclick={() => ondelete(file)}>
             <i class="fa-solid fa-trash"></i>
             <Localized id="files-actions.delete" />
         </button>

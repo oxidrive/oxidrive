@@ -2335,6 +2335,7 @@ dependencies = [
  "globset",
  "infer",
  "mime_guess",
+ "mockall",
  "opendal",
  "oxidrive-accounts",
  "oxidrive-authorization",

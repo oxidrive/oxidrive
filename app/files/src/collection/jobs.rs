@@ -51,7 +51,7 @@ impl app::Hooks for JobsModule {
             c,
             |dispatcher, event| async move {
                 match event {
-                    FileEvent::Changed(file) => {
+                    FileEvent::Changed(file) | FileEvent::Deleted(file) => {
                         if let Err(err) = dispatcher
                             .dispatch(RefreshCollections {
                                 owner_id: file.owner_id,

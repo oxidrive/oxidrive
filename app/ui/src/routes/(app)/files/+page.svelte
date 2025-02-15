@@ -39,7 +39,6 @@ const FilesView = $derived(view === "list" ? FilesList : FilesGrid);
 const { localize } = getFluentContext();
 
 function togglePreview(preview?: SchemaFileData) {
-	console.log(preview);
 	pushState("", { preview });
 }
 
@@ -59,6 +58,23 @@ async function upload(ev: Event) {
 	}
 
 	await invalidate("/api/v1/files");
+}
+
+async function deleteFile(file: SchemaFileData) {
+	const { error } = await client.DELETE("/api/v1/files/{file_id}", {
+		params: { path: { file_id: file.id } },
+	});
+
+	if (error) {
+		reportError(error);
+		return;
+	}
+
+	await invalidate(
+		(url) =>
+			url.pathname === "/api/v1/files" ||
+			url.pathname === `/api/v1/files/${file.id}`,
+	);
 }
 
 let debounceSearchTimer: ReturnType<typeof setTimeout>;
@@ -140,8 +156,8 @@ async function search(ev: Event) {
 {#if files.items.length > 0}
 <FilesView
     {files}
-    ondelete={() => {}}
-    onpreview={(file) => togglePreview(file)}
+    ondelete={deleteFile}
+    onpreview={togglePreview}
 />
 {:else}
     <div class="empty">

@@ -11,8 +11,8 @@ create index idx_collections_owned_by on collections (owner_id);
 create table collections_files (
     collection_id text not null,
     file_id text not null,
-    foreign key (collection_id) references collections(id),
-    foreign key (file_id) references files(id),
+    foreign key (collection_id) references collections(id) on delete cascade,
+    foreign key (file_id) references files(id) on delete cascade,
     primary key (collection_id, file_id)
 ) strict;
 

@@ -56,12 +56,15 @@ impl CedarAuthorizer {
 
         let request = Request::new(
             principal.uid(),
-            action,
+            action.clone(),
             resource.uid(),
             context,
             Some(&self.schema),
         )
         .unwrap();
+
+        let p = principal.uid();
+        let r = resource.uid();
 
         let entities = Entities::from_entities([principal, resource], Some(&self.schema))
             .unwrap_or_else(report_error);
@@ -71,6 +74,8 @@ impl CedarAuthorizer {
             .is_authorized(&request, &self.policies, &entities);
 
         tracing::trace!(target: "oxidrive::authorizer",
+            principal = %p, %action, resource = %r,
+            decision = ?response.decision(),
             diagnostics = ?response.diagnostics(),
             "authorization request evaluated",
         );

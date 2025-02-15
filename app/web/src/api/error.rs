@@ -9,6 +9,8 @@ use oxidrive_authorization::Authorized;
 use serde::Serialize;
 use utoipa::{openapi::Content, ToResponse, ToSchema};
 
+static ERROR_DETAILS: &str = "error";
+
 pub type ApiResult<T> = Result<T, ApiError>;
 
 #[derive(Clone, Debug)]
@@ -33,7 +35,7 @@ impl ApiError {
             status: StatusCode::INTERNAL_SERVER_ERROR,
             message: err.to_string(),
             error: None,
-            details: HashMap::from_iter([("error".into(), format!("{err:?}").into())]),
+            details: HashMap::from_iter([(ERROR_DETAILS.into(), format!("{err:?}").into())]),
         }
     }
 
@@ -106,6 +108,11 @@ impl ApiError {
 
 impl IntoResponse for ApiError {
     fn into_response(self) -> axum::response::Response {
+        if self.status.is_server_error() {
+            let details = self.details.get(ERROR_DETAILS).map(ToString::to_string);
+            tracing::error!(error = self.message, error.details = details);
+        }
+
         let status = self.status;
         let body = Json(self.into_body());
 
@@ -133,6 +140,14 @@ impl<'r> ToResponse<'r> for ApiError {
     }
 }
 
+impl Display for ApiError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        std::fmt::Display::fmt(&self.message, f)
+    }
+}
+
+impl std::error::Error for ApiError {}
+
 impl From<Authorized> for ApiError {
     fn from(_: Authorized) -> Self {
         Self::unauthorized()
@@ -149,4 +164,25 @@ pub fn handle_panic(err: Box<dyn Any + Send + 'static>) -> axum::response::Respo
     };
 
     ApiError::new(details).error("UNEXPECTED").into_response()
+}
+
+pub trait ApiResultExt {
+    fn hide_403_as_404(self) -> Self;
+}
+
+impl<T> ApiResultExt for ApiResult<T> {
+    fn hide_403_as_404(self) -> Self {
+        if self.is_ok()
+            || self
+                .as_ref()
+                .is_err_and(|err| err.status != StatusCode::FORBIDDEN)
+        {
+            return self;
+        }
+
+        self.inspect_err(|err| {
+            tracing::warn!(error = %err, error.details = ?err, "authorization failed, access forbidden");
+        })
+        .map_err(|_| ApiError::not_found())
+    }
 }

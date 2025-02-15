@@ -3,8 +3,8 @@ use std::sync::Arc;
 use crate::{
     content_type,
     file::{
-        self, ByNameError, DownloadFileError, FileEvent, FileMetadata, FileStorage, SaveFileError,
-        UploadFileError,
+        self, ByNameError, DeleteFileError, DownloadFileError, FileEvent, FileMetadata,
+        FileStorage, SaveFileError, UploadFileError,
     },
     File, Tag,
 };
@@ -107,6 +107,12 @@ impl Files {
         let filter = oxidrive_search::parse_query(query)?;
         let files = self.metadata.search(owner_id, filter, paginate).await?;
         Ok(files)
+    }
+
+    pub async fn delete(&self, file: &File) -> Result<(), DeleteFileError> {
+        self.metadata.delete(file.id).await?;
+        self.publisher.publish(FileEvent::Deleted(file.clone()));
+        Ok(())
     }
 }
 

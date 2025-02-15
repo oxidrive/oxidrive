@@ -11,7 +11,10 @@ use crate::{
     Tag,
 };
 
-use super::{AllOwnedByInError, ByIdError, ByNameError, FileMetadata, SaveFileError, SearchError};
+use super::{
+    AllOwnedByInError, ByIdError, ByNameError, DeleteFileError, FileMetadata, SaveFileError,
+    SearchError,
+};
 
 pub struct PgFileMetadata {
     pool: sqlx::PgPool,
@@ -199,6 +202,15 @@ where owner_id =
 
         let slice = paginate::to_slice(files, |f| f.id.to_string(), &paginate).map(File::from);
         Ok(slice)
+    }
+
+    async fn delete(&self, id: FileId) -> Result<(), DeleteFileError> {
+        sqlx::query("delete from files where id = $1")
+            .bind(id.as_uuid())
+            .execute(&self.pool)
+            .await
+            .map_err(DeleteFileError::wrap)?;
+        Ok(())
     }
 }
 

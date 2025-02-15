@@ -16,6 +16,14 @@ impl<T> Slice<T> {
         }
     }
 
+    pub fn single(item: T, next: impl Into<String>) -> Self {
+        Self {
+            items: vec![item],
+            next: Some(next.into()),
+            previous: None,
+        }
+    }
+
     pub fn empty() -> Self {
         Self {
             items: Default::default(),

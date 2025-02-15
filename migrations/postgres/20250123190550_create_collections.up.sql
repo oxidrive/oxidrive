@@ -8,8 +8,8 @@ create table collections (
 create index idx_collections_owned_by on collections (owner_id);
 
 create table collections_files (
-    collection_id uuid not null references collections(id),
-    file_id uuid not null references files(id),
+    collection_id uuid not null references collections(id) on delete cascade,
+    file_id uuid not null references files(id) on delete cascade,
     primary key (collection_id, file_id)
 );
 
