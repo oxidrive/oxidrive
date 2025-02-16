@@ -1,7 +1,7 @@
 use delete::FileDeleted;
 use oxidrive_files::File;
 use serde::{Deserialize, Serialize};
-use update_tags::TagsUpdated;
+use update::FileUpdated;
 use utoipa::{OpenApi, ToSchema};
 use utoipa_axum::{router::OpenApiRouter, routes};
 
@@ -10,16 +10,16 @@ use crate::state::AppState;
 mod delete;
 mod get;
 mod list;
-mod update_tags;
+mod update;
 
 #[derive(OpenApi)]
-#[openapi(components(responses(TagsUpdated, FileDeleted)))]
+#[openapi(components(responses(FileUpdated, FileDeleted)))]
 pub struct FilesApi;
 
 pub fn routes() -> OpenApiRouter<AppState> {
     OpenApiRouter::new()
         .routes(routes!(list::handler))
-        .routes(routes!(get::handler, update_tags::handler, delete::handler))
+        .routes(routes!(get::handler, update::handler, delete::handler))
 }
 
 #[derive(Debug, Serialize, ToSchema)]

@@ -6,7 +6,7 @@ use axum::{
 };
 use oxidrive_accounts::auth::AccountEntity;
 use oxidrive_authorization::Authorizer;
-use oxidrive_files::{auth::FileEntity, file::FileId, tag::ParseError, AddTagsError, Files};
+use oxidrive_files::{auth::FileEntity, file::FileId, tag::ParseError, Files, UpdateError};
 use serde::Deserialize;
 use utoipa::{ToResponse, ToSchema};
 
@@ -18,11 +18,11 @@ use crate::{
 use super::FileData;
 
 #[utoipa::path(
-    put,
-    path = "/{file_id}/tags",
-    operation_id = "tags::update",
+    patch,
+    path = "/{file_id}",
+    operation_id = "update",
     params(("file_id" = String, format = "uuid")),
-    responses((status = OK, response = TagsUpdated)),
+    responses((status = OK, response = FileUpdated)),
     tag = "files",
 )]
 #[axum::debug_handler(state = crate::state::AppState)]
@@ -31,8 +31,8 @@ pub async fn handler(
     State(files): State<Files>,
     CurrentUser(account): CurrentUser,
     Path(file_id): Path<FileId>,
-    Json(body): Json<UpdateTags>,
-) -> ApiResult<TagsUpdated> {
+    Json(body): Json<UpdateFile>,
+) -> ApiResult<FileUpdated> {
     let Some(file) = files.metadata().by_id(file_id).await? else {
         return Err(ApiError::unauthorized());
     };
@@ -40,31 +40,43 @@ pub async fn handler(
     authorizer
         .authorize(
             &AccountEntity::from(&account),
-            "updateTags",
+            "update",
             &FileEntity::from(&file),
         )
         .into_err::<ApiError>()?;
 
-    let tags = body
-        .tags
-        .into_iter()
-        .map(oxidrive_files::Tag::parse)
-        .collect::<Result<Vec<_>, _>>()?;
+    let tags = match body.tags {
+        Some(tags) => Some(
+            tags.into_iter()
+                .map(oxidrive_files::Tag::parse)
+                .collect::<Result<Vec<_>, _>>()?,
+        ),
+        None => None,
+    };
 
-    let file = files.update_tags(file, tags).await?;
+    let file = files
+        .update(
+            file,
+            oxidrive_files::file::UpdateFile {
+                name: body.name,
+                tags,
+            },
+        )
+        .await?;
 
-    Ok(TagsUpdated(file.into()))
+    Ok(FileUpdated(file.into()))
 }
 
 #[derive(Deserialize, ToSchema)]
-pub struct UpdateTags {
-    tags: Vec<String>,
+pub struct UpdateFile {
+    name: Option<String>,
+    tags: Option<Vec<String>>,
 }
 
 #[derive(ToResponse)]
-pub struct TagsUpdated(FileData);
+pub struct FileUpdated(FileData);
 
-impl IntoResponse for TagsUpdated {
+impl IntoResponse for FileUpdated {
     fn into_response(self) -> axum::response::Response {
         Json(self.0).into_response()
     }
@@ -76,10 +88,10 @@ impl From<ParseError> for ApiError {
     }
 }
 
-impl From<AddTagsError> for ApiError {
-    fn from(err: AddTagsError) -> Self {
+impl From<UpdateError> for ApiError {
+    fn from(err: UpdateError) -> Self {
         match err {
-            AddTagsError::SaveFileFailed(err) => Self::new(err),
+            UpdateError::SaveFileFailed(err) => Self::new(err),
         }
     }
 }

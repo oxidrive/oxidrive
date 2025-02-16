@@ -23,6 +23,7 @@ const {
 	forceVisible: true,
 });
 
+let name = $state(file.name);
 let tags = $state([...file.tags]);
 
 const add = (tag: SchemaTag) => {
@@ -36,9 +37,9 @@ const remove = (tag: SchemaTag) => {
 const submit = async (ev: Event) => {
 	ev.preventDefault();
 
-	const { error } = await client.PUT("/api/v1/files/{file_id}/tags", {
+	const { error } = await client.PATCH("/api/v1/files/{file_id}", {
 		params: { path: { file_id: file.id } },
-		body: { tags: tags.map(concat) },
+		body: { name, tags: tags.map(concat) },
 	});
 
 	if (error) {
@@ -74,7 +75,7 @@ const submit = async (ev: Event) => {
 
                     <form class="form" onsubmit={submit}>
                         <div class="fieldset inputs">
-                            <input class="input" type="text" name="name" bind:value={file.name} disabled>
+                            <input class="input" type="text" name="name" bind:value={name}>
                             <TagsInput tags={file.tags}
                                        onadd={add}
                                        onremove={remove} />

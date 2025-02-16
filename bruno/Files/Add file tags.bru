@@ -4,8 +4,8 @@ meta {
   seq: 7
 }
 
-put {
-  url: {{server}}/api/v1/files/:id/tags
+patch {
+  url: {{server}}/api/v1/files/:id
   body: json
   auth: none
 }

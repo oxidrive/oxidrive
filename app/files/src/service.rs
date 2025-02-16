@@ -4,9 +4,9 @@ use crate::{
     content_type,
     file::{
         self, ByNameError, DeleteFileError, DownloadFileError, FileEvent, FileMetadata,
-        FileStorage, SaveFileError, UploadFileError,
+        FileStorage, SaveFileError, UpdateFile, UploadFileError,
     },
-    File, Tag,
+    File,
 };
 use bytes::Bytes;
 use futures::{Stream, TryStreamExt};
@@ -86,15 +86,10 @@ impl Files {
         Ok(file)
     }
 
-    pub async fn update_tags<I>(&self, mut file: File, tags: I) -> Result<File, AddTagsError>
-    where
-        I: IntoIterator<Item = Tag>,
-    {
-        file.set_tags(tags);
-
+    pub async fn update(&self, mut file: File, data: UpdateFile) -> Result<File, UpdateError> {
+        file.update(data);
         let file = self.metadata.save(file).await?;
         self.publisher.publish(FileEvent::Changed(file.clone()));
-
         Ok(file)
     }
 
@@ -138,15 +133,15 @@ pub enum UploadError {
 }
 
 #[derive(Debug, thiserror::Error)]
-pub enum AddTagsError {
-    #[error("failed to save file")]
-    SaveFileFailed(#[from] SaveFileError),
-}
-
-#[derive(Debug, thiserror::Error)]
 pub enum SearchError {
     #[error(transparent)]
     QueryParse(#[from] QueryParseError),
     #[error(transparent)]
     SearchFailed(#[from] file::SearchError),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum UpdateError {
+    #[error("failed to save file")]
+    SaveFileFailed(#[from] SaveFileError),
 }

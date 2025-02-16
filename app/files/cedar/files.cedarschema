@@ -14,7 +14,7 @@ namespace File {
         resource: File,
     };
 
-    action updateTags appliesTo {
+    action update appliesTo {
         principal: Account,
         resource: File,
     };

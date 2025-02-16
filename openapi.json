@@ -342,14 +342,12 @@
             "$ref": "#/components/responses/ApiError"
           }
         }
-      }
-    },
-    "/api/v1/files/{file_id}/tags": {
-      "put": {
+      },
+      "patch": {
         "tags": [
           "files"
         ],
-        "operationId": "api::v1::files::tags::update",
+        "operationId": "api::v1::files::update",
         "parameters": [
           {
             "name": "file_id",
@@ -365,7 +363,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/UpdateTags"
+                "$ref": "#/components/schemas/UpdateFile"
               }
             }
           },
@@ -373,7 +371,7 @@
         },
         "responses": {
           "200": {
-            "$ref": "#/components/responses/TagsUpdated"
+            "$ref": "#/components/responses/FileUpdated"
           },
           "4XX": {
             "$ref": "#/components/responses/ApiError"
@@ -824,6 +822,26 @@
           }
         }
       },
+      "UpdateFile": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "tags": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "UpdatePassword": {
         "type": "object",
         "required": [
@@ -832,20 +850,6 @@
         "properties": {
           "password": {
             "type": "string"
-          }
-        }
-      },
-      "UpdateTags": {
-        "type": "object",
-        "required": [
-          "tags"
-        ],
-        "properties": {
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
         }
       }
@@ -901,6 +905,16 @@
           }
         }
       },
+      "FileUpdated": {
+        "description": "",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/FileData"
+            }
+          }
+        }
+      },
       "PersonalAccessTokenCreated": {
         "description": "",
         "content": {
@@ -931,16 +945,6 @@
                   "expires_at": "2025-02-14T16:16:32.225Z"
                 }
               }
-            }
-          }
-        }
-      },
-      "TagsUpdated": {
-        "description": "",
-        "content": {
-          "application/json": {
-            "schema": {
-              "$ref": "#/components/schemas/FileData"
             }
           }
         }

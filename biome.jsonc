@@ -19,7 +19,8 @@
 			"dist/*",
 			".astro/*",
 			"src/lib/openapi.ts",
-			"openapi.json"
+			"openapi.json",
+			"vite.config.js.timestamp-*"
 		]
 	},
 	"overrides": [

@@ -113,23 +113,7 @@ export interface paths {
         delete: operations["api::v1::files::delete"];
         options?: never;
         head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/files/{file_id}/tags": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put: operations["api::v1::files::tags::update"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
+        patch: operations["api::v1::files::update"];
         trace?: never;
     };
     "/api/v1/pats": {
@@ -259,11 +243,12 @@ export interface components {
             filter?: string | null;
             name?: string | null;
         };
+        UpdateFile: {
+            name?: string | null;
+            tags?: string[] | null;
+        };
         UpdatePassword: {
             password: string;
-        };
-        UpdateTags: {
-            tags: string[];
         };
     };
     responses: {
@@ -307,6 +292,14 @@ export interface components {
                 "application/json": components["schemas"]["FileData"];
             };
         };
+        FileUpdated: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["FileData"];
+            };
+        };
         PersonalAccessTokenCreated: {
             headers: {
                 [name: string]: unknown;
@@ -315,14 +308,6 @@ export interface components {
                 "application/json": components["schemas"]["PersonalAccessTokenData"] & {
                     token: string;
                 };
-            };
-        };
-        TagsUpdated: {
-            headers: {
-                [name: string]: unknown;
-            };
-            content: {
-                "application/json": components["schemas"]["FileData"];
             };
         };
         UploadCompleted: {
@@ -350,15 +335,15 @@ export type SchemaPageFileData = components['schemas']['Page_FileData'];
 export type SchemaPersonalAccessTokenData = components['schemas']['PersonalAccessTokenData'];
 export type SchemaTag = components['schemas']['Tag'];
 export type SchemaUpdateCollection = components['schemas']['UpdateCollection'];
+export type SchemaUpdateFile = components['schemas']['UpdateFile'];
 export type SchemaUpdatePassword = components['schemas']['UpdatePassword'];
-export type SchemaUpdateTags = components['schemas']['UpdateTags'];
 export type ResponseAccountCreated = components['responses']['AccountCreated'];
 export type ResponseApiError = components['responses']['ApiError'];
 export type ResponseCollectionCreated = components['responses']['CollectionCreated'];
 export type ResponseCollectionUpdated = components['responses']['CollectionUpdated'];
 export type ResponseFileDeleted = components['responses']['FileDeleted'];
+export type ResponseFileUpdated = components['responses']['FileUpdated'];
 export type ResponsePersonalAccessTokenCreated = components['responses']['PersonalAccessTokenCreated'];
-export type ResponseTagsUpdated = components['responses']['TagsUpdated'];
 export type ResponseUploadCompleted = components['responses']['UploadCompleted'];
 export type $defs = Record<string, never>;
 export interface operations {
@@ -573,7 +558,7 @@ export interface operations {
             "5XX": components["responses"]["ApiError"];
         };
     };
-    "api::v1::files::tags::update": {
+    "api::v1::files::update": {
         parameters: {
             query?: never;
             header?: never;
@@ -584,11 +569,11 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["UpdateTags"];
+                "application/json": components["schemas"]["UpdateFile"];
             };
         };
         responses: {
-            200: components["responses"]["TagsUpdated"];
+            200: components["responses"]["FileUpdated"];
             "4XX": components["responses"]["ApiError"];
             "5XX": components["responses"]["ApiError"];
         };

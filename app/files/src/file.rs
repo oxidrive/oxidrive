@@ -105,7 +105,18 @@ impl File {
         self.hash = Some(hash);
     }
 
-    fn default_tags(file: &File) -> Tags {
+    pub fn update(&mut self, data: UpdateFile) {
+        if let Some(name) = data.name {
+            self.name = name;
+            self.add_tag(tag!("{}:{}", tag::reserved::NAME, self.name));
+        }
+
+        if let Some(tags) = data.tags {
+            self.set_tags(tags);
+        }
+    }
+
+    pub(self) fn default_tags(file: &File) -> Tags {
         let mut tags = HashMap::from_iter(
             [
                 tag!("{}:{}", tag::reserved::NAME, file.name),
@@ -128,6 +139,12 @@ impl File {
 
         tags
     }
+}
+
+#[derive(Debug, Default)]
+pub struct UpdateFile {
+    pub name: Option<String>,
+    pub tags: Option<Vec<Tag>>,
 }
 
 #[cfg(any(test, feature = "fixtures"))]
@@ -208,5 +225,28 @@ mod tests {
         check!(file.tags.get(CONTENT_TYPE) == Some(&content_type));
         check!(file.tags.get(SIZE) == Some(&size));
         check!(file.tags.get("added") == Some(&tag!("added")));
+    }
+
+    #[rstest]
+    #[case(UpdateFile { name: Some("test".into()), ..Default::default() })]
+    #[case(UpdateFile { tags: Some(vec![tag!("added"), tag!("hello:world")]), ..Default::default() })]
+    #[case(UpdateFile { name: Some("test".into()), tags: Some(vec![tag!("added"), tag!("hello:world")]) })]
+    fn it_updates_a_file(mut file: File, #[case] data: UpdateFile) {
+        let name = data.name.clone();
+        let tags = data.tags.clone();
+
+        file.update(data);
+
+        if let Some(name) = name {
+            check!(file.name == name);
+            check!(file.tags.get(NAME) == Some(&tag!("name:{name}")));
+        }
+
+        if let Some(tags) = tags {
+            let mut expected_tags = File::default_tags(&file);
+            expected_tags.extend(tags.into_iter().map(|tag| (tag.key.clone(), tag)));
+
+            check!(file.tags == expected_tags);
+        }
     }
 }

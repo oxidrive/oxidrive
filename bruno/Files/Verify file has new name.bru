@@ -1,10 +1,10 @@
 meta {
-  name: Delete file
+  name: Verify file has new name
   type: http
-  seq: 11
+  seq: 10
 }
 
-delete {
+get {
   url: {{server}}/api/v1/files/:id
   body: none
   auth: none
@@ -16,4 +16,5 @@ params:path {
 
 assert {
   res.status: eq 200
+  res.body.name: eq silly-goose.jpg
 }
