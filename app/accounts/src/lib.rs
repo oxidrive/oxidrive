@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use account::{
     Account, AccountCredentials, Accounts, ByUsernameError, Credentials, ForAccountError,
-    HashError, Password, PgAccountCredentials, PgAccounts, SaveAccountError, SaveCredentialsError,
-    SqliteAccountCredentials, SqliteAccounts,
+    HashError, InvalidCredentials, Password, PgAccountCredentials, PgAccounts, SaveAccountError,
+    SaveCredentialsError, SqliteAccountCredentials, SqliteAccounts, VerifyCreds,
 };
 use oxidrive_database::Database;
 use pat::{PersonalAccessTokens, PersonalAccessTokensModule};
@@ -71,13 +71,23 @@ impl AccountService {
         Ok(account)
     }
 
+    pub async fn verify_password(
+        &self,
+        account: &Account,
+        password: impl Into<String>,
+    ) -> Result<(), VerifyPasswordError> {
+        let credentials = self.credentials.for_account(account.id).await?;
+        credentials.verify(VerifyCreds::Password(password.into()))?;
+        Ok(())
+    }
+
     pub async fn change_password(
         &self,
         account: &Account,
-        password: &str,
+        password: impl AsRef<str>,
     ) -> Result<(), ChangePasswordError> {
         let mut credentials = self.credentials.for_account(account.id).await?;
-        credentials.replace(Password::hash(password)?);
+        credentials.replace(Password::hash(password.as_ref())?);
 
         self.credentials.save(credentials).await?;
 
@@ -97,6 +107,14 @@ pub enum CreateAccountError {
     InvalidPassword(#[from] HashError),
     #[error(transparent)]
     SaveCredentials(#[from] SaveCredentialsError),
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum VerifyPasswordError {
+    #[error(transparent)]
+    LoadCredentials(#[from] ForAccountError),
+    #[error(transparent)]
+    InvalidPassword(#[from] InvalidCredentials),
 }
 
 #[derive(Debug, thiserror::Error)]

@@ -1,5 +1,5 @@
 use axum::{extract::State, http::StatusCode, Json};
-use oxidrive_accounts::{AccountService, ChangePasswordError};
+use oxidrive_accounts::{AccountService, ChangePasswordError, VerifyPasswordError};
 use serde::Deserialize;
 use utoipa::ToSchema;
 
@@ -19,15 +19,31 @@ use crate::{
 pub async fn handler(
     State(accounts): State<AccountService>,
     CurrentUser(account): CurrentUser,
-    Json(UpdatePassword { password }): Json<UpdatePassword>,
+    Json(UpdatePassword {
+        current_password,
+        new_password,
+    }): Json<UpdatePassword>,
 ) -> ApiResult<()> {
-    accounts.change_password(&account, &password).await?;
+    accounts.verify_password(&account, current_password).await?;
+    accounts.change_password(&account, new_password).await?;
     Ok(())
 }
 
 #[derive(Debug, Deserialize, ToSchema)]
 pub struct UpdatePassword {
-    password: String,
+    current_password: String,
+    new_password: String,
+}
+
+impl From<VerifyPasswordError> for ApiError {
+    fn from(err: VerifyPasswordError) -> Self {
+        match err {
+            VerifyPasswordError::LoadCredentials(err) => Self::new(err),
+            VerifyPasswordError::InvalidPassword(err) => Self::new(err)
+                .error("INVALID_CURRENT_PASSWORD")
+                .status(StatusCode::BAD_REQUEST),
+        }
+    }
 }
 
 impl From<ChangePasswordError> for ApiError {
@@ -35,7 +51,7 @@ impl From<ChangePasswordError> for ApiError {
         match err {
             ChangePasswordError::LoadCredentials(err) => Self::new(err),
             ChangePasswordError::InvalidPassword(err) => Self::new(err)
-                .error("INVALID_PASSWORD")
+                .error("INVALID_NEW_PASSWORD")
                 .status(StatusCode::BAD_REQUEST),
             ChangePasswordError::SaveCredentials(err) => Self::new(err),
         }

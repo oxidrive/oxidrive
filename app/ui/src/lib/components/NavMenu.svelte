@@ -27,7 +27,6 @@ const {
 
 {#if $open}
     <div use:melt={$portalled} class="">
-    <!-- class="fixed inset-0 z-50 bg-black/50" -->
         <div
             use:melt={$overlay}
             class="overlay"
@@ -35,7 +34,6 @@ const {
         >
         </div>
 
-        <!-- class="fixed left-0 top-0 z-50 h-screen w-full max-w-[350px] bg-white p-6  shadow-lg focus:outline-none" -->
         <nav
             use:melt={$content}
             class="menu"
@@ -55,6 +53,13 @@ const {
                     {/snippet}
                 </Localized>
             </header>
+
+            <section class="section">
+                <a class="menu-entry" href="/ui/account">
+                    <i class="fa-solid fa-circle-user text-primary-500"></i>
+                    <Localized id="navmenu-account-settings" />
+                </a>
+            </section>
 
             <hr>
 

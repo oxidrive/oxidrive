@@ -1,16 +1,21 @@
+<script lang="ts" module>
+export type Variant = "filled" | "outline" | "ghost";
+</script>
+
 <script lang="ts">
 import type { Snippet } from "svelte";
 import type { HTMLButtonAttributes } from "svelte/elements";
 
 interface Props extends HTMLButtonAttributes {
 	loading?: boolean;
+     variant: Variant,
 	children: Snippet;
 }
 
-const { loading = false, children, ...props }: Props = $props();
+const { loading = false, variant, children, ...props }: Props = $props();
 </script>
 
-<button {...props}>
+<button class="button {variant}" {...props}>
     {#if loading}
         <span class="loader"></span>
     {:else}

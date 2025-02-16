@@ -248,7 +248,8 @@ export interface components {
             tags?: string[] | null;
         };
         UpdatePassword: {
-            password: string;
+            current_password: string;
+            new_password: string;
         };
     };
     responses: {

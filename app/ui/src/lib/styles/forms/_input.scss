@@ -5,7 +5,7 @@
     background-color: var(--oxi-primary-50);
     width: 100%;
 
-    &:disabled {
+    &:is(:disabled,:read-only) {
         border-color: var(--oxi-primary-200);
         color: var(--oxi-primary-200);
     }

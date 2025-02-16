@@ -143,7 +143,7 @@ async function onFilterChanged() {
         </div>
 
         <div class="fieldset buttons">
-            <Button class="button filled" type="submit" {loading}>{attrs.submit}</Button>
+            <Button variant="filled" type="submit" {loading}>{attrs.submit}</Button>
         </div>
     </form>
 </div>

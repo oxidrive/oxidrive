@@ -71,3 +71,7 @@ html {
 .title {
     @extend .text-2xl;
 }
+
+.subtitle {
+    @extend .text-xl;
+}

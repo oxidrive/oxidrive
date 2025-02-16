@@ -845,10 +845,14 @@
       "UpdatePassword": {
         "type": "object",
         "required": [
-          "password"
+          "current_password",
+          "new_password"
         ],
         "properties": {
-          "password": {
+          "current_password": {
+            "type": "string"
+          },
+          "new_password": {
             "type": "string"
           }
         }

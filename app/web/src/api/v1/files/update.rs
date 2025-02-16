@@ -11,7 +11,7 @@ use serde::Deserialize;
 use utoipa::{ToResponse, ToSchema};
 
 use crate::{
-    api::error::{ApiError, ApiResult},
+    api::error::{ApiError, ApiResult, ApiResultExt},
     session::CurrentUser,
 };
 
@@ -34,7 +34,7 @@ pub async fn handler(
     Json(body): Json<UpdateFile>,
 ) -> ApiResult<FileUpdated> {
     let Some(file) = files.metadata().by_id(file_id).await? else {
-        return Err(ApiError::unauthorized());
+        return Err(ApiError::not_found());
     };
 
     authorizer
@@ -43,7 +43,8 @@ pub async fn handler(
             "update",
             &FileEntity::from(&file),
         )
-        .into_err::<ApiError>()?;
+        .into_err::<ApiError>()
+        .hide_403_as_404()?;
 
     let tags = match body.tags {
         Some(tags) => Some(
