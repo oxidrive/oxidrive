@@ -65,7 +65,7 @@ const {
 
             <section class="section">
                     <a class="menu-entry" href="/ui/collections">
-                        <i class="fa-solid fa-book text-primary-500"></i>
+                        <i class="fa-solid fa-tags text-primary-500"></i>
                         <Localized id="navmenu-collections" />
                     </a>
                     <a class="menu-entry" href="/ui/files">

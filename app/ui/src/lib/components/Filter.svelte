@@ -21,7 +21,7 @@ const highlighted = $derived(
 );
 </script>
 
-<pre><code class="filter {clazz}">{@html highlighted}</code></pre>
+<pre class="filter-container {clazz}"><code class="filter">{@html highlighted}</code></pre>
 
 <style>
  .filter {

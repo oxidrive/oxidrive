@@ -11,7 +11,6 @@ import {
 	faFileImage,
 	faFilePdf,
 	faFileVideo,
-	faFolder,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
 

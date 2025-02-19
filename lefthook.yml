@@ -9,7 +9,7 @@ pre-commit:
       group:
         jobs:
           - name: biome-check
-            glob: &js "*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
+            glob: &js "*.{svelte,js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}"
             run: npx --no @biomejs/biome check --no-errors-on-unmatched --files-ignore-unknown=true --write {staged_files}
           - name: biome-format
             glob: *js

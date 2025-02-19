@@ -81,4 +81,9 @@ function togglePreview(preview?: SchemaFileData) {
         flex-direction: column;
         align-items: center;
     }
+
+ :global(.filter-container) {
+     text-align: center;
+     width: 100%;
+}
 </style>
