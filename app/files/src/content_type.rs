@@ -1,7 +1,7 @@
 use std::{pin::Pin, sync::LazyLock};
 
 use bytes::Bytes;
-use futures::{stream::StreamExt, Stream};
+use futures::{Stream, stream::StreamExt};
 use infer::Infer;
 
 pub const DEFAULT_BINARY_TYPE: &str = "application/octet-stream";
@@ -15,7 +15,7 @@ static INFER: LazyLock<Infer> = LazyLock::new(|| {
 pub async fn detect_from_stream<S, E>(
     name: &str,
     stream: S,
-) -> (impl Stream<Item = Result<Bytes, E>>, String)
+) -> (impl Stream<Item = Result<Bytes, E>> + use<S, E>, String)
 where
     S: Stream<Item = Result<Bytes, E>> + Unpin,
     E: 'static,

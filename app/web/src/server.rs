@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 
 use tokio::net::TcpListener;
 
-use crate::{routes, state::AppState, Config};
+use crate::{Config, routes, state::AppState};
 
 #[derive(Clone)]
 pub struct Server {

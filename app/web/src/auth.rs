@@ -1,6 +1,6 @@
 use axum::Router;
 
-use crate::{state::AppState, Config};
+use crate::{Config, state::AppState};
 
 mod session;
 

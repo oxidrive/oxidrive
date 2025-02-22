@@ -27,7 +27,7 @@
 
           packages = rec {
             default = oxidrive;
-            oxidrive = pkgs.callPackage ./. { };
+            oxidrive = pkgs.callPackage ./. { inherit toolchain; };
             oci-image = pkgs.callPackage ./nix/oci-image.nix {
               inherit pkgs oxidrive;
 

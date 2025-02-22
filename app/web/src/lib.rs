@@ -7,7 +7,7 @@ use serde::Deserialize;
 use state::AppState;
 use tower::{
     layer::util::Identity,
-    util::{option_layer, Either},
+    util::{Either, option_layer},
 };
 use tower_http::cors::CorsLayer;
 use tower_surf::Surf;

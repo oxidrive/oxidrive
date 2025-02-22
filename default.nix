@@ -1,6 +1,7 @@
 { pkgs
 , lib
 , rustPlatform
+, toolchain
 }:
 
 let
@@ -45,6 +46,7 @@ rustPlatform.buildRustPackage {
     clang
     mold
     nodejs_20
+    toolchain
   ];
 
   meta = {

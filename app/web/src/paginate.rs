@@ -5,11 +5,11 @@ use std::{
 
 use axum::{
     extract::{FromRequestParts, Query},
-    http::{request::Parts, StatusCode},
+    http::{StatusCode, request::Parts},
     response::IntoResponse,
 };
-use base64::{engine::general_purpose::URL_SAFE_NO_PAD as ENGINE, Engine};
-use oxidrive_paginate::{Paginate, Slice, DEFAULT_LIMIT};
+use base64::{Engine, engine::general_purpose::URL_SAFE_NO_PAD as ENGINE};
+use oxidrive_paginate::{DEFAULT_LIMIT, Paginate, Slice};
 use serde::{Deserialize, Serialize};
 use utoipa::{PartialSchema, ToSchema};
 

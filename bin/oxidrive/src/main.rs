@@ -2,7 +2,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use clap::Parser;
-use oxidrive::{command::Command, PoliciesModule, ServerModule};
+use oxidrive::{PoliciesModule, ServerModule, command::Command};
 use oxidrive_accounts::AccountsModule;
 use oxidrive_config::Config;
 use oxidrive_database::{self as database, DatabaseModule};

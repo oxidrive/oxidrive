@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use sqlx::{types::Json, Postgres, QueryBuilder, Transaction};
+use sqlx::{Postgres, QueryBuilder, Transaction, types::Json};
 use uuid::Uuid;
 
 use crate::queue::{

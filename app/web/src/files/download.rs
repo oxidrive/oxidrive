@@ -4,8 +4,8 @@ use axum::{
     body::Bytes,
     extract::{Path, Query, State},
     http::{
-        header::{self, IF_NONE_MATCH},
         HeaderMap, HeaderValue, StatusCode,
+        header::{self, IF_NONE_MATCH},
     },
     response::{IntoResponse, Response},
 };
@@ -13,7 +13,7 @@ use axum_extra::response::FileStream;
 use futures::Stream;
 use oxidrive_accounts::auth::AccountEntity;
 use oxidrive_authorization::Authorizer;
-use oxidrive_files::{auth::FileEntity, file::ByNameError, DownloadError, File, Files};
+use oxidrive_files::{DownloadError, File, Files, auth::FileEntity, file::ByNameError};
 use serde::Deserialize;
 use utoipa::ToSchema;
 

@@ -1,6 +1,6 @@
 use crate::{
-    account::{macros::account_id, AccountId},
-    session::{macros::session_id, Session, SessionId},
+    account::{AccountId, macros::account_id},
+    session::{Session, SessionId, macros::session_id},
 };
 use assert2::{check, let_assert};
 use time::OffsetDateTime;

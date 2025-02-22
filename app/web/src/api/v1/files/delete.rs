@@ -1,11 +1,11 @@
 use axum::{
+    Json,
     extract::{Path, State},
     response::IntoResponse,
-    Json,
 };
 use oxidrive_accounts::auth::AccountEntity;
 use oxidrive_authorization::Authorizer;
-use oxidrive_files::{auth::FileEntity, file::DeleteFileError, FileId, Files};
+use oxidrive_files::{FileId, Files, auth::FileEntity, file::DeleteFileError};
 use utoipa::ToResponse;
 
 use crate::{

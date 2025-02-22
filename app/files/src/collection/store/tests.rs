@@ -8,9 +8,8 @@ use crate::{
         jobs::{RefreshCollection, RefreshCollectionWorker},
     },
     file::{
-        self,
+        self, FileMetadata,
         store::tests::{FILE_ID_1, FILE_ID_2},
-        FileMetadata,
     },
 };
 
@@ -108,8 +107,8 @@ async fn store_and_fetch_by_id<S: CollectionStore>(store: S) {
 
 mod inmemory {
     use file::{
-        store::tests::{file_1, file_2},
         InMemoryFileMetadata,
+        store::tests::{file_1, file_2},
     };
 
     use super::*;

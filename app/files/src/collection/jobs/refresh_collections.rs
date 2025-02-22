@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::collection::{AllOwnedByError, CollectionStore};
 
-use super::{refresh_collection::RefreshCollection, RefreshCollectionWorker};
+use super::{RefreshCollectionWorker, refresh_collection::RefreshCollection};
 
 #[derive(Clone)]
 pub struct RefreshCollectionsWorker {

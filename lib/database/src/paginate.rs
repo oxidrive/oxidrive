@@ -15,7 +15,7 @@ where
 
 pub mod postgres {
     use oxidrive_paginate::Paginate;
-    use sqlx::{types::Uuid, Postgres, QueryBuilder};
+    use sqlx::{Postgres, QueryBuilder, types::Uuid};
 
     pub fn push_query<'a>(
         qb: &mut QueryBuilder<'a, Postgres>,
@@ -58,7 +58,7 @@ pub mod postgres {
 
 pub mod sqlite {
     use oxidrive_paginate::Paginate;
-    use sqlx::{types::Uuid, QueryBuilder, Sqlite};
+    use sqlx::{QueryBuilder, Sqlite, types::Uuid};
 
     pub fn push_query<'a>(
         qb: &mut QueryBuilder<'a, Sqlite>,

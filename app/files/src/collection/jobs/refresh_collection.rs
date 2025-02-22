@@ -5,9 +5,9 @@ use oxidrive_workers::{Job, Process};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    FileId,
     collection::{ByIdError, CollectionId, CollectionStore, SaveCollectionError},
     file::{FileMetadata, SearchError},
-    FileId,
 };
 
 #[derive(Clone)]
@@ -92,9 +92,9 @@ mod tests {
     use rstest::rstest;
 
     use crate::{
-        collection::{Collection, InMemoryCollectionStore},
-        file::{fixtures::file, InMemoryFileMetadata},
         File,
+        collection::{Collection, InMemoryCollectionStore},
+        file::{InMemoryFileMetadata, fixtures::file},
     };
 
     use super::*;

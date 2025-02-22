@@ -1,7 +1,7 @@
 use std::{collections::HashMap, marker::PhantomData};
 
 use cedar::{policies::CompoundPolicyLoader, schema::CompoundSchemaLoader};
-use serde::{ser::SerializeMap, Serialize};
+use serde::{Serialize, ser::SerializeMap};
 
 pub mod cedar;
 

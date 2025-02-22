@@ -7,7 +7,7 @@ use account::{
 };
 use oxidrive_database::Database;
 use pat::{PersonalAccessTokens, PersonalAccessTokensModule};
-use session::{jobs::JobsModule, Sessions, SessionsModule};
+use session::{Sessions, SessionsModule, jobs::JobsModule};
 
 pub mod account;
 pub mod auth;

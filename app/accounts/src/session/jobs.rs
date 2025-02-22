@@ -1,9 +1,9 @@
 use std::sync::Arc;
 
 use oxidrive_workers::{
+    Job, Process, Worker,
     queue::{Enqueue, JobQueue},
     scheduler::Scheduler,
-    Job, Process, Worker,
 };
 use serde::{Deserialize, Serialize};
 

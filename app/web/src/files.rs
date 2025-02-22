@@ -3,7 +3,7 @@ use upload::UploadCompleted;
 use utoipa::OpenApi;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
-use crate::{state::AppState, Config};
+use crate::{Config, state::AppState};
 
 mod download;
 mod upload;

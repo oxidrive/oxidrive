@@ -7,8 +7,8 @@ use std::{
 
 use axum::http::{HeaderName, HeaderValue, Method};
 use serde::{
-    de::{SeqAccess, Visitor},
     Deserialize, Deserializer,
+    de::{SeqAccess, Visitor},
 };
 use tower_http::cors::{AllowHeaders, AllowMethods, AllowOrigin, CorsLayer, ExposeHeaders};
 
@@ -92,7 +92,10 @@ impl<T> FromStr for AnyOr<T> {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         if s.to_lowercase() != "any" {
-            return Err(format!("invalid CORS configuration '{s}': should be either a {} or the literal string 'any'", std::any::type_name::<T>()));
+            return Err(format!(
+                "invalid CORS configuration '{s}': should be either a {} or the literal string 'any'",
+                std::any::type_name::<T>()
+            ));
         }
 
         Ok(Self::Any)

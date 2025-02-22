@@ -10,8 +10,8 @@ pub use event::*;
 pub use store::*;
 
 use crate::tag;
-use crate::tag::reserved::SIZE;
 use crate::tag::Tag;
+use crate::tag::reserved::SIZE;
 
 mod event;
 
@@ -154,7 +154,7 @@ pub mod fixtures {
     use bytes::Bytes;
     use fake::Fake;
     use futures::Stream;
-    use oxidrive_accounts::account::{fixtures::account, Account};
+    use oxidrive_accounts::account::{Account, fixtures::account};
     use rstest::fixture;
 
     use super::*;
@@ -179,7 +179,7 @@ mod tests {
     use assert2::check;
     use fake::Fake;
     use fixtures::file;
-    use oxidrive_accounts::account::{fixtures::account, Account};
+    use oxidrive_accounts::account::{Account, fixtures::account};
     use rstest::rstest;
 
     use crate::tag::reserved::*;

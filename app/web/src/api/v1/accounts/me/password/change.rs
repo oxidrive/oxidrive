@@ -1,4 +1,4 @@
-use axum::{extract::State, http::StatusCode, Json};
+use axum::{Json, extract::State, http::StatusCode};
 use oxidrive_accounts::{AccountService, ChangePasswordError, VerifyPasswordError};
 use serde::Deserialize;
 use utoipa::ToSchema;

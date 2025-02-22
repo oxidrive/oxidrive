@@ -3,8 +3,8 @@ use std::{future::Future, sync::Arc};
 use futures::StreamExt;
 use oxidrive_pubsub::Publisher;
 use oxidrive_workers::{
-    queue::{Enqueue, JobQueue},
     Dispatch, Process, Worker,
+    queue::{Enqueue, JobQueue},
 };
 
 pub use refresh_collection::*;

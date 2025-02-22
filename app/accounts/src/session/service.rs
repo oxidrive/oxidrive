@@ -90,9 +90,9 @@ mod tests {
 
     use crate::{
         account::{
+            Account, Credentials, MockAccountCredentials, VerifyCreds,
             credentials::fixtures::{password, with_password},
             fixtures::account,
-            Account, Credentials, MockAccountCredentials, VerifyCreds,
         },
         session::store::MockSessionStore,
     };

@@ -4,7 +4,7 @@ use axum::{
     extract::{FromRequestParts, OptionalFromRequestParts},
     http::{HeaderMap, StatusCode},
 };
-use mime_guess::{mime::*, Mime};
+use mime_guess::{Mime, mime::*};
 
 use crate::api::error::ApiError;
 

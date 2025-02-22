@@ -1,6 +1,6 @@
 use cedar_policy::{
-    entities_errors::EntitiesError, Context, Entities, Entity, EntityId, EntityUid, PolicySet,
-    Request, Schema,
+    Context, Entities, Entity, EntityId, EntityUid, PolicySet, Request, Schema,
+    entities_errors::EntitiesError,
 };
 use serde_json::json;
 
@@ -21,7 +21,6 @@ impl CedarAuthorizer {
     where
         P: TryInto<PolicySet>,
         P::Error: std::error::Error,
-
         S: TryInto<Schema>,
         S::Error: std::error::Error,
     {

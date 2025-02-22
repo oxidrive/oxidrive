@@ -5,8 +5,8 @@ use time::OffsetDateTime;
 use crate::account::AccountId;
 
 use super::{
-    store::{ByTokenError, PersonalAccessTokenStore, SaveError},
     InvalidExpirationDate, PersonalAccessToken, Token,
+    store::{ByTokenError, PersonalAccessTokenStore, SaveError},
 };
 
 #[derive(Clone)]

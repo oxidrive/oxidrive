@@ -94,8 +94,8 @@ impl Password {
 
     pub fn hash(password: impl AsRef<[u8]>) -> Result<Self, HashError> {
         use argon2::{
-            password_hash::{rand_core::OsRng, PasswordHasher, SaltString},
             Argon2,
+            password_hash::{PasswordHasher, SaltString, rand_core::OsRng},
         };
 
         let salt = SaltString::generate(&mut OsRng);
@@ -141,7 +141,7 @@ pub mod fixtures {
     use fake::Fake;
     use rstest::fixture;
 
-    use crate::account::{fixtures::account, Account};
+    use crate::account::{Account, fixtures::account};
 
     use super::*;
 

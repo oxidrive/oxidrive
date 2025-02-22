@@ -5,11 +5,11 @@ use oxidrive_accounts::account::AccountId;
 use oxidrive_database::paginate;
 use oxidrive_paginate::{Paginate, Slice};
 use oxidrive_search::Filter;
-use sqlx::{types::Json, QueryBuilder};
+use sqlx::{QueryBuilder, types::Json};
 
 use crate::{
-    file::{File, FileId, Tags},
     Tag,
+    file::{File, FileId, Tags},
 };
 
 use super::{

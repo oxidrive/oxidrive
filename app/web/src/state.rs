@@ -2,7 +2,7 @@ use axum::extract::FromRef;
 use axum_extra::extract::cookie::Key;
 use oxidrive_accounts::AccountService;
 use oxidrive_authorization::Authorizer;
-use oxidrive_files::{collection::Collections, Files};
+use oxidrive_files::{Files, collection::Collections};
 
 use crate::Config;
 

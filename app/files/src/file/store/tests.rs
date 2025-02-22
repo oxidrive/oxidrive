@@ -6,8 +6,9 @@ use oxidrive_accounts::{
 use oxidrive_paginate::Paginate;
 
 use crate::{
+    File, FileId,
     file::{self, macros::file_id},
-    tag, File, FileId,
+    tag,
 };
 
 use super::FileMetadata;

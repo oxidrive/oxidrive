@@ -6,12 +6,12 @@ use axum::{
     response::IntoResponseParts,
 };
 use axum_extra::{
-    extract::{
-        cookie::{Cookie, Key},
-        SignedCookieJar,
-    },
-    headers::{authorization::Bearer, Authorization},
     TypedHeader,
+    extract::{
+        SignedCookieJar,
+        cookie::{Cookie, Key},
+    },
+    headers::{Authorization, authorization::Bearer},
 };
 use oxidrive_accounts::{
     account::{Account, AccountId},

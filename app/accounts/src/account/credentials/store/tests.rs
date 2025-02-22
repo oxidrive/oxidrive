@@ -1,7 +1,7 @@
 use assert2::check;
 
 use super::*;
-use crate::account::{credentials, Account};
+use crate::account::{Account, credentials};
 
 async fn store_and_load_credentials_for_a_user<S: AccountCredentials>(store: S) {
     let account = Account {

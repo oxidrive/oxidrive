@@ -4,8 +4,8 @@ use rust_embed::Embed;
 use serde::Serialize;
 
 use crate::{
-    collection::{Collection, CollectionId},
     File, FileId,
+    collection::{Collection, CollectionId},
 };
 
 #[derive(Embed)]

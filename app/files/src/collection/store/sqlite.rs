@@ -7,8 +7,8 @@ use oxidrive_paginate::{Paginate, Slice};
 use sqlx::{Executor, QueryBuilder, Sqlite};
 
 use crate::{
-    collection::{Collection, CollectionId},
     FileId,
+    collection::{Collection, CollectionId},
 };
 
 use super::{AllOwnedByError, ByIdError, CollectionStore, SaveCollectionError};

@@ -1,12 +1,12 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use oxidrive_accounts::auth::AccountEntity;
 use oxidrive_authorization::Authorizer;
-use oxidrive_files::{auth::FileEntity, file::FileId, tag::ParseError, Files, UpdateError};
+use oxidrive_files::{Files, UpdateError, auth::FileEntity, file::FileId, tag::ParseError};
 use serde::Deserialize;
 use utoipa::{ToResponse, ToSchema};
 

@@ -2,9 +2,9 @@ use std::{fmt::Display, str::FromStr};
 
 use serde::Deserialize;
 use sqlx::{
+    Database as _,
     postgres::PgPoolOptions,
     sqlite::{SqliteConnectOptions, SqlitePoolOptions},
-    Database as _,
 };
 use url::Url;
 

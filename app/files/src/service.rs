@@ -1,12 +1,11 @@
 use std::sync::Arc;
 
 use crate::{
-    content_type,
+    File, content_type,
     file::{
         self, ByNameError, DeleteFileError, DownloadFileError, FileEvent, FileMetadata,
         FileStorage, SaveFileError, UpdateFile, UploadFileError,
     },
-    File,
 };
 use bytes::Bytes;
 use futures::{Stream, TryStreamExt};
@@ -43,7 +42,7 @@ impl Files {
         &self,
         file: &File,
     ) -> Result<
-        Option<impl Stream<Item = Result<Bytes, impl std::error::Error>> + 'static>,
+        Option<impl Stream<Item = Result<Bytes, impl std::error::Error + 'static>> + 'static>,
         DownloadError,
     > {
         Ok(self.storage.download(file).await?)

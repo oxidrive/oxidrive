@@ -1,8 +1,8 @@
 use axum::{
+    Router,
     http::StatusCode,
     response::{IntoResponse, Redirect},
     routing::get,
-    Router,
 };
 use tower_http::{catch_panic::CatchPanicLayer, trace::TraceLayer};
 use utoipa::OpenApi;
@@ -10,16 +10,16 @@ use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
 use crate::{
+    Config,
     api::{
-        self,
-        error::{handle_panic, ApiError},
-        ApiDoc,
+        self, ApiDoc,
+        error::{ApiError, handle_panic},
     },
     auth, files,
     headers::Accept,
     session::CurrentUser,
     state::AppState,
-    ui, Config,
+    ui,
 };
 
 pub fn openapi_router(cfg: &Config) -> OpenApiRouter<AppState> {

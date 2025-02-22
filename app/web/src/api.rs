@@ -1,17 +1,17 @@
-use axum::http::{header::CACHE_CONTROL, HeaderValue};
+use axum::http::{HeaderValue, header::CACHE_CONTROL};
 use error::{ApiError, ApiErrorBody};
 use tower_http::set_header::SetResponseHeaderLayer;
 use utoipa::{
+    Modify, OpenApi,
     openapi::{
+        PathItem,
         path::Operation,
         security::{self, SecurityScheme},
-        PathItem,
     },
-    Modify, OpenApi,
 };
 use utoipa_axum::router::OpenApiRouter;
 
-use crate::{files, state::AppState, Config};
+use crate::{Config, files, state::AppState};
 
 pub mod error;
 

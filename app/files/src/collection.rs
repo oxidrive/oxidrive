@@ -57,7 +57,7 @@ impl Collection {
 #[cfg(any(test, feature = "fixtures"))]
 pub mod fixtures {
     use fake::Fake;
-    use oxidrive_accounts::account::{fixtures::account, Account};
+    use oxidrive_accounts::account::{Account, fixtures::account};
     use rstest::fixture;
 
     use super::*;

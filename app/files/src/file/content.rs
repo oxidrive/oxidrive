@@ -21,8 +21,10 @@ impl FileStorage {
     pub async fn download(
         &self,
         file: &File,
-    ) -> Result<Option<impl Stream<Item = Result<Bytes, impl std::error::Error>>>, DownloadFileError>
-    {
+    ) -> Result<
+        Option<impl Stream<Item = Result<Bytes, impl std::error::Error + 'static>> + 'static>,
+        DownloadFileError,
+    > {
         let path = path_for(file);
 
         if !self.service.exists(&path).await? {
@@ -42,7 +44,7 @@ impl FileStorage {
         &self,
         file: &File,
         content: impl Stream<Item = Result<Bytes, impl std::error::Error + Send + Sync + 'static>>
-            + Unpin,
+        + Unpin,
     ) -> Result<usize, UploadFileError> {
         let mut size = 0;
 

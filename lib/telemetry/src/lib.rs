@@ -2,7 +2,7 @@ mod panic;
 
 pub use panic::install_panic_logger;
 use serde::Deserialize;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
+use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
 pub fn init(cfg: &Config) {
     let pretty_layer =

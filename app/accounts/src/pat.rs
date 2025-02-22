@@ -70,7 +70,7 @@ impl Token {
     fn new() -> Self {
         use rand::prelude::*;
 
-        Self(rand::thread_rng().gen())
+        Self(rand::thread_rng().r#gen())
     }
 
     fn hashed(&self) -> blake3::Hash {

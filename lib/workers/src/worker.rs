@@ -4,8 +4,8 @@ use serde::Serialize;
 use tokio::task::JoinError;
 
 use crate::{
-    queue::{CommitError, Enqueue, JobId, JobQueue, PullBatchError, QueueError, QueuedJob},
     Job, Process,
+    queue::{CommitError, Enqueue, JobId, JobQueue, PullBatchError, QueueError, QueuedJob},
 };
 
 pub struct Worker<P> {

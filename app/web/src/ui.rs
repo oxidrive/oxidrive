@@ -1,11 +1,11 @@
 use axum::{
-    http::{header, HeaderMap, StatusCode, Uri},
-    response::{Html, IntoResponse, Response},
     Router,
+    http::{HeaderMap, StatusCode, Uri, header},
+    response::{Html, IntoResponse, Response},
 };
 use oxidrive_ui::{AssetFile, Assets};
 
-use crate::{state::AppState, Config};
+use crate::{Config, state::AppState};
 
 static INDEX_HTML: &str = "index.html";
 

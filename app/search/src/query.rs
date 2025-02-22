@@ -1,6 +1,6 @@
 use std::{fmt::Display, str::FromStr};
 
-use pest::{iterators::Pairs, Parser};
+use pest::{Parser, iterators::Pairs};
 use pest_derive::Parser;
 
 #[derive(Parser)]

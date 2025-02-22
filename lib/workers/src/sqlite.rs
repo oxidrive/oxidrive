@@ -1,5 +1,5 @@
 use async_trait::async_trait;
-use sqlx::{types::Json, QueryBuilder, Sqlite, Transaction};
+use sqlx::{QueryBuilder, Sqlite, Transaction, types::Json};
 
 use crate::queue::{
     CommitError, Enqueue, JobBatch, JobQueue, PullBatchError, QueueError, QueuedJob,

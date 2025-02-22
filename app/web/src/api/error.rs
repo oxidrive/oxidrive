@@ -4,10 +4,10 @@ use std::{
     fmt::{Debug, Display},
 };
 
-use axum::{http::StatusCode, response::IntoResponse, Json};
+use axum::{Json, http::StatusCode, response::IntoResponse};
 use oxidrive_authorization::Authorized;
 use serde::Serialize;
-use utoipa::{openapi::Content, ToResponse, ToSchema};
+use utoipa::{ToResponse, ToSchema, openapi::Content};
 
 static ERROR_DETAILS: &str = "error";
 

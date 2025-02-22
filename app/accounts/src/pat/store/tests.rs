@@ -3,8 +3,8 @@ use std::str::FromStr;
 use assert2::{check, let_assert};
 
 use crate::{
-    account::{macros::account_id, AccountId},
-    pat::{macros::token_id, PersonalAccessToken, Token, TokenId},
+    account::{AccountId, macros::account_id},
+    pat::{PersonalAccessToken, Token, TokenId, macros::token_id},
 };
 
 use super::PersonalAccessTokenStore;

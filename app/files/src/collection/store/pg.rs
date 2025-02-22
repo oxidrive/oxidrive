@@ -8,8 +8,8 @@ use sqlx::{Executor, Postgres, QueryBuilder};
 use uuid::Uuid;
 
 use crate::{
-    collection::{Collection, CollectionId},
     FileId,
+    collection::{Collection, CollectionId},
 };
 
 use super::{AllOwnedByError, ByIdError, CollectionStore, SaveCollectionError};

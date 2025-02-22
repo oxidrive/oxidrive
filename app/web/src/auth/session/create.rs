@@ -1,11 +1,11 @@
 use axum::{
-    extract::{Query, State},
-    http::{self, header::REFERER, HeaderMap, StatusCode, Uri},
-    response::{IntoResponse, Redirect},
     Form,
+    extract::{Query, State},
+    http::{self, HeaderMap, StatusCode, Uri, header::REFERER},
+    response::{IntoResponse, Redirect},
 };
 use axum_extra::extract::cookie::SignedCookieJar;
-use oxidrive_accounts::{account::VerifyCreds, AccountService};
+use oxidrive_accounts::{AccountService, account::VerifyCreds};
 use serde::Deserialize;
 use url::Url;
 

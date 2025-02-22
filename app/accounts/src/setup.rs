@@ -1,6 +1,6 @@
 use crate::{
-    account::{Account, Credentials, Password},
     AccountService,
+    account::{Account, Credentials, Password},
 };
 
 const DEFAULT_ADMIN_USERNAME: &str = "admin";

@@ -1,5 +1,5 @@
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Json};
-use oxidrive_accounts::{pat::CreatePatError, AccountService};
+use axum::{Json, extract::State, http::StatusCode, response::IntoResponse};
+use oxidrive_accounts::{AccountService, pat::CreatePatError};
 use serde::{Deserialize, Serialize};
 use time::OffsetDateTime;
 use utoipa::{ToResponse, ToSchema};

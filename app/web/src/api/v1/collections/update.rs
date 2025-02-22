@@ -1,8 +1,8 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
     response::IntoResponse,
-    Json,
 };
 use oxidrive_accounts::auth::AccountEntity;
 use oxidrive_authorization::Authorizer;

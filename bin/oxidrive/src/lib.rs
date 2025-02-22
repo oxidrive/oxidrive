@@ -1,7 +1,7 @@
 use oxidrive_accounts::auth::{AccountsAuthPolicies, AccountsAuthSchemas};
 use oxidrive_authorization::{
-    cedar::{policies::CompoundPolicyLoader, schema::CompoundSchemaLoader},
     AuthorizationModule,
+    cedar::{policies::CompoundPolicyLoader, schema::CompoundSchemaLoader},
 };
 use oxidrive_database::Database;
 use oxidrive_files::{

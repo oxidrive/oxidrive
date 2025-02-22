@@ -3,12 +3,12 @@ use oxidrive_accounts::account::AccountId;
 use oxidrive_database::paginate;
 use oxidrive_paginate::{Paginate, Slice};
 use oxidrive_search::Filter;
-use sqlx::{postgres::types::PgHstore, QueryBuilder};
+use sqlx::{QueryBuilder, postgres::types::PgHstore};
 use uuid::Uuid;
 
 use crate::{
-    file::{File, FileId},
     Tag,
+    file::{File, FileId},
 };
 
 use super::{
