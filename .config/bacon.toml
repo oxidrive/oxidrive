@@ -123,6 +123,7 @@ allow_warnings = true
 background = false
 on_change_strategy = "kill_then_restart"
 kill = ["kill", "-s", "INT"]
+ignore = ["**/*.scss", "**/*.svelte", "**/*.ts", "**/*.js"]
 
 # You may define here keybindings that would be specific to
 # a project, for example a shortcut to launch a specific job.

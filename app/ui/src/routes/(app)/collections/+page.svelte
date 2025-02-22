@@ -38,20 +38,22 @@ const { data }: Props = $props();
 
 <Fab color="primary" icon={faPlus} label="upload" to="/ui/collections/new" />
 
-<style>
-    .collections {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        padding: var(--oxi-size-sm);
-        gap: var(--oxi-size-m);
-    }
+<style lang="scss">
+ @use "$lib/styles/oxi";
+
+ .collections {
+     display: grid;
+     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+     padding: oxi.size(sm);
+     gap: oxi.size(m);
+ }
 
     .collection {
         display: flex;
         flex-direction: column;
         justify-content: space-between;
         align-items: center;
-        gap: var(--oxi-size-sm);
+        gap: oxi.size(sm);
 
         & > .footer {
             display: flex;
@@ -71,6 +73,6 @@ const { data }: Props = $props();
         flex-direction: column;
         align-items: center;
         width: 100%;
-        padding: var(--oxi-size-sm);
+        padding: oxi.size(sm);
     }
 </style>

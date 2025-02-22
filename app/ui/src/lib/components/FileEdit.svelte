@@ -92,25 +92,27 @@ const submit = async (ev: Event) => {
   </div>
 {/if}
 
-<style>
+<style lang="scss">
+   @use "$lib/styles/oxi";
+
  .overlay {
      position: fixed;
      z-index: 50;
-     inset: 0px;
-     background-color: rgb(0, 0, 0, 0.75);
+     inset: 0;
+     background-color: rgb(0 0 0 / 75%);
  }
 
  .dialog {
      position: fixed;
      left: 0;
      top: 40%;
-     margin: var(--oxi-size-sm);
-     padding: var(--oxi-size-sm);
+     margin: oxi.size(sm);
+     padding: oxi.size(sm);
      z-index: 50;
      max-height: 85vh;
      width: 90vw;
      max-width: 450px;
-     border-radius: var(--oxi-rounded-xl);
+     border-radius: oxi.rounded(xl);
      background-color: var(--oxi-white);
  }
 
@@ -119,6 +121,6 @@ const submit = async (ev: Event) => {
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--oxi-size-sm);
+    margin-bottom: oxi.size(sm);
 }
 </style>

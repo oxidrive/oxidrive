@@ -66,13 +66,14 @@ const {
     {/snippet}
 </Localized>
 
-<style>
+<style lang="scss">
+  @use "$lib/styles/oxi";
+
     .tags {
         width: 100%;
         display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: var(--oxi-size-2xs);
+        flex-flow: row wrap;
+        gap: oxi.size(2xs);
     }
 
     .tags > :global(.tag) {
@@ -80,6 +81,6 @@ const {
     }
 
     .delete {
-        margin-left: var(--oxi-size-2xs);
+        margin-left: oxi.size(2xs);
     }
 </style>

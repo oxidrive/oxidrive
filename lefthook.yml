@@ -21,6 +21,10 @@ pre-commit:
             glob: *js
             run: just check-node
 
+    - name: scss
+      glob: "*.{svelte,css,scss}"
+      run: npm --workspace app/ui run style:lint:fix
+
     - name: rust
       group:
         piped: true

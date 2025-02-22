@@ -32,8 +32,7 @@
 html,
 :host {
 	line-height: 1.5; /* 1 */
-	-webkit-text-size-adjust: 100%; /* 2 */
-	-moz-tab-size: 4; /* 3 */
+	text-size-adjust: 100%; /* 2 */ /* 3 */
 	tab-size: 4; /* 3 */
 	font-family: var(--oxi-font-family); /* 4 */
 	font-feature-settings: normal; /* 5 */
@@ -201,7 +200,7 @@ button,
 input:where([type="button"]),
 input:where([type="reset"]),
 input:where([type="submit"]) {
-	-webkit-appearance: button; /* 1 */
+	appearance: button; /* 1 */
 	background-color: transparent; /* 2 */
 	background-image: none; /* 2 */
 }
@@ -245,7 +244,7 @@ Correct the cursor style of increment and decrement buttons in Safari.
 */
 
 [type="search"] {
-	-webkit-appearance: textfield; /* 1 */
+	appearance: textfield; /* 1 */
 	outline-offset: -2px; /* 2 */
 }
 
@@ -254,7 +253,7 @@ Remove the inner padding in Chrome and Safari on macOS.
 */
 
 ::-webkit-search-decoration {
-	-webkit-appearance: none;
+	appearance: none;
 }
 
 /*
@@ -263,7 +262,7 @@ Remove the inner padding in Chrome and Safari on macOS.
 */
 
 ::-webkit-file-upload-button {
-	-webkit-appearance: button; /* 1 */
+	appearance: button; /* 1 */
 	font: inherit; /* 2 */
 }
 

@@ -22,14 +22,18 @@ const { class: clazz = "" } = $props();
     </div>
 </div>
 
-<style>
+<style lang="scss">
+  @use "$lib/styles/oxi";
+
  /* Oxygen Spinner */
+
  /* Heavily adapted from https://codepen.io/AlexWarnes/pen/jXYYKL */
 
  @keyframes spin {
      from {
          transform: rotate(0);
      }
+
      to {
          transform: rotate(359deg);
      }
@@ -41,8 +45,8 @@ const { class: clazz = "" } = $props();
      display: flex;
      justify-content: center;
      align-items: center;
-     background-color: var(--oxi-primary-500);
-     border-radius: var(--oxi-rounded-full);
+     background-color: oxi.primary(500);
+     border-radius: oxi.rounded(full);
  }
 
  .orbit {

@@ -43,11 +43,13 @@ const { ondelete, onpreview, files }: Props = $props();
     {/each}
 </div>
 
-<style>
+<style lang="scss">
+  @use "$lib/styles/oxi";
+
     .files-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-        padding: var(--oxi-size-sm);
+        padding: oxi.size(sm);
     }
 
     .file-box {
@@ -56,7 +58,7 @@ const { ondelete, onpreview, files }: Props = $props();
         justify-content: space-between;
         align-items: center;
         aspect-ratio: 1 / 1;
-        padding: var(--oxi-size-2xs);
+        padding: oxi.size(2xs);
 
         .header {
             display: flex;
@@ -72,8 +74,8 @@ const { ondelete, onpreview, files }: Props = $props();
             justify-content: space-between;
             align-items: center;
             width: 100%;
-            gap: var(--oxi-size-sm);
-            padding: var(--oxi-size-2xs);
+            gap: oxi.size(sm);
+            padding: oxi.size(2xs);
 
         }
     }

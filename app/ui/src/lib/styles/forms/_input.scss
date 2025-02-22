@@ -1,42 +1,47 @@
-.input {
-    padding: var(--oxi-size-xs) var(--oxi-size-2xs);
-    border: 2px solid var(--oxi-primary-500);
-    border-radius: var(--oxi-rounded);
-    background-color: var(--oxi-primary-50);
-    width: 100%;
+@use "../tokens" as oxi;
 
-    &:is(:disabled,:read-only) {
-        border-color: var(--oxi-primary-200);
-        color: var(--oxi-primary-200);
-    }
+@mixin init() {
+    .input {
+        padding: oxi.size(xs) oxi.size(2xs);
+        border: 2px solid oxi.primary(500);
+        border-radius: oxi.rounded();
+        background-color: oxi.primary(50);
+        width: 100%;
 
-    &::placeholder {
-        font-size: var(--oxi-text-md-font-size);
-        line-height: var(--oxi-text-md-line-height);
-        color: var(--oxi-primary-500);
-        opacity: 1;
-    }
+        &:is(:disabled,:read-only) {
+            border-color: oxi.primary(200);
+            color: oxi.primary(200);
+        }
 
-    &.error {
-        color: var(--oxi-danger-500);
-        border-color: var(--oxi-danger-500);
         &::placeholder {
-            color: var(--oxi-danger-500);
+            @include oxi.text(md);
+
+            color: oxi.primary(500);
+            opacity: 1;
+        }
+
+        &.error {
+            color: oxi.danger(500);
+            border-color: oxi.danger(500);
+
+            &::placeholder {
+                color: oxi.danger(500);
+            }
+        }
+
+        &.thin {
+            padding: oxi.size(3xs);
         }
     }
 
-    &.thin {
-        padding: var(--oxi-size-3xs);
+    .checkbox {
+        accent-color: oxi.primary(500);
+        transform: scale(1.2);
     }
-}
 
-.checkbox {
-    accent-color: var(--oxi-primary-500);
-    transform: scale(1.2);
-}
+    .field .error {
+        @include oxi.text(sm);
 
-.field .error {
-    font-size: var(--oxi-text-sm-font-size);
-    line-height: var(--oxi-text-sm-line-height);
-    color: var(--oxi-danger-500);
+        color: oxi.danger(500);
+    }
 }

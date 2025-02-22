@@ -12,10 +12,12 @@ let { children }: Props = $props();
     </div>
 </main>
 
-<style>
-    :global(body) {
-        background-color: var(--oxi-primary-500);
-    }
+<style lang="scss">
+ @use "$lib/styles/oxi";
+
+ :global(body) {
+     background-color: oxi.primary(500);
+ }
 
     .main {
         display: flex;
@@ -24,26 +26,27 @@ let { children }: Props = $props();
         min-height: 100vh;
         justify-content: center;
         align-items: center;
-        padding: var(--oxi-size-2xl);
+        padding: oxi.size(2xl);
     }
 
     .panel {
         display: flex;
-        background-color: var(--oxi-primary-100);
+        background-color: oxi.primary(100);
+        max-width: 500px;
         width: 100%;
         height: 100%;
-        padding: var(--oxi-size-5xl) var(--oxi-size-lg);
-        border-radius: var(--oxi-size-3xl);
+        padding: oxi.size(5xl) oxi.size(lg);
+        border-radius: oxi.rounded(4xl);
         flex-direction: column;
         justify-content: space-evenly;
         align-items: center;
-        gap: var(--oxi-size-xl);
+        gap: oxi.size(xl);
 
-        @media screen and (min-width: 768px) {
+        @include oxi.mq(s) {
             width: 50%;
         }
 
-        @media screen and (min-width: 1024px) {
+        @include oxi.mq(l) {
             width: 33%;
         }
     }

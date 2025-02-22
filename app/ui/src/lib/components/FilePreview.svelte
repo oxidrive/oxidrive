@@ -84,6 +84,8 @@ onMount(() => {
 </div>
 
 <style lang="scss">
+ @use "$lib/styles/oxi";
+
  .preview {
      position: fixed;
      top: 0;
@@ -94,8 +96,8 @@ onMount(() => {
      flex-direction: column;
      align-items: center;
      justify-content: start;
-     background-color: rgb(0, 0, 0, 0.95);
-     gap: var(--oxi-size-sm);
+     background-color: rgb(0 0 0 / 95%);
+     gap: oxi.size(sm);
 
      .header {
          display: flex;
@@ -103,15 +105,15 @@ onMount(() => {
          justify-content: space-between;
          align-items: center;
          width: 100%;
-         padding: var(--oxi-size-sm);
-         color: var(--oxi-primary-50);
+         padding: oxi.size(sm);
+         color: oxi.primary(50);
 
          .section {
              width: 32%;
          }
 
          .spacer {
-             @media screen and (max-width: 768px) {
+             @media screen and (width <= 768px) {
                  display: none;
              }
          }
@@ -125,7 +127,7 @@ onMount(() => {
              flex-direction: row;
              justify-content: end;
              align-items: center;
-             gap: var(--oxi-size-2xl);
+             gap: oxi.size(2xl);
          }
      }
 
@@ -135,16 +137,16 @@ onMount(() => {
      }
 
      .download {
-         color: var(--oxi-primary-50);
+         color: oxi.primary(50);
          width: 100%;
          height: 100%;
-         padding: 0 var(--oxi-size-xl);
+         padding: 0 oxi.size(xl);
          word-break: break-word;
          display: flex;
          flex-direction: column;
          justify-content: center;
          align-items: center;
-         gap: var(--oxi-size-sm);
+         gap: oxi.size(sm);
      }
  }
 </style>

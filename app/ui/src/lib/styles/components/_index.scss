@@ -1,0 +1,7 @@
+@use "button";
+@use "tag";
+
+@mixin init() {
+    @include button.init;
+    @include tag.init;
+}

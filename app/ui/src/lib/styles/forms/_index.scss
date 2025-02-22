@@ -1,0 +1,7 @@
+@use "input";
+@use "form";
+
+@mixin init() {
+    @include input.init;
+    @include form.init;
+}

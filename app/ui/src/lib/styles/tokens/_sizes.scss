@@ -1,3 +1,4 @@
+@use "sass:map";
 @use "../utils";
 
 $sizes: (
@@ -16,7 +17,6 @@ $sizes: (
     '5xl': 96px,
 	'6xl': 120px,
 );
-
 $rounded: (
     /* none: 0, */
     "sm":	2px,
@@ -26,22 +26,47 @@ $rounded: (
     "xl":	12px,
     "2xl":	16px,
     "3xl":  24px,
-    /* "full":	9999px, */
+    "4xl":  32px,
+    // "full":	9999px,
 );
 
-:root {
-    --oxi-size-0: 0px;
-    --oxi-size-none: 0px;
-    --oxi-size-px: 1px;
-
-    @each $size, $value in $sizes {
-        --oxi-size-#{$size}: #{utils.px-to-rem($value)};
+@function size($size) {
+    @if not map.has-key($sizes, "#{$size}") {
+        @error "unknown size #{$size}";
     }
 
-    --oxi-rounded-none: 0px;
-    --oxi-rounded: #{utils.px-to-rem(4px)};
-    @each $size, $value in $rounded {
-        --oxi-rounded-#{$size}:	#{utils.px-to-rem($value)};
+    @return var(--oxi-size-#{$size});
+}
+
+@function rounded($size: "") {
+    @if $size == "" {
+        @return var(--oxi-rounded);
     }
-    --oxi-rounded-full: 9999px;
+
+    @if not map.has-key($rounded, "#{$size}") and $size != full and $size != none {
+        @error "unknown rounded radius #{$size}";
+    }
+
+    @return var(--oxi-rounded-#{$size});
+}
+
+@mixin init() {
+    :root {
+        --oxi-size-0: 0px;
+        --oxi-size-none: 0px;
+        --oxi-size-px: 1px;
+
+        @each $size, $value in $sizes {
+            --oxi-size-#{$size}: #{utils.px-to-rem($value)};
+        }
+
+        --oxi-rounded-none: 0px;
+        --oxi-rounded: #{utils.px-to-rem(4px)};
+
+        @each $size, $value in $rounded {
+            --oxi-rounded-#{$size}:	#{utils.px-to-rem($value)};
+        }
+
+        --oxi-rounded-full: 9999px;
+    }
 }

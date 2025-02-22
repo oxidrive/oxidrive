@@ -179,14 +179,20 @@ async function search(ev: Event) {
     />
 </Fab>
 
-<style>
+<style lang="scss">
+ @use "$lib/styles/oxi";
+
  .toolbar {
      display: flex;
      flex-direction: row;
      justify-content: space-between;
      align-items: center;
-     padding: var(--oxi-size-sm);
-     gap: var(--oxi-size-sm);
+     padding: oxi.size(sm);
+     gap: oxi.size(sm);
+
+     @include oxi.mq(s) {
+         gap: oxi.size(4xl);
+     }
  }
 
  .toolbar-group {
@@ -201,7 +207,7 @@ async function search(ev: Event) {
 }
 
  .error {
-     padding: var(--oxi-size-sm);
+     padding: oxi.size(sm);
  }
 
 .empty {

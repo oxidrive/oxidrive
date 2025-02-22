@@ -27,6 +27,7 @@ const tag = split(t);
     {@render action?.()}
 </span>
 
-<style>
+<style lang="scss">
+  @use "$lib/styles/oxi";
 
 </style>

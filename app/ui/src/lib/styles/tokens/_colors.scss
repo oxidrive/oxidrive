@@ -1,3 +1,5 @@
+@use "sass:map";
+
 $primary: (
     "50": #e8edf2,
     "100": #d1dbe4,
@@ -10,7 +12,6 @@ $primary: (
     "800": #0a1e31,
     "900": #050f18,
 );
-
 $danger: (
     "50": #fbedeb,
     "100": #f7dbd6,
@@ -24,35 +25,62 @@ $danger: (
     "900": #2b0f0a,
 );
 
-:root {
-    --oxi-black: black;
-    --oxi-white: white;
 
-    @each $shade, $value in $primary {
-        --oxi-primary-#{$shade}: #{$value};
+@function black() {
+    @return var(--oxi-black);
+}
+
+@function white() {
+    @return var(--oxi-white);
+}
+
+@function primary($shade) {
+    @if not map.has-key($primary, "#{$shade}") {
+        @error "unknown color primary-#{$shade}";
     }
 
-    @each $shade, $value in $danger {
-        --oxi-danger-#{$shade}: #{$value};
+    @return var(--oxi-primary-#{$shade});
+}
+
+@function danger($shade) {
+    @if not map.has-key($danger, "#{$shade}") {
+        @error "unknown color danger-#{$shade}";
     }
+
+    @return var(--oxi-danger-#{$shade});
 }
 
-.text-white {
-    color: var(--oxi-white);
-}
+@mixin init() {
+    :root {
+        --oxi-black: black;
+        --oxi-white: white;
 
-.text-black {
-    color: var(--oxi-black);
-}
+        @each $shade, $value in $primary {
+            --oxi-primary-#{$shade}: #{$value};
+        }
 
-@each $shade, $_ in $primary {
-    .text-primary-#{$shade} {
-        color: var(--oxi-primary-#{$shade});
+        @each $shade, $value in $danger {
+            --oxi-danger-#{$shade}: #{$value};
+        }
     }
-}
 
-@each $shade, $_ in $danger {
-    .text-danger-#{$shade} {
-        color: var(--oxi-danger-#{$shade});
+    .text-white {
+        color: var(--oxi-white);
+    }
+
+    .text-black {
+        color: var(--oxi-black);
+    }
+
+    @each $shade, $_ in $primary {
+        .text-primary-#{$shade} {
+            color: var(--oxi-primary-#{$shade});
+        }
+    }
+
+    @each $shade, $_ in $danger {
+        .text-danger-#{$shade} {
+            color: var(--oxi-danger-#{$shade});
+        }
     }
 }

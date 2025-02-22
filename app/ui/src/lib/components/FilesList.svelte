@@ -66,13 +66,15 @@ function formatSize(size: number): string {
     {/each}
 </div>
 
-<style>
-    .files {
-        display: flex;
-        flex-direction: column;
-        justify-content: stretch;
-        align-items: center;
-    }
+<style lang="scss">
+ @use "$lib/styles/oxi";
+
+ .files {
+     display: flex;
+     flex-direction: column;
+     justify-content: stretch;
+     align-items: center;
+ }
 
     .file {
         display: flex;
@@ -80,16 +82,16 @@ function formatSize(size: number): string {
         justify-content: space-between;
         align-items: center;
         width: 100%;
-        padding: var(--oxi-size-2xs) var(--oxi-size-xs);
-        border-bottom: 1px solid var(--oxi-primary-300);
-        gap: var(--oxi-size-sm);
+        padding: oxi.size(2xs) oxi.size(xs);
+        border-bottom: 1px solid oxi.primary(300);
+        gap: oxi.size(sm);
     }
 
     .file > .info {
         display: flex;
         flex-direction: column;
         align-items: flex-start;
-        gap: var(--oxi-size-2xs);
+        gap: oxi.size(2xs);
         flex: 1 1 0;
         min-width: 0;
     }
@@ -99,7 +101,7 @@ function formatSize(size: number): string {
         flex-direction: column;
         justify-content: space-between;
         align-items: flex-start;
-        gap: var(--oxi-size-4xs);
+        gap: oxi.size(4xs);
         max-width: 90%;
     }
 
@@ -110,12 +112,10 @@ function formatSize(size: number): string {
 
     .file-tags {
         display: flex;
-        flex-direction: row;
-        flex-wrap: wrap;
+        flex-flow: row wrap;
         justify-content: flex-start;
         align-items: center;
-        column-gap: var(--oxi-size-2xs);
-        row-gap: var(--oxi-size-4xs);
+        gap: oxi.size(4xs) oxi.size(2xs);
         width: 100%;
 
         & > :global(.tag) {
@@ -128,7 +128,6 @@ function formatSize(size: number): string {
     }
 
     .file-details {
-        font-size: var(--oxi-text-2xs-font-size);
-        line-height: var(--oxi-text-2xs-line-height);
+        @include oxi.text(2xs);
     }
 </style>

@@ -1,20 +1,22 @@
-.tag {
+@use "../tokens" as oxi;
+
+@mixin init() {
+    .tag {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: var(--oxi-size-4xs) var(--oxi-size-3xs);
-        color: var(--oxi-primary-500);
-        background-color: var(--oxi-primary-50);
-        border: solid var(--oxi-primary-500) 2px;
-        border-radius: var(--oxi-rounded-lg);
+        padding: oxi.size(4xs) oxi.size(3xs);
+        color: oxi.primary(500);
+        background-color: oxi.primary(50);
+        border: solid oxi.primary(500) 2px;
+        border-radius: oxi.rounded(lg);
 
         .key {
-            font-weight: var(--oxi-text-bold);
+            @include oxi.weight(bold);
         }
 
         &.small {
-            font-size: var(--oxi-text-xs-font-size);
-            line-height: var(--oxi-text-xs-line-height);
+            @include oxi.text(xs);
         }
 
         .value {
@@ -23,3 +25,4 @@
             white-space: nowrap;
         }
     }
+}

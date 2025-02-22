@@ -12,8 +12,10 @@
 		"test:unit": "vitest",
 		"test:e2e": "playwright test",
 		"format": "biome check --write .",
-		"lint": "biome ci",
-		"lint:fix": "biome lint --write .",
+		"lint": "biome ci && npm run style:lint",
+		"lint:fix": "biome lint --write . && npm run style:lint:fix",
+		"style:lint": "stylelint src/**/*.{svelte,css,scss}",
+		"style:lint:fix": "stylelint src/**/*.{svelte,css,scss} --fix",
 		"clean": "rimraf build .svelte-kit"
 	},
 	"devDependencies": {
@@ -32,6 +34,9 @@
 		"openapi-typescript": "^7.0.0",
 		"rimraf": "^6.0.1",
 		"sass": "^1.83.1",
+		"stylelint": "^16.14.1",
+		"stylelint-config-html": "^1.1.0",
+		"stylelint-config-standard-scss": "^14.0.0",
 		"svelte": "^5.0.0",
 		"svelte-check": "^4.0.0",
 		"tslib": "^2.4.1",

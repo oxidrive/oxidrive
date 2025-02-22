@@ -1,9 +1,11 @@
 @use '@fortawesome/fontawesome-free/css/all.css';
 @use "preflight" as *;
-@use "tokens/all" as *;
-@use "layout/all" as *;
-@use "components/all" as *;
-@use "forms/all" as *;
+@use "tokens";
+@use "components";
+@use "forms";
+@include tokens.init;
+@include components.init;
+@include forms.init;
 
 .sr-only {
     position: absolute;

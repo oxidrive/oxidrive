@@ -1,0 +1,29 @@
+@use "sass:map";
+
+$breakpoints: (
+  base: 1px,
+  2xs: 375px,
+  xs: 576px,
+  s: 768px,
+  m: 992px,
+  l: 1200px,
+  xl: 1680px,
+);
+
+@function breakpoint($breakpoint) {
+  @return map.get($breakpoints, $breakpoint);
+}
+
+@function -is-base($breakpoint) {
+  @return $breakpoint == base;
+}
+
+@mixin mq($from) {
+  @if -is-base($from) {
+    @content;
+  } @else {
+    @media screen and (min-width: #{breakpoint($from)}) {
+      @content;
+    }
+  }
+}

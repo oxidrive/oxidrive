@@ -1,0 +1,41 @@
+@use "../tokens" as oxi;
+
+@mixin init() {
+    .form {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+        gap: oxi.size(2xl);
+        width: 100%;
+    }
+
+    .fieldset {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        align-items: center;
+        width: 100%;
+
+        &.inline {
+            flex-direction: row-reverse;
+        }
+
+        &.inputs {
+            gap: oxi.size(xl);
+            width: 100%;
+        }
+
+        &.buttons {
+            gap: oxi.size(2xs);
+        }
+    }
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-evenly;
+        width: 100%;
+        gap: oxi.size(xs);
+    }
+}

@@ -52,16 +52,18 @@ const {
     </div>
 {/if}
 
-<style>
+<style lang="scss">
+  @use "$lib/styles/oxi";
+
     .popover {
-        background-color: var(--oxi-primary-50);
-        padding: var(--oxi-size-2xs);
-        border: 1px solid var(--oxi-primary-300);
-        border-radius: var(--oxi-rounded-2xl);
+        background-color: oxi.primary(50);
+        padding: oxi.size(2xs);
+        border: 1px solid oxi.primary(300);
+        border-radius: oxi.rounded(2xl);
     }
 
  .arrow {
-     border-top: 1px solid var(--oxi-primary-300);
-     border-left: 1px solid var(--oxi-primary-300);
+     border-top: 1px solid oxi.primary(300);
+     border-left: 1px solid oxi.primary(300);
  }
 </style>

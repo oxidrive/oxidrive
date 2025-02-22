@@ -23,11 +23,13 @@ const highlighted = $derived(
 
 <pre class="filter-container {clazz}"><code class="filter">{@html highlighted}</code></pre>
 
-<style>
+<style lang="scss">
+ @use "$lib/styles/oxi";
+
  .filter {
-     background-color: var(--oxi-primary-100);
-     padding: var(--oxi-size-2xs);
-     border-radius: var(--oxi-rounded-lg);
+     background-color: oxi.primary(100);
+     padding: oxi.size(2xs);
+     border-radius: oxi.rounded(lg);
      display: block;
  }
 </style>

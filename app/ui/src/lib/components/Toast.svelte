@@ -1,6 +1,4 @@
 <script lang="ts" context="module">
-import type { SchemaApiError } from "$lib/openapi";
-
 export type ToastData = {
 	title: string;
 	message: string;
@@ -78,38 +76,39 @@ export function reportError(
 </div>
 
 <style lang="scss">
+ @use "$lib/styles/oxi";
+
  .toasts {
      position: fixed;
      right: 0;
      top: 0;
      z-index: 60;
-     margin: var(--oxi-size-sm);
+     margin: oxi.size(sm);
      display: flex;
      flex-direction: column;
-     gap: var(--oxi-size-2xs);
+     gap: oxi.size(2xs);
      max-width: 90vw;
  }
 
  .toast {
-     padding: var(--oxi-size-2xs);
-     border-radius: var(--oxi-rounded-2xl);
+     padding: oxi.size(2xs);
+     border-radius: oxi.rounded(2xl);
      word-break: break-word;
      hyphens: auto;
 
      &.info {
-         background-color: var(--oxi-primary-50);
-         border: 2px solid var(--oxi-primary-500);
+         background-color: oxi.primary(50);
+         border: 2px solid oxi.primary(500);
      }
 
      &.danger {
-         background-color: var(--oxi-danger-50);
-         border: 2px solid var(--oxi-danger-500);
+         background-color: oxi.danger(50);
+         border: 2px solid oxi.danger(500);
      }
 
      .header {
          display: flex;
-         flex-direction: row;
-         flex-wrap: nowrap;
+         flex-flow: row nowrap;
          justify-content: space-between;
          align-items: center;
      }

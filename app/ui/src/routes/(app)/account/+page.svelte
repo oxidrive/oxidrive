@@ -145,17 +145,19 @@ async function changePassword(ev: SubmitEvent) {
     </section>
 </div>
 
-<style>
-    .account {
-        display: flex;
-        flex-direction: column;
-        gap: var(--oxi-size-m);
-        padding: var(--oxi-size-sm);
-    }
+<style lang="scss">
+ @use "$lib/styles/oxi";
+
+ .account {
+     display: flex;
+     flex-direction: column;
+     gap: oxi.size(m);
+     padding: oxi.size(sm);
+ }
 
     .section {
         display: flex;
         flex-direction: column;
-        gap: var(--oxi-size-sm);
+        gap: oxi.size(sm);
     }
 </style>

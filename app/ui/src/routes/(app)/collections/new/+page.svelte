@@ -150,13 +150,15 @@ async function onFilterChanged() {
 {/snippet}
 </Localized>
 
-<style>
-    .create {
-        padding: var(--oxi-size-m);
-    }
+<style lang="scss">
+ @use "$lib/styles/oxi";
+
+ .create {
+     padding: oxi.size(m);
+ }
 
     .title {
-        margin-bottom: var(--oxi-size-xs);
+        margin-bottom: oxi.size(xs);
         width: 100%;
         text-align: center;
     }

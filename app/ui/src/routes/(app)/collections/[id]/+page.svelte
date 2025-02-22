@@ -56,23 +56,25 @@ function togglePreview(preview?: SchemaFileData) {
     {/if}
 {/await}
 
-<style>
-    .header {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: var(--oxi-size-m);
-        width: 100%;
-        gap: var(--oxi-size-xs);
-    }
+<style lang="scss">
+ @use "$lib/styles/oxi";
+
+ .header {
+     display: flex;
+     flex-direction: column;
+     justify-content: center;
+     align-items: center;
+     padding: oxi.size(m);
+     width: 100%;
+     gap: oxi.size(xs);
+ }
 
     .loading {
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        padding: var(--oxi-size-m);
+        padding: oxi.size(m);
         width: 100%;
     }
 

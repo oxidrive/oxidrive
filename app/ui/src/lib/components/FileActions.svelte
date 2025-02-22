@@ -33,13 +33,15 @@ const { ondelete, file }: Props = $props();
     </div>
 </Popover>
 
-<style>
+<style lang="scss">
+  @use "$lib/styles/oxi";
+
  .actions {
      display: flex;
      flex-direction: column;
      justify-content: stretch;
      align-items: center;
-     gap: var(--oxi-size-2xs);
+     gap: oxi.size(2xs);
  }
 
  .actions > :global(.action) {
@@ -48,11 +50,11 @@ const { ondelete, file }: Props = $props();
      justify-content: flex-start;
      align-items: center;
      width: 100%;
-     gap: var(--oxi-size-sm);
-     color: var(--oxi-primary-500);
+     gap: oxi.size(sm);
+     color: oxi.primary(500);
 
      &:disabled {
-         color: var(--oxi-primary-300);
+         color: oxi.primary(300);
      }
  }
 </style>

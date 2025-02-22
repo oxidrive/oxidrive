@@ -89,12 +89,14 @@ const {
 
 {/if}
 
-<style>
+<style lang="scss">
+ @use "$lib/styles/oxi";
+
  .navmenu {
-     background-color: var(--oxi-primary-50);
-     padding: var(--oxi-size-2xs);
-     border: 1px solid var(--oxi-primary-300);
-     border-radius: var(--oxi-rounded-2xl);
+     background-color: oxi.primary(50);
+     padding: oxi.size(2xs);
+     border: 1px solid oxi.primary(300);
+     border-radius: oxi.rounded(2xl);
  }
 
  .menu-entry {
@@ -102,34 +104,33 @@ const {
      flex-direction: row;
      justify-content: left;
      align-items: center;
-     gap: var(--oxi-size-sm);
+     gap: oxi.size(sm);
  }
 
 .overlay {
     position: fixed;
     inset: 0;
     z-index: 50;
-    background-color: rgb(var(--oxi-black) / 0.5);
+    background-color: rgb(oxi.black() / 50%);
 }
 
-.menu {
-    position: fixed;
-    right: 0;
-    top: 0;
-    z-index: 50;
-    min-height: 100vh;
-    width: 100%;
-    background-color: var(--oxi-white);
-    padding: var(--oxi-size-xl);
+ .menu {
+     background-color: oxi.white();
+     display: flex;
+     flex-direction: column;
+     gap: oxi.size(sm);
+     min-height: 100vh;
+     padding: oxi.size(xl);
+     position: fixed;
+     right: 0;
+     top: 0;
+     width: 100%;
+     z-index: 50;
 
-    @media screen and (min-width: 768px) {
-        max-width: 50vw;
-    }
-
-    display: flex;
-    flex-direction: column;
-    gap: var(--oxi-size-sm);
-}
+     @include oxi.mq(s) {
+         max-width: 50vw;
+     }
+ }
 
  .username {
      text-transform: capitalize;
@@ -149,7 +150,7 @@ const {
     justify-content: space-evenly;
     align-items: center;
     width: 100%;
-    gap: var(--oxi-size-2xs);
+    gap: oxi.size(2xs);
 
     & > * {
         width: 100%;

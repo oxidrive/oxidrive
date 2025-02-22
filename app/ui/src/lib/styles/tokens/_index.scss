@@ -1,0 +1,13 @@
+@use "colors";
+@use "sizes";
+@use "typography";
+@forward "breakpoints" hide init;
+@forward "colors" hide init;
+@forward "sizes" hide init;
+@forward "typography" hide init;
+
+@mixin init() {
+    @include colors.init;
+    @include sizes.init;
+    @include typography.init;
+}

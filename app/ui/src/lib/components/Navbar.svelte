@@ -20,13 +20,15 @@ const { user }: Props = $props();
     </div>
 </nav>
 
-<style>
+<style lang="scss">
+  @use "$lib/styles/oxi";
+
     .navbar {
         display: flex;
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
-        padding: var(--oxi-size-2xs) var(--oxi-size-m);
+        padding: oxi.size(2xs) oxi.size(m);
     }
 
     .logo {
@@ -39,6 +41,6 @@ const { user }: Props = $props();
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
-        gap: var(--oxi-size-sm);
+        gap: oxi.size(sm);
     }
 </style>

@@ -49,7 +49,9 @@ let { data }: Props = $props();
     </div>
 </form>
 
-<style>
+<style lang="scss">
+   @use "$lib/styles/oxi";
+
     .logo {
         height: 100px;
         width: 100px;

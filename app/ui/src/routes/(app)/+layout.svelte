@@ -26,9 +26,11 @@ const year = new Date().getFullYear();
     </footer>
 </div>
 
-<style>
+<style lang="scss">
+ @use "$lib/styles/oxi";
+
  :global(body) {
-     background-color: var(--oxi-primary-500);
+     background-color: oxi.primary(500);
  }
 
  .app {
@@ -43,8 +45,8 @@ const year = new Date().getFullYear();
  }
 
  .main {
-     border-radius: var(--oxi-rounded-2xl) var(--oxi-rounded-2xl) 0 0;
-     background-color: var(--oxi-white);
+     border-radius: oxi.rounded(2xl) oxi.rounded(2xl) 0 0;
+     background-color: oxi.white();
      width: 100%;
      flex: 1;
  }
@@ -54,8 +56,8 @@ const year = new Date().getFullYear();
      flex-direction: column;
      justify-content: space-between;
      align-items: center;
-     background-color: var(--oxi-white);
+     background-color: oxi.white();
      width: 100%;
-     padding: var(--oxi-size-2xs) var(--oxi-size-xs);
+     padding: oxi.size(2xs) oxi.size(xs);
  }
 </style>

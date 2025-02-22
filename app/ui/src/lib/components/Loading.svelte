@@ -6,7 +6,9 @@ import LoadingSpinner from "./LoadingSpinner.svelte";
     <LoadingSpinner />
 </div>
 
-<style>
+<style lang="scss">
+ @use "$lib/styles/oxi";
+
  .loading {
      position: absolute;
      z-index: 100;
@@ -16,7 +18,7 @@ import LoadingSpinner from "./LoadingSpinner.svelte";
      flex-direction: column;
      justify-content: center;
      align-items: center;
-     background-color: var(--oxi-color-primary-500);
+     background-color: oxi.primary(500);
      top: 0;
  }
 </style>
