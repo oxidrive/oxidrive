@@ -4,6 +4,7 @@
   inputs = {
     flake-parts.url = "github:hercules-ci/flake-parts";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -29,10 +30,12 @@
       ];
 
       perSystem =
-        { pkgs, ... }:
+        { pkgs, system, ... }:
         let
           rustPkgs = pkgs.appendOverlays [ (import rust-overlay) ];
           toolchain = rustPkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
+
+          stablePkgs = import inputs.nixpkgs-stable { inherit system; };
         in
         {
           formatter = pkgs.nixfmt-tree;
@@ -53,7 +56,7 @@
 
             packages = with pkgs; [
               bacon
-              bruno-cli
+              stablePkgs.bruno-cli
               cosign
               cargo-machete
               cargo-mutants
