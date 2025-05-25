@@ -23,7 +23,7 @@
           toolchain = rustPkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;
         in
         {
-          formatter = pkgs.nixpkgs-fmt;
+          formatter = pkgs.nixfmt-tree;
 
           packages = rec {
             default = oxidrive;
