@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 #[derive(Clone, Debug, Default, Deserialize)]
-#[serde(tag = "type")]
+#[serde(tag = "type", rename_all = "kebab-case")]
 pub enum CsrfConfig {
     Cookie(CsrfCookieConfig),
     #[default]
