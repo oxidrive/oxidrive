@@ -1,9 +1,10 @@
 telemetry:
-  log: oxidrive::authorizer=trace,tower_http=trace,info
+  log: oxidrive::authorizer=trace,tower_http=debug,info
 
 server:
   secret_key: 1D/El3AvfsvuhvCWFzuexHZWqn/vs//2kTIdX+CzX4xroIz8gItEaG2XOWmGqmTjkd+KqpwvZhOlsW125D62CDs27wY0EgrWlNfiX463yYc=
-  disable_csrf: true
+  csrf:
+    type: fetch
   cors:
     allow_headers: any
     allow_methods: any
