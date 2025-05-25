@@ -64,6 +64,9 @@ pre-commit:
           - name: nix-flake-check
             glob: "*.nix"
             run: nix flake check
+          - name: nix-fmt
+            glob: "*.nix"
+            run: nix fmt -- --fail-on-change
 
     - name: links
       glob: "*.md"
