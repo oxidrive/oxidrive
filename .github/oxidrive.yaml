@@ -3,7 +3,8 @@ telemetry:
 
 server:
   secret_key: 641efbb1aa2683448e56fcefea4caec4d3be478fbb0be4632500ed581eb15df8
-  disable_csrf: true
+  csrf:
+    type: fetch
   cors:
     allow_headers: any
     allow_methods: any

@@ -46,3 +46,4 @@ utoipa = { workspace = true, features = ["uuid", "axum_extras", "time"] }
 utoipa-axum = { workspace = true }
 utoipa-swagger-ui = { workspace = true, features = ["axum", "vendored"] }
 uuid = { workspace = true }
+tower-sec-fetch = { workspace = true }

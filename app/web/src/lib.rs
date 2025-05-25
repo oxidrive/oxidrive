@@ -2,20 +2,20 @@ use std::net::{IpAddr, Ipv6Addr};
 
 use bytesize::ByteSize;
 use cors::CorsConfig;
+use csrf::{CsrfConfig, CsrfCookieConfig};
 use oxidrive_ui::WebUiModule;
 use serde::Deserialize;
 use state::AppState;
-use tower::{
-    layer::util::Identity,
-    util::{Either, option_layer},
-};
+use tower::{layer::util::Identity, util::Either};
 use tower_http::cors::CorsLayer;
+use tower_sec_fetch::SecFetchLayer;
 use tower_surf::Surf;
 use utoipa::openapi::OpenApi;
 
 pub use server::Server;
 
 mod cors;
+mod csrf;
 mod headers;
 mod paginate;
 mod routes;
@@ -37,28 +37,27 @@ pub struct Config {
 
     secret_key: String,
 
-    #[serde(default)]
-    disable_csrf: bool,
-
     #[serde(default = "default_upload_body_limit")]
     upload_body_limit: ByteSize,
 
     #[serde(default)]
     cors: Option<CorsConfig>,
+
+    #[serde(default)]
+    csrf: CsrfConfig,
 }
 
 impl Config {
-    pub(crate) fn csrf(&self) -> Either<Surf, Identity> {
-        let surf = Surf::new(&self.secret_key)
-            .cookie_name("oxidrive_csrf_token")
-            .prefix(false);
-
-        let layer = match self.disable_csrf {
-            true => None,
-            false => Some(surf),
+    pub(crate) fn csrf(&self) -> Either<Either<Surf, SecFetchLayer>, Identity> {
+        let layer = match &self.csrf {
+            CsrfConfig::Cookie(CsrfCookieConfig { cookie_name }) => {
+                Either::Left(Surf::new(&self.secret_key).cookie_name(cookie_name))
+            }
+            CsrfConfig::Fetch => Either::Right(SecFetchLayer::default()),
+            CsrfConfig::None => return Either::Right(Identity::default()),
         };
 
-        option_layer(layer)
+        Either::Left(layer)
     }
 
     pub(crate) fn cors(&self) -> CorsLayer {
@@ -70,9 +69,9 @@ impl Config {
             host: default_host(),
             port: default_port(),
             secret_key: Default::default(),
-            disable_csrf: Default::default(),
             upload_body_limit: default_upload_body_limit(),
             cors: Default::default(),
+            csrf: Default::default(),
         }
     }
 }
