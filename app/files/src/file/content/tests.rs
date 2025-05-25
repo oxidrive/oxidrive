@@ -70,7 +70,7 @@ mod fs {
         let root_dir = tempfile::tempdir().unwrap();
 
         FileStorage::file_system(fs::Config {
-            root_folder_path: root_dir.into_path(),
+            root_folder_path: root_dir.keep(),
         })
     }
 

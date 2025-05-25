@@ -10,14 +10,26 @@
     };
   };
 
-  outputs = inputs @ { self, flake-parts, rust-overlay, ... }:
+  outputs =
+    inputs@{
+      self,
+      flake-parts,
+      rust-overlay,
+      ...
+    }:
     flake-parts.lib.mkFlake { inherit inputs; } rec {
       imports = [
       ];
 
-      systems = [ "x86_64-linux" "aarch64-linux" "aarch64-darwin" "x86_64-darwin" ];
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "aarch64-darwin"
+        "x86_64-darwin"
+      ];
 
-      perSystem = { pkgs, ... }:
+      perSystem =
+        { pkgs, ... }:
         let
           rustPkgs = pkgs.appendOverlays [ (import rust-overlay) ];
           toolchain = rustPkgs.rust-bin.fromRustupToolchainFile ./rust-toolchain.toml;

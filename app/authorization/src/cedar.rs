@@ -92,6 +92,7 @@ impl From<cedar_policy::Response> for Authorized {
     }
 }
 
+#[allow(clippy::result_large_err)]
 fn try_entity<E: crate::Entity>(entity: &E, schema: &Schema) -> Result<Entity, EntitiesError> {
     let json = json!({
         "uid": Ref::from(entity),

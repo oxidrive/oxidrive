@@ -55,11 +55,9 @@ impl FileStorage {
             .await?
             .into_bytes_sink();
 
-        let mut content = content
-            .map_err(|err| std::io::Error::new(std::io::ErrorKind::Other, err))
-            .inspect_ok(|bytes| {
-                size += bytes.len();
-            });
+        let mut content = content.map_err(std::io::Error::other).inspect_ok(|bytes| {
+            size += bytes.len();
+        });
 
         writer.send_all(&mut content).await?;
         writer.close().await?;
