@@ -1,6 +1,7 @@
-{ pkgs
-, buildNpmPackage
-, lib
+{
+  pkgs,
+  buildNpmPackage,
+  lib,
 }:
 
 let

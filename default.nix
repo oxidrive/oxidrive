@@ -1,7 +1,8 @@
-{ pkgs
-, lib
-, rustPlatform
-, toolchain
+{
+  pkgs,
+  lib,
+  rustPlatform,
+  toolchain,
 }:
 
 let
@@ -13,7 +14,15 @@ let
   f = import ./nix/filters.nix pkgs;
 
   src = lib.cleanSourceWith {
-    filter = f.hasSuffices [ ".toml" "Cargo.lock" ".rs" ".pest" ".sql" ".cedar" ".cedarschema" ];
+    filter = f.hasSuffices [
+      ".toml"
+      "Cargo.lock"
+      ".rs"
+      ".pest"
+      ".sql"
+      ".cedar"
+      ".cedarschema"
+    ];
     src = pkgs.nix-gitignore.gitignoreSource [ ] (lib.cleanSource ./.);
   };
 in

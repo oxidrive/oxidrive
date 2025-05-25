@@ -1,15 +1,18 @@
-{ pkgs ? import <nixpkgs> { }
-, oxidrive ? pkgs.callPackage ../. { }
-, tag ? "latest"
-, revision ? null
-, created ? null
+{
+  pkgs ? import <nixpkgs> { },
+  oxidrive ? pkgs.callPackage ../. { },
+  tag ? "latest",
+  revision ? null,
+  created ? null,
 }:
-
 
 pkgs.dockerTools.streamLayeredImage {
   name = "oxidrive";
 
-  contents = [ oxidrive pkgs.cacert ];
+  contents = [
+    oxidrive
+    pkgs.cacert
+  ];
 
   config = {
     WorkingDir = "/oxidrive";
@@ -37,7 +40,8 @@ pkgs.dockerTools.streamLayeredImage {
       "org.opencontainers.image.description" = "Self-hostable, simple personal storage service";
       "org.opencontainers.image.licenses" = "AGPL-3.0";
       "org.opencontainers.image.revision" = revision;
-      "org.opencontainers.image.version" = if tag == "latest" then oxidrive.version else "${oxidrive.version}-${tag}";
+      "org.opencontainers.image.version" =
+        if tag == "latest" then oxidrive.version else "${oxidrive.version}-${tag}";
       "org.opencontainers.image.source" = "https://github.com/oxidrive/oxidrive";
       "org.opencontainers.image.url" = "https://oxidrive.github.io/oxidrive";
     };
