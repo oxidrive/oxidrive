@@ -637,6 +637,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    /** @example hello world */
                     "application/octet-stream": string;
                 };
             };

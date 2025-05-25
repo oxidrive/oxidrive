@@ -59,6 +59,7 @@ jobs:
           github_access_token: ${{ secrets.GITHUB_TOKEN }}
       - uses: DeterminateSystems/magic-nix-cache-action@v7
       - run: nix flake check
+      - run: nix develop --command npm ci
 
       - name: Check formatting
         run: nix develop --command just openapi-generate-types --check
