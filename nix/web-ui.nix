@@ -24,9 +24,9 @@ buildNpmPackage {
   version = meta.version;
   inherit src;
 
-  nodejs = pkgs.nodejs_20;
+  nodejs = pkgs.nodejs_22;
 
-  npmDepsHash = "sha256-8oALjiIjK/2ukKAGJ/STs+m/P9le+HfHZTsZy6XvCDM=";
+  npmDepsHash = "sha256-HS6j/Owz+N3Cs0SvqgFFrA3h0j6kPOcTL25cT5ax7+0=";
   npmFlags = "--workspace app/ui";
 
   installPhase = ''

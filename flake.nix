@@ -68,7 +68,7 @@
               skopeo
               sqlx-cli
               toolchain
-              nodejs_20
+              nodejs_22
               lefthook
               lychee
               typos

@@ -1,0 +1,51 @@
+name: Smoke Build
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches:
+      - main
+    paths:
+      - .github/workflows/**
+      - .cargo/**
+      - app/**
+      - bin/**
+      - lib/**
+      - migrations/**
+      - Cargo.*
+      - rust-toolchain.toml
+  merge_group:
+
+env:
+  CARGO_TERM_COLOR: always
+
+concurrency:
+  group: smoke-build-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  checks: write
+
+jobs:
+  build:
+    if: github.event.pull_request.draft == false
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: nixbuild/nix-quick-install-action@v30
+      - uses: nix-community/cache-nix-action@v6
+        with:
+          primary-key: nix-${{ runner.os }}-${{ hashFiles('**/*.nix', '**/flake.lock') }}
+          restore-prefixes-first-match: nix-${{ runner.os }}-
+          gc-max-store-size-linux: 1G
+          purge: true
+          purge-prefixes: nix-${{ runner.os }}-
+          purge-created: 0
+          purge-last-accessed: 0
+          purge-primary-key: never
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Build
+        run: nix build
